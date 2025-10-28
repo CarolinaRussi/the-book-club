@@ -2,4 +2,6 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-I am using tailwind, react-icons, react-router
+I am using tailwind, react-icons, react-router.
+
+On back-end I will use express.
