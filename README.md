@@ -53,16 +53,16 @@ O terminal exibirá um endereço local (geralmente http://localhost:5173).
 Abra esse link no navegador para visualizar o app.
 
 # Tecnologias utilizadas
-React
-react-icons 
-react-router
-Vite
-TypeScript
-Tailwind
-Context API
-Express
-Neon (PostgreSQL em nuvem)
-
+React  
+react-icons  
+react-router  
+Vite  
+TypeScript  
+Tailwind  
+Context API  
+Express  
+Neon (PostgreSQL em nuvem)  
+  
 
 # Objetivo do projeto
 O BookClub nasceu da ideia de criar um espaço digital para fortalecer clubes de leitura — um ambiente onde leitoras possam se conectar, acompanhar suas leituras e planejar encontros de forma simples e interativa.
