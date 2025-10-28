@@ -12,6 +12,7 @@ Permite marcar reuniões, salvar livros lidos com notas e reviews, e descobrir o
 ```bash
 git clone https://github.com/CarolinaRussi/the-book-club.git
 ```
+
 Entre na pasta do projeto:
 
 ```bash
@@ -27,6 +28,7 @@ Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expr
 ```
 
 Ou se tiver npm instalado:
+
 ```bash
 npm i -g pnpm
 ```
@@ -45,6 +47,14 @@ pnpm install
 
 ### 4. Rodar o projeto em modo de desenvolvimento
 
+Conectar no banco de dados
+
+```bash
+npx tsx src/db/server.ts
+```
+
+Rodar o front
+
 ```bash
 pnpm dev
 ```
@@ -53,6 +63,7 @@ O terminal exibirá um endereço local (geralmente http://localhost:5173).
 Abra esse link no navegador para visualizar o app.
 
 # Tecnologias utilizadas
+
 React  
 react-icons  
 react-router  
@@ -61,10 +72,10 @@ TypeScript
 Tailwind  
 Context API  
 Express  
-Neon (PostgreSQL em nuvem)  
-  
+Neon (PostgreSQL em nuvem)
 
 # Objetivo do projeto
+
 O BookClub nasceu da ideia de criar um espaço digital para fortalecer clubes de leitura — um ambiente onde leitoras possam se conectar, acompanhar suas leituras e planejar encontros de forma simples e interativa.
 
 Desenvolvido por Carolina Russi Ferla

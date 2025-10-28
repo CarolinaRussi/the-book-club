@@ -2,7 +2,7 @@ import { GiBookCover } from "react-icons/gi";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { TbBooks, TbCoffee } from "react-icons/tb";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -59,19 +59,21 @@ export default function Home() {
         </div>
       </div>
       <div className="flex flex-row gap-6 mt-5">
-        <button
+        <Link
+          to="/register"
           className={`font-semibold px-8 py-3 rounded-xl flex items-center gap-2 bg-primary text-background  cursor-pointer `}
           onClick={() => handleLogin()}
         >
           Criar conta
-        </button>
+        </Link>
 
-        <button
+        <Link
+          to="/login"
           className={`font-semibold px-6 py-3 rounded-xl flex items-center gap-2 text-foreground border border-secondary cursor-pointer `}
           onClick={() => handleLogin()}
         >
           Entrar
-        </button>
+        </Link>
       </div>
     </div>
   );
