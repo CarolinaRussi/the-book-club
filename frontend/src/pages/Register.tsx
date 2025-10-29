@@ -35,10 +35,10 @@ export default function Register() {
   const password = watch("password");
 
   const { mutate, isPending } = useMutation<
-  { token: string; id: string },
-  ApiError,
-  RegisterData
->({
+    { token: string; id: string },
+    ApiError,
+    RegisterData
+  >({
     mutationFn: registerUser,
     onSuccess: (result) => {
       toast.success("Conta criada com sucesso!");

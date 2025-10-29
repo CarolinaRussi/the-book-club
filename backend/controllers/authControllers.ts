@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { client } from "../../db/client";
+import { client } from "../db/client";
 import { UserStatus } from "../enums/userStatus";
 
 export const register = async (req: Request, res: Response) => {

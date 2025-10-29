@@ -9,7 +9,7 @@ interface RegisterData {
 
 export async function registerUser(
   data: RegisterData
-): Promise<{ token: string; id: string, name: string }> {
+): Promise<{ token: string; id: string; name: string }> {
   try {
     const response = await api.post("/register", data);
     return response.data;
