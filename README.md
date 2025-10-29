@@ -66,12 +66,16 @@ Abra esse link no navegador para visualizar o app.
 
 React  
 react-icons  
-react-router  
+react-router
+react-toastify
+react-hook-form
 Vite  
 TypeScript  
 Tailwind  
 Context API  
-Express  
+Express
+Axios 
+jsonwebtoken
 Neon (PostgreSQL em nuvem)
 
 # Objetivo do projeto

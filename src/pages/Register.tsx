@@ -3,6 +3,8 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
 import { registerUser } from "../api/mutations/registerUser";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
 
 interface IFormInput {
   name: string;
@@ -11,26 +13,45 @@ interface IFormInput {
   confirmPassword: string;
 }
 
+interface ApiError {
+  message: string;
+}
+
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export default function Register() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<IFormInput>();
+  const password = watch("password");
 
-  const mutation = useMutation({
+  const { mutate, isPending } = useMutation<
+  { token: string; id: string },
+  ApiError,
+  RegisterData
+>({
     mutationFn: registerUser,
-    onSuccess: () => toast.success("Conta criada com sucesso!"),
-    onError: () => toast.error("Erro ao criar conta!"),
+    onSuccess: (result) => {
+      toast.success("Conta criada com sucesso!");
+      localStorage.setItem("token", result.token);
+      login(result.token, result.id);
+      navigate("/");
+    },
+    onError: (error) => toast.error(error.message || "Erro ao criar conta"),
   });
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
-    const { name, email, password, confirmPassword } = data;
-    if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem");
-      return;
-    }
-    mutation.mutate({ name, email, password });
+    const { name, email, password } = data;
+    mutate({ name, email, password });
   };
   return (
     <div className="bg-background flex flex-col items-center justify-start gap-4 min-h-screen p-20">
@@ -71,21 +92,30 @@ export default function Register() {
             </h3>
           )}
           <input
-            {...register("confirmPassword", { required: true, minLength: 6 })}
+            {...register("confirmPassword", {
+              required: true,
+              validate: (value) =>
+                value === password || "As senhas não coincidem",
+            })}
             type="password"
             placeholder="Confirmar Senha"
             className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
           />
           {errors.confirmPassword && (
             <h3 className="text-xs text-primary">
-              Senha é obrigatória e deve ter no mínimo 6 caracteres
+              {errors.confirmPassword.message}
             </h3>
           )}
           <button
             type="submit"
-            className="bg-primary text-background font-semibold rounded-lg p-2 w-80 mt-6 hover:bg-foreground cursor-pointer transition-colors"
+            disabled={isPending}
+            className={`bg-primary text-background font-semibold rounded-lg p-2 w-80 mt-6 transition-colors ${
+              isPending
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-foreground cursor-pointer"
+            }`}
           >
-            Registrar
+            {isPending ? "Registrando..." : "Registrar"}
           </button>
         </form>
         <h3 className="text-warm-brown mt-4">

@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
-//import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { client } from "../../db/client";
 import { UserStatus } from "../enums/userStatus";
 
@@ -12,6 +12,15 @@ export const register = async (req: Request, res: Response) => {
     return;
   }
 
+  const userExists = await client.query(
+    "SELECT * FROM users WHERE email = $1",
+    [email]
+  );
+
+  if (userExists.rows.length > 0) {
+    return res.status(400).json({ message: "E-mail já cadastrado" });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await client.query(
@@ -19,7 +28,19 @@ export const register = async (req: Request, res: Response) => {
       [name, email, hashedPassword, UserStatus.ACTIVE]
     );
     const user = result.rows[0];
-    res.status(201).json({ message: "Usuário registrado com sucesso", user });
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET não definido");
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET!
+    );
+    res.status(201).json({
+      message: "Usuário registrado com sucesso",
+      token,
+      id: user.id,
+      name: user.name,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erro ao registrar usuário" });
