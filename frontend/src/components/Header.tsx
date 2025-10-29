@@ -22,7 +22,7 @@ export default function Header() {
       </div>
       <div className="flex flex-row items-center gap-2">
         <NavLink
-          to="/"
+          to={isLoggedIn ? "/home" : "/"}
           className={({ isActive }) =>
             `font-semibold px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-primary hover:text-background ${
               isActive ? "bg-primary text-background" : "text-foreground"

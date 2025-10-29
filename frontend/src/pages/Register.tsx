@@ -5,8 +5,8 @@ import { registerUser } from "../api/mutations/registerUser";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { IFormInput, RegisterData } from "../types/IRegister";
-import { ApiError } from "../types/IApi";
+import { IFormInput, IRegisterData } from "../types/IRegister";
+import { IApiError, IApiReturnData } from "../types/IApi";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -20,16 +20,15 @@ export default function Register() {
   const password = watch("password");
 
   const { mutate, isPending } = useMutation<
-    { token: string; id: string },
-    ApiError,
-    RegisterData
+    IApiReturnData,
+    IApiError,
+    IRegisterData
   >({
     mutationFn: registerUser,
     onSuccess: (result) => {
       toast.success("Conta criada com sucesso!");
-      localStorage.setItem("token", result.token);
-      login(result.token, result.id);
-      navigate("/");
+      login(result.token, result.id, result.name);
+      navigate("/home");
     },
     onError: (error) => toast.error(error.message || "Erro ao criar conta"),
   });

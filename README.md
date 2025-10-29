@@ -49,8 +49,9 @@ pnpm install
 
 Para conectar ao banco de dados, entre na pasta backend pelo terminal
 
+
 ```bash
-npx tsx db/server.ts
+pnpm dev
 ```
 
 Para rodar o front, entre na pasta frontend pelo terminal

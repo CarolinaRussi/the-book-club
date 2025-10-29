@@ -1,6 +1,12 @@
 
-interface ApiError {
+interface IApiError {
   message: string;
 }
 
-export type { ApiError };
+interface IApiReturnData {
+  token: string;
+  id: string;
+  name: string;
+}
+
+export type { IApiError, IApiReturnData };

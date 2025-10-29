@@ -1,6 +1,6 @@
-interface LoginData {
+interface ILoginData {
   email: string;
   password: string;
 }
 
-export type {  LoginData };
+export type {  ILoginData };

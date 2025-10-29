@@ -1,9 +1,9 @@
 import axios from "axios";
 import { api } from "../index";
-import { LoginData } from "../../types/ILogin";
+import { ILoginData } from "../../types/ILogin";
 
 export async function loginUser(
-  data: LoginData
+  data: ILoginData
 ): Promise<{ token: string; id: string; name: string }> {
   try {
     const response = await api.post("/login", data);

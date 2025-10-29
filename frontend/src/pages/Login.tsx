@@ -4,8 +4,8 @@ import { GiBookCover } from "react-icons/gi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { ApiError } from "../types/IApi";
-import { LoginData } from "../types/ILogin";
+import { IApiError, IApiReturnData } from "../types/IApi";
+import { ILoginData } from "../types/ILogin";
 import { loginUser } from "../api/mutations/loginUser";
 
 export default function Login() {
@@ -15,26 +15,25 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginData>();
+  } = useForm<ILoginData>();
 
   const { mutate: loginMutate, isPending } = useMutation<
-    { token: string; id: string },
-    ApiError,
-    LoginData
+    IApiReturnData,
+    IApiError,
+    ILoginData
   >({
     mutationFn: loginUser,
     onSuccess: (result) => {
       toast.success("Login efetuado com sucesso!");
-      localStorage.setItem("token", result.token);
-      login(result.token, result.id);
-      navigate("/");
+      login(result.token, result.id, result.name);
+      navigate("/home");
     },
     onError: (error) => {
       toast.error(error.message || "Email ou senha incorretos");
     },
   });
 
-  const onSubmit: SubmitHandler<LoginData> = (data) => {
+  const onSubmit: SubmitHandler<ILoginData> = (data) => {
     const { email, password } = data;
 
     loginMutate({ email, password });

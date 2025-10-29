@@ -5,10 +5,10 @@ interface IFormInput {
   confirmPassword: string;
 }
 
-interface RegisterData {
+interface IRegisterData {
   name: string;
   email: string;
   password: string;
 }
 
-export type { IFormInput, RegisterData };
+export type { IFormInput, IRegisterData };
