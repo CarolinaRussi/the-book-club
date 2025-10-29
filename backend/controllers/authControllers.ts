@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { client } from "../db/client";
+import { pool } from "../db/pool";
 import { UserStatus } from "../enums/userStatus";
 
 export const register = async (req: Request, res: Response) => {
@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response) => {
     return;
   }
 
-  const userExists = await client.query(
+  const userExists = await pool.query(
     "SELECT * FROM users WHERE email = $1",
     [email]
   );
@@ -23,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await client.query(
+    const result = await pool.query(
       "INSERT INTO users (name, email, password, status) VALUES ($1, $2, $3, $4) RETURNING *",
       [name, email, hashedPassword, UserStatus.ACTIVE]
     );
@@ -55,7 +55,7 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
-  const result = await client.query("SELECT * FROM users WHERE email = $1", [
+  const result = await pool.query("SELECT * FROM users WHERE email = $1", [
     email,
   ]);
 
