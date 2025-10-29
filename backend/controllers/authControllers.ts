@@ -46,3 +46,45 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Erro ao registrar usuário" });
   }
 };
+
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ message: "Preencha todos os campos!" });
+    return;
+  }
+
+  const result = await client.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
+
+  if (result.rows.length === 0) {
+    return res.status(400).json({ message: "Usuário não encontrado" });
+  }
+
+  try {
+    const user = result.rows[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      res.status(401).json({ message: "Senha inválida" });
+      return;
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET!
+    );
+    res.status(201).json({
+      message: "Usuário logado com sucesso",
+      token,
+      id: user.id,
+      name: user.name,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao registrar usuário" });
+  }
+};
