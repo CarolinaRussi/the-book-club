@@ -47,13 +47,13 @@ pnpm install
 
 ### 4. Rodar o projeto em modo de desenvolvimento
 
-Conectar no banco de dados
+Para conectar ao banco de dados, entre na pasta backend pelo terminal
 
 ```bash
-npx tsx src/db/server.ts
+npx tsx db/server.ts
 ```
 
-Rodar o front
+Para rodar o front, entre na pasta frontend pelo terminal
 
 ```bash
 pnpm dev
@@ -67,6 +67,7 @@ Abra esse link no navegador para visualizar o app.
 React  
 react-icons  
 react-router
+tanstack/react-query
 react-toastify
 react-hook-form
 Vite  
@@ -74,7 +75,8 @@ TypeScript
 Tailwind  
 Context API  
 Express
-Axios 
+Axios
+bcryptjs 
 jsonwebtoken
 Neon (PostgreSQL em nuvem)
 

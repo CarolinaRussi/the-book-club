@@ -1,11 +1,6 @@
 import axios from "axios";
 import { api } from "../index";
-
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-}
+import { RegisterData } from "../../types/IRegister";
 
 export async function registerUser(
   data: RegisterData

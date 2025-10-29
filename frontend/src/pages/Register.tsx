@@ -5,23 +5,8 @@ import { registerUser } from "../api/mutations/registerUser";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-
-interface IFormInput {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface ApiError {
-  message: string;
-}
-
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-}
+import { IFormInput, RegisterData } from "../types/IRegister";
+import { ApiError } from "../types/IApi";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -53,6 +38,7 @@ export default function Register() {
     const { name, email, password } = data;
     mutate({ name, email, password });
   };
+
   return (
     <div className="bg-background flex flex-col items-center justify-start gap-4 min-h-screen p-20">
       <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 h-160 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
