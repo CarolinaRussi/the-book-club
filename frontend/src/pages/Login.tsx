@@ -25,7 +25,7 @@ export default function Login() {
     mutationFn: loginUser,
     onSuccess: (result) => {
       toast.success("Login efetuado com sucesso!");
-      login(result.token, result.id, result.name);
+      login(result.token, result.user);
       navigate("/home");
     },
     onError: (error) => {

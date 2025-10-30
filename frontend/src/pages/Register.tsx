@@ -27,15 +27,15 @@ export default function Register() {
     mutationFn: registerUser,
     onSuccess: (result) => {
       toast.success("Conta criada com sucesso!");
-      login(result.token, result.id, result.name);
+      login(result.token, result.user);
       navigate("/home");
     },
     onError: (error) => toast.error(error.message || "Erro ao criar conta"),
   });
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
-    const { name, email, password } = data;
-    mutate({ name, email, password });
+    const { confirmPassword, ...rest } = data;
+    mutate(rest);
   };
 
   return (
@@ -54,8 +54,16 @@ export default function Register() {
           />
           {errors.name && (
             <h3 className="text-xs text-primary">
-              Nome de usuário obrigatório
+              Nome de usuário é obrigatório
             </h3>
+          )}
+          <input
+            {...register("lastName", { required: true })}
+            placeholder="Sobrenome"
+            className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+          />
+          {errors.lastName && (
+            <h3 className="text-xs text-primary">Sobrenome é obrigatório</h3>
           )}
           <input
             {...register("email", { required: true })}

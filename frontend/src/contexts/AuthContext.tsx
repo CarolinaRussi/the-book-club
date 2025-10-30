@@ -1,11 +1,11 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { set } from "react-hook-form";
+import { IUser } from "../types/IApi";
+import { api } from "../api/index";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  userId: string | null;
-  userName: string | null;
-  login: (token: string, userId: string, name: string) => void;
+  user: IUser | null;
+  login: (token: string, user: IUser) => void;
   logout: () => void;
 }
 
@@ -13,36 +13,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUserId = localStorage.getItem("userId");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    setIsLoggedIn(!!token);
-    setUserId(storedUserId);
+      setUser(JSON.parse(storedUser));
+      setIsLoggedIn(true);
+    }
   }, []);
 
-  const login = (token: string, userId: string, name: string) => {
+  const login = (token: string, user: IUser) => {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
     localStorage.setItem("token", token);
-    localStorage.setItem("userId", userId);
+    localStorage.setItem("user", JSON.stringify(user));
     setIsLoggedIn(true);
-    setUserId(userId);
-    setUserName(name);
+    setUser(user);
   };
 
   const logout = () => {
+    delete api.defaults.headers.common["Authorization"];
+
     localStorage.removeItem("token");
-    localStorage.removeItem("userId");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
-    setUserId(null);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider
-      value={{ isLoggedIn, userId, login, logout, userName }}
-    >
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

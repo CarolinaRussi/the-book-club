@@ -1,10 +1,11 @@
 import axios from "axios";
 import { api } from "../index";
 import { IRegisterData } from "../../types/IRegister";
+import { IApiReturnData } from "../../types/IApi";
 
 export async function registerUser(
   data: IRegisterData
-): Promise<{ token: string; id: string; name: string }> {
+): Promise<IApiReturnData> {
   try {
     const response = await api.post("/register", data);
     return response.data;

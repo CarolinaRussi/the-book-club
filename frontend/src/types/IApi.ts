@@ -1,12 +1,17 @@
-
 interface IApiError {
   message: string;
 }
 
-interface IApiReturnData {
-  token: string;
+interface IUser {
   id: string;
+  email: string;
   name: string;
+  nickname: string;
 }
 
-export type { IApiError, IApiReturnData };
+interface IApiReturnData {
+  token: string;
+  user: IUser;
+}
+
+export type { IApiError, IUser, IApiReturnData };
