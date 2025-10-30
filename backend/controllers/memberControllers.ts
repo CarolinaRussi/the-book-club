@@ -5,7 +5,6 @@ import { UserStatus } from "../enums/userStatus";
 
 export const getMemberFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(id);
 
   if (!id) {
     return res.status(401).json({ message: "Clube não selecionado" });
