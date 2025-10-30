@@ -16,6 +16,7 @@ export const getMyClubs = async (req: Request, res: Response) => {
         clubs.id,
         clubs.name,
         clubs.status,
+        clubs.owner_id,
         clubs.description,
         clubs.created_at 
       FROM clubs
