@@ -9,22 +9,28 @@ import Login from "./pages/Login.tsx";
 import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
 import Index from "./pages/Index.tsx";
+import { PublicRoute } from "./components/public/PublicRoute.tsx";
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
       {
-        path: "/",
-        element: <Index />,
-      },
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/register",
-        element: <Register />,
+        element: <PublicRoute />,
+        children: [
+          {
+            path: "/",
+            element: <Index />,
+          },
+          {
+            path: "/login",
+            element: <Login />,
+          },
+          {
+            path: "/register",
+            element: <Register />,
+          },
+        ],
       },
       {
         element: <PrivateRoute />,
