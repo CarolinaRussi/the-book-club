@@ -71,6 +71,7 @@ react-router
 tanstack/react-query
 react-toastify
 react-hook-form
+shadcn (pnpm dlx shadcn@latest add nomeDoComponente)
 Vite  
 TypeScript  
 Tailwind  

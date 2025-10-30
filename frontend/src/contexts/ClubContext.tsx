@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserClubs } from "../api/queries/fetchUserClubs";
 import { UserClub } from "../types/IClubs";
+import { useAuth } from "./AuthContext";
 
 interface ClubContextData {
   selectedClubId: string | null;
@@ -15,11 +16,13 @@ const ClubContext = createContext<ClubContextData | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const { data: userClubs, isLoading: isLoadingClubs } = useQuery({
-    queryKey: ["userClubs"],
+    queryKey: ["userClubs", user?.id],
     queryFn: fetchUserClubs,
     staleTime: 1000 * 60 * 5,
+    enabled: !!user,
   });
 
   useEffect(() => {
@@ -34,6 +37,12 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     userClubs: userClubs || [],
     isLoadingClubs,
   };
+
+  useEffect(() => {
+    if (!user) {
+      setSelectedClubId(null);
+    }
+  }, [user]);
 
   return <ClubContext.Provider value={value}>{children}</ClubContext.Provider>;
 }
