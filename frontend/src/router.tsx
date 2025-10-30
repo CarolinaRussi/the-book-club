@@ -8,6 +8,7 @@ import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
+import Index from "./pages/Index.tsx";
 
 const router = createBrowserRouter([
   {
@@ -15,7 +16,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: <Index />,
       },
       {
         path: "/login",
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         element: <PrivateRoute />,
         children: [
+          {
+            path: "/home",
+            element: <Home />,
+          },
           {
             path: "/meetings",
             element: <Meetings />,
