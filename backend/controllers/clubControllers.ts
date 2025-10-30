@@ -12,13 +12,18 @@ export const getMyClubs = async (req: Request, res: Response) => {
 
   try {
     const query = `
-      SELECT 
+      SELECT
         clubs.id,
-        clubs.name 
+        clubs.name,
+        clubs.status,
+        clubs.description,
+        clubs.created_at 
       FROM clubs
       JOIN members ON clubs.id = members.club_id
       WHERE members.user_id = $1
-      AND clubs.status = $2 
+      ORDER BY 
+        clubs.status = $2 DESC, 
+        clubs.created_at DESC
     `;
 
     const result = await pool.query(query, [userId, UserStatus.ACTIVE]);
