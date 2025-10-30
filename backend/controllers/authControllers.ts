@@ -5,17 +5,16 @@ import { pool } from "../db/pool";
 import { UserStatus } from "../enums/userStatus";
 
 export const register = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
+  const { name, lastName, email, nickname, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!name || !lastName || !email || !nickname || !password) {
     res.status(400).json({ message: "Preencha todos os campos!" });
     return;
   }
 
-  const userExists = await pool.query(
-    "SELECT * FROM users WHERE email = $1",
-    [email]
-  );
+  const userExists = await pool.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
 
   if (userExists.rows.length > 0) {
     return res.status(400).json({ message: "E-mail já cadastrado" });
@@ -23,9 +22,10 @@ export const register = async (req: Request, res: Response) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const fullName = `${name} ${lastName}`;
     const result = await pool.query(
-      "INSERT INTO users (name, email, password, status) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, email, hashedPassword, UserStatus.ACTIVE]
+      "INSERT INTO users (name, email, nickname, password, status) VALUES ($1, $2, $3, $4) RETURNING *",
+      [fullName, email, nickname, hashedPassword, UserStatus.ACTIVE]
     );
     const user = result.rows[0];
     if (!process.env.JWT_SECRET) {
@@ -38,8 +38,7 @@ export const register = async (req: Request, res: Response) => {
     res.status(201).json({
       message: "Usuário registrado com sucesso",
       token,
-      id: user.id,
-      name: user.name,
+      user,
     });
   } catch (error) {
     console.error(error);
@@ -80,8 +79,7 @@ export const login = async (req: Request, res: Response) => {
     res.status(201).json({
       message: "Usuário logado com sucesso",
       token,
-      id: user.id,
-      name: user.name,
+      user,
     });
   } catch (error) {
     console.error(error);
