@@ -1,13 +1,26 @@
 import { GiBookshelf } from "react-icons/gi";
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useClub } from "../contexts/ClubContext";
 import { FiHome } from "react-icons/fi";
 import { TbBooks, TbCoffee } from "react-icons/tb";
 import { MdOutlineLogout, MdOutlinePeopleAlt } from "react-icons/md";
 
+const privateNavItems = [
+  { to: "/meetings", label: "Próximo Encontro", Icon: TbCoffee, size: 24 },
+  { to: "/library", label: "Biblioteca", Icon: TbBooks, size: 24 },
+  { to: "/readers", label: "Leitoras", Icon: MdOutlinePeopleAlt, size: 24 },
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
+  const { selectedClubId, setSelectedClubId, userClubs, isLoadingClubs } =
+    useClub();
+
+  function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    setSelectedClubId(event.target.value);
+  }
 
   const handleLogout = () => {
     logout();
@@ -24,8 +37,10 @@ export default function Header() {
         <NavLink
           to={isLoggedIn ? "/home" : "/"}
           className={({ isActive }) =>
-            `font-semibold px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-primary hover:text-background ${
-              isActive ? "bg-primary text-background" : "text-foreground"
+            `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              isActive
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
             }`
           }
         >
@@ -35,39 +50,43 @@ export default function Header() {
 
         {isLoggedIn && (
           <>
-            <NavLink
-              to="/meetings"
-              className={({
-                isActive,
-              }) => `font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background cursor-pointer
-               ${isActive ? "bg-primary text-background" : "text-foreground"}`}
-            >
-              <TbCoffee size={24} />
-              Próximo Encontro
-            </NavLink>
-            <NavLink
-              to="/library"
-              className={({
-                isActive,
-              }) => `font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background cursor-pointer
-               ${isActive ? "bg-primary text-background" : "text-foreground"}`}
-            >
-              <TbBooks size={24} />
-              Biblioteca
-            </NavLink>
-            <NavLink
-              to="/readers"
-              className={({
-                isActive,
-              }) => `font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background cursor-pointer
-               ${isActive ? "bg-primary text-background" : "text-foreground"}`}
-            >
-              <MdOutlinePeopleAlt size={24} />
-              Leitoras
-            </NavLink>
+            {privateNavItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+                  }`
+                }
+              >
+                <item.Icon size={item.size} />
+                {item.label}
+              </NavLink>
+            ))}
+
+            {userClubs.length > 1 && (
+              <select
+                value={selectedClubId || ""}
+                disabled={isLoadingClubs}
+                onChange={handleChange}
+                className="items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all border-2 border-secondary bg-background text-foreground cursor-pointer"
+              >
+                {isLoadingClubs && <option>Carregando clubes...</option>}
+
+                {userClubs.map((userClub) => (
+                  <option key={userClub.id} value={userClub.id}>
+                    {userClub.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
             <button
               onClick={handleLogout}
-              className="font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background text-foreground cursor-pointer"
+              className="font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background text-muted-foreground cursor-pointer"
             >
               <MdOutlineLogout size={24} />
               Sair

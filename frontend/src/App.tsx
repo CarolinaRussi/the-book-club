@@ -1,11 +1,14 @@
 import { RouterProvider } from "react-router";
 import { AuthProvider } from "./contexts/AuthContext";
 import { router } from "./router";
+import { ClubProvider } from "./contexts/ClubContext";
 
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ClubProvider>
+        <RouterProvider router={router} />
+      </ClubProvider>
     </AuthProvider>
   );
 }
