@@ -1,15 +1,5 @@
+import { Readers } from "../../types/IReaders";
 import { api } from "../index";
-
-interface Readers {
-  id: string;
-  bio: string;
-  email: string;
-  favorites_genres: string;
-  joined_at: string;
-  name: string;
-  nickname: string;
-  profile_picture: string;
-}
 
 export const fetchReadersByClubId = async (
   clubId: string | null

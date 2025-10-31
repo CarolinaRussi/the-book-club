@@ -1,4 +1,4 @@
-interface UserClub {
+export interface UserClub {
   id: string;
   name: string;
   status: string;
@@ -6,5 +6,3 @@ interface UserClub {
   created_at: string;
   description?: string;
 }
-
-export type { UserClub };

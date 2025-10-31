@@ -1,5 +1,4 @@
 import { createContext, useState, useContext, useEffect } from "react";
-import { api } from "../api";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserClubs } from "../api/queries/fetchUserClubs";
 import { UserClub } from "../types/IClubs";

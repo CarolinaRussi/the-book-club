@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
-import { registerUser } from "../api/mutations/registerUser";
+import { registerUser } from "../api/mutations/auth";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";

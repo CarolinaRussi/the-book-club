@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { IUser } from "../types/IApi";
+import { IUser } from "../types/IUser";
 import { api } from "../api/index";
 
 interface AuthContextType {
