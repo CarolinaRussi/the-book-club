@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useClub } from "../contexts/ClubContext";
 import { fetchReadersByClubId } from "../api/queries/fetchReaders";
-import { useEffect } from "react";
+import { getInitials } from "../utils/formatters";
 
 export default function Readers() {
   const { selectedClubId } = useClub();
@@ -14,17 +14,7 @@ export default function Readers() {
     enabled: !!selectedClubId,
   });
 
-  const getInitials = (name: string) => {
-    if (!name) return "?";
-
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-  };
-
+  //TODO implementar tela de carregamento
   return (
     <div className="flex flex-col w-full max-w-7xl">
       <div className="flex flex-col items-start">
@@ -43,10 +33,10 @@ export default function Readers() {
               key={reader.id}
               className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md"
             >
-              <Avatar className="mb-4 ">
+              <Avatar className="mb-4 size-30 ">
                 <AvatarImage
-                  src="teste.com"
-                  alt="Foto de perfil de Ana Silva"
+                  src={reader.profile_picture}
+                  alt={`Foto de perfil de ${reader.name}`}
                 />
                 <AvatarFallback className="text-4xl text-primary" delayMs={600}>
                   {getInitials(reader.name)}
