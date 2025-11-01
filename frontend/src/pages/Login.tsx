@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { IApiError, IApiReturnData } from "../types/IApi";
 import { ILoginData } from "../types/ILogin";
-import { loginUser } from "../api/mutations/auth";
+import { loginUser } from "../api/mutations/authMutate";
 
 export default function Login() {
   const navigate = useNavigate();

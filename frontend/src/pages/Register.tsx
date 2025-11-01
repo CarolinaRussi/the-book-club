@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
-import { registerUser } from "../api/mutations/auth";
+import { registerUser } from "../api/mutations/authMutate";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -63,6 +63,14 @@ export default function Register() {
         />
         {errors.lastName && (
           <h3 className="text-xs text-primary">Sobrenome é obrigatório</h3>
+        )}
+        <input
+          {...register("nickname", { required: true })}
+          placeholder="Apelido"
+          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+        />
+        {errors.lastName && (
+          <h3 className="text-xs text-primary">Apelido é obrigatório</h3>
         )}
         <input
           {...register("email", { required: true })}

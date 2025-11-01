@@ -1,57 +1,84 @@
 import { createContext, useState, useEffect, useContext } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Importe useQuery e useQueryClient
 import { IUser } from "../types/IUser";
 import { api } from "../api/index";
+import { fetchAuthenticatedUser } from "../api/queries/fetchUser";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   user: IUser | null;
+  isLoadingUser: boolean;
   login: (token: string, user: IUser) => void;
   logout: () => void;
+  updateUserContext: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [user, setUser] = useState<IUser | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (token && storedUser) {
+    if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      setUser(JSON.parse(storedUser));
       setIsLoggedIn(true);
     }
   }, []);
 
-  const login = (token: string, user: IUser) => {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  const {
+    data: user,
+    refetch: refetchUser,
+    isLoading: isLoadingUser,
+  } = useQuery({
+    queryKey: ["authenticatedUser"],
+    queryFn: fetchAuthenticatedUser,
+    enabled: isLoggedIn,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
+  const login = (token: string, userPayload: IUser) => {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+
+    queryClient.setQueryData(["authenticatedUser"], userPayload);
+
     setIsLoggedIn(true);
-    setUser(user);
   };
 
   const logout = () => {
     delete api.defaults.headers.common["Authorization"];
-
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+
     setIsLoggedIn(false);
-    setUser(null);
+
+    queryClient.removeQueries({ queryKey: ["authenticatedUser"] });
+    queryClient.clear();
+  };
+
+  const updateUserContext = () => {
+    refetchUser();
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        user: user || null,
+        isLoadingUser,
+        login,
+        logout,
+        updateUserContext,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

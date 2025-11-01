@@ -5,6 +5,5 @@ export const fetchReadersByClubId = async (
   clubId: string | null
 ): Promise<Readers[]> => {
   const { data } = await api.get(`/club/${clubId}/readers`);
-  console.log(data);
   return data;
 };
