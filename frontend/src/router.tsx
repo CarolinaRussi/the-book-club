@@ -10,6 +10,7 @@ import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
 import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const router = createBrowserRouter([
   {
@@ -44,12 +45,16 @@ const router = createBrowserRouter([
             element: <Meetings />,
           },
           {
+            path: "/library",
+            element: <Library />,
+          },
+          {
             path: "/readers",
             element: <Readers />,
           },
           {
-            path: "/library",
-            element: <Library />,
+            path: "/profile",
+            element: <Profile />,
           },
         ],
       },

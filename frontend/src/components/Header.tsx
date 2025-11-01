@@ -4,7 +4,11 @@ import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import { FiHome } from "react-icons/fi";
 import { TbBooks, TbCoffee } from "react-icons/tb";
-import { MdOutlineLogout, MdOutlinePeopleAlt } from "react-icons/md";
+import {
+  MdOutlineLogout,
+  MdOutlinePeopleAlt,
+  MdOutlinePerson,
+} from "react-icons/md";
 import {
   Select,
   SelectContent,
@@ -26,6 +30,7 @@ const privateNavItems = [
   { to: "/meetings", label: "Próximo Encontro", Icon: TbCoffee, size: 24 },
   { to: "/library", label: "Biblioteca", Icon: TbBooks, size: 24 },
   { to: "/readers", label: "Leitoras", Icon: MdOutlinePeopleAlt, size: 24 },
+  { to: "/profile", label: "Perfil", Icon: MdOutlinePerson, size: 24 },
 ];
 
 export default function Header() {
