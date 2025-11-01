@@ -3,6 +3,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useClub } from "../contexts/ClubContext";
 import { fetchReadersByClubId } from "../api/queries/fetchReaders";
 import { getInitials } from "../utils/formatters";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 
 export default function Readers() {
   const { selectedClubId } = useClub();
@@ -19,15 +25,15 @@ export default function Readers() {
     <div className="flex flex-col w-full max-w-7xl">
       <div className="flex flex-col items-start">
         <h1 className="text-4xl font-bold text-foreground ">
-          Nossos Participantes
+          Leitores do Clube
         </h1>
         <h2 className="text-md mt-3 w-full text-warm-brown">
-          Conheça as leitoras apaixonadas que fazem parte do nosso clube!
+          Conheça os leitores apaixonados que fazem parte do nosso clube!
         </h2>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {readers && readers.length > 0 ? (
+        {selectedClubId && readers && readers.length > 0 ? (
           readers.map((reader) => (
             <div
               key={reader.id}
@@ -54,7 +60,14 @@ export default function Readers() {
             </div>
           ))
         ) : (
-          <div>Sem leitoras</div>
+          <Card className="md:col-span-4 text-center">
+            <CardHeader>
+              <CardTitle>Nenhum clube por aqui... ainda!</CardTitle>
+              <CardDescription>
+                Que tal criar seu próprio clube ou entrar em um com um convite?
+              </CardDescription>
+            </CardHeader>
+          </Card>
         )}
       </div>
     </div>
