@@ -73,13 +73,21 @@ react-toastify
 react-hook-form
 shadcn (pnpm dlx shadcn@latest add nomeDoComponente)
 Vite  
-TypeScript  
 Tailwind  
 Context API  
+TypeScript
+Node
+Cors  
 Express
 Axios
 bcryptjs 
 jsonwebtoken
+cloudinary
+multer
+dotenv
+Prisma
+pnpm
+pg
 Neon (PostgreSQL em nuvem)
 
 # Objetivo do projeto

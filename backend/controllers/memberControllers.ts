@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-
-import { pool } from "../db/pool";
+import { db } from "../db/client";
 import { UserStatus } from "../enums/userStatus";
 
 export const getMemberFromClub = async (req: Request, res: Response) => {
@@ -11,28 +10,35 @@ export const getMemberFromClub = async (req: Request, res: Response) => {
   }
 
   try {
-    const query = `
-      SELECT
-        users.name,
-        users.nickname,
-        users.bio,
-        users.favorites_genres,
-        users.profile_picture,
-        users.email,
-        members.joined_at
-      FROM users
-      JOIN members ON users.id = members.user_id
-      WHERE members.club_id = $1
-      AND users.status = $2
-      ORDER BY 
-        users.created_at DESC
-    `;
-
-    const result = await pool.query(query, [id, UserStatus.ACTIVE]);
-
-    res.status(200).json(result.rows);
+    const members = await db.member.findMany({
+      where: {
+        club_id: id,
+        user: {
+          status: UserStatus.ACTIVE,
+        },
+      },
+      orderBy: {
+        user: {
+          created_at: "desc",
+        },
+      },
+      select: {
+        joined_at: true,
+        user: {
+          select: {
+            name: true,
+            nickname: true,
+            bio: true,
+            favorites_genres: true,
+            profile_picture: true,
+            email: true,
+          },
+        },
+      },
+    });
+    res.status(200).json(members);
   } catch (error) {
-    console.error("Erro ao buscar clubes do usuário:", error);
-    res.status(500).json({ message: "Erro interno ao buscar clubes" });
+    console.error("Erro ao buscar membros do clube:", error);
+    res.status(500).json({ message: "Erro interno ao buscar membros" });
   }
 };

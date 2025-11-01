@@ -1,7 +1,8 @@
 import { type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { pool } from "../db/pool";
+import { db } from "../db/client";
+import { Prisma } from "../generated/prisma/client";
 import { UserStatus } from "../enums/userStatus";
 
 export const register = async (req: Request, res: Response) => {
@@ -12,22 +13,20 @@ export const register = async (req: Request, res: Response) => {
     return;
   }
 
-  const userExists = await pool.query("SELECT * FROM users WHERE email = $1", [
-    email,
-  ]);
-
-  if (userExists.rows.length > 0) {
-    return res.status(400).json({ message: "E-mail já cadastrado" });
-  }
-
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const fullName = `${name} ${lastName}`;
-    const result = await pool.query(
-      "INSERT INTO users (name, email, nickname, password, status) VALUES ($1, $2, $3, $4) RETURNING *",
-      [fullName, email, nickname, hashedPassword, UserStatus.ACTIVE]
-    );
-    const user = result.rows[0];
+
+    const user = await db.user.create({
+      data: {
+        name: fullName,
+        email: email,
+        nickname: nickname,
+        password: hashedPassword,
+        status: UserStatus.ACTIVE,
+      },
+    });
+
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET não definido");
     }
@@ -35,12 +34,20 @@ export const register = async (req: Request, res: Response) => {
       { id: user.id, email: user.email },
       process.env.JWT_SECRET!
     );
+
+    const { password: _, ...userParaFront } = user;
+
     res.status(201).json({
       message: "Usuário registrado com sucesso",
       token,
-      user,
+      user: userParaFront,
     });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return res.status(400).json({ message: "E-mail já cadastrado" });
+      }
+    }
     console.error(error);
     res.status(500).json({ message: "Erro ao registrar usuário" });
   }
@@ -54,16 +61,16 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
-  const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-    email,
-  ]);
-
-  if (result.rows.length === 0) {
-    return res.status(400).json({ message: "Usuário não encontrado" });
-  }
-
   try {
-    const user = result.rows[0];
+    const user = await db.user.findUnique({
+      where: { email: email },
+    });
+
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      return res
+        .status(400)
+        .json({ message: "Usuário não encontrado ou inativo" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
@@ -76,10 +83,13 @@ export const login = async (req: Request, res: Response) => {
       { id: user.id, email: user.email },
       process.env.JWT_SECRET!
     );
+
+    const { password: _, ...userParaFront } = user;
+
     res.status(201).json({
       message: "Usuário logado com sucesso",
       token,
-      user,
+      user: userParaFront,
     });
   } catch (error) {
     console.error(error);
