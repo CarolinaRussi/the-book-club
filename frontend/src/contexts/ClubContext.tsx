@@ -1,13 +1,13 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserClubs } from "../api/queries/fetchUserClubs";
-import { UserClub } from "../types/IClubs";
+import { IUserClub } from "../types/IClubs";
 import { useAuth } from "./AuthContext";
 
 interface ClubContextData {
   selectedClubId: string | null;
   setSelectedClubId: (id: string | null) => void;
-  userClubs: UserClub[];
+  userClubs: IUserClub[];
   isLoadingClubs: boolean;
 }
 

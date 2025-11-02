@@ -39,7 +39,7 @@ export default function Register() {
   };
 
   return (
-    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 h-160 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
+    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Criar conta</h1>
       <h2 className="text-warm-brown mb-4 w-80">

@@ -1,4 +1,4 @@
-export interface Readers {
+export interface IReaders {
   id: string;
   bio: string;
   email: string;

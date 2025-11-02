@@ -29,7 +29,7 @@ import { useState } from "react";
 const privateNavItems = [
   { to: "/meetings", label: "Próximo Encontro", Icon: TbCoffee, size: 24 },
   { to: "/library", label: "Biblioteca", Icon: TbBooks, size: 24 },
-  { to: "/readers", label: "Leitoras", Icon: MdOutlinePeopleAlt, size: 24 },
+  { to: "/readers", label: "Leitores", Icon: MdOutlinePeopleAlt, size: 24 },
   { to: "/profile", label: "Perfil", Icon: MdOutlinePerson, size: 24 },
 ];
 
