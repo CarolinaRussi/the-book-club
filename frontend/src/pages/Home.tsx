@@ -1,9 +1,9 @@
 import { FaPlus } from "react-icons/fa6";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router";
 import { MdOutlineEmail } from "react-icons/md";
 import { useClub } from "../contexts/ClubContext";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,19 +11,22 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { BookCard, IBook } from "../components/cards/BookCard";
+import CreateClubDialog from "../components/dialogs/CreateClubDialog";
+import { useState } from "react";
 
 export default function Home() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { userClubs } = useClub();
-  // const handleLogin = () => {
-  //   login("test-token", "test-user");
-  //   navigate("/");
-  // };
+  const [createClubOpen, setCreateClubOpen] = useState(false);
 
-  const openModalCreateBookClube = () => {
-    // Lógica para abrir o modal de criação do clube do livro
-    console.log("Abrir modal de criação de clube do livro");
+  const actualBook: IBook = {
+    id: "1",
+    name: "O nome do vento (A Crônica do Matador do Rei - Livro 1)",
+    author: "Patrick Rothfuss",
+    description:
+      "Ninguém sabe ao certo quem é o herói ou o vilão desse fascinante universo criado por Patrick Rothfuss. Na realidade, essas duas figuras se concentram em Kote, um homem enigmático que se esconde sob a identidade de proprietário da hospedaria Marco do Percurso. Da infância numa trupe de artistas itinerantes, passando pelos anos vividos numa cidade hostil e pelo esforço para ingressar na escola de magia, O nome do vento acompanha a trajetória de Kote e as duas forças que movem sua vida: o desejo de aprender o mistério por trás da arte de nomear as coisas e a necessidade de reunir informações sobre o Chandriano – os lendários demônios que assassinaram sua família no passado. Quando esses seres do mal reaparecem na cidade, um cronista suspeita de que o misterioso Kote seja o personagem principal de diversas histórias que rondam a região e decide aproximar-se dele para descobrir a verdade. Pouco a pouco, a história de Kote vai sendo revelada, assim como sua multifacetada personalidade – notório mago, esmerado ladrão, amante viril, herói salvador, músico magistral, assassino infame. Nessa provocante narrativa, o leitor é transportado para um mundo fantástico, repleto de mitos e seres fabulosos, heróis e vilões, ladrões e trovadores, amor e ódio, paixão e vingança.Mais do que a trama bem construída e os personagens cativantes, o que torna O nome do vento uma obra tão especial - que levou Patrick Rothfuss ao topo da lista de mais vendidos do The New York Times - é sua capacidade de encantar leitores de todas as idades.",
+    image_url: "https://m.media-amazon.com/images/I/81CGmkRG9GL._SL1500_.jpg",
   };
 
   return (
@@ -39,10 +42,10 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10 mt-5">
-        <Card id="card-novo-clube" className="w-full">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FaPlus size={20} className="text-primary" />
+              <FaPlus size={24} className="text-primary" />
               Criar novo clube
             </CardTitle>
           </CardHeader>
@@ -52,16 +55,15 @@ export default function Home() {
             </p>
           </CardContent>
           <CardFooter>
-            <button
-              onClick={() => openModalCreateBookClube()}
-              className="mt-4 font-semibold py-3 w-full rounded-xl bg-primary text-background cursor-pointer hover:bg-primary/80"
+            <Button
+              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-background cursor-pointer hover:bg-primary/80"
+              onClick={() => setCreateClubOpen(true)}
             >
-              Criar clube
-            </button>
+              Criar Clube
+            </Button>
           </CardFooter>
         </Card>
-
-        <Card id="card-biblioteca" className="w-full">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MdOutlineEmail size={24} className="text-primary" />
@@ -74,15 +76,17 @@ export default function Home() {
             </p>
           </CardContent>
           <CardFooter>
-            <button
-              onClick={() => openModalCreateBookClube()}
-              className="mt-4 font-semibold py-3 w-full rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer"
+            <Button
+              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer"
+              onClick={() => setCreateClubOpen(true)}
             >
               Inserir código
-            </button>
+            </Button>
           </CardFooter>
         </Card>
       </div>
+
+      {/* <BookCard actualBook={actualBook} /> */}
 
       <div className="grid grid-cols-1 gap-10 mt-10">
         <Card id="card-meus-clubes" className="w-full mt-3">
@@ -136,6 +140,10 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+      <CreateClubDialog
+        open={createClubOpen}
+        onOpenChange={setCreateClubOpen}
+      />
     </div>
   );
 }
