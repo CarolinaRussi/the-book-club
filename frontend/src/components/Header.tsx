@@ -44,7 +44,7 @@ export default function Header() {
   const handleLogout = () => {
     logout();
     navigate("/");
-    if (isMobileMenuOpen) setIsMobileMenuOpen(false); // Fecha o menu se estiver aberto
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
   };
 
   const NavLinks = ({ isMobile = false }) => (
@@ -56,7 +56,7 @@ export default function Header() {
             isMobile ? "px-4 py-3 text-lg" : "px-4 py-2 text-sm"
           } rounded-md font-medium transition-all ${
             isActive
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary text-cream shadow-sm"
               : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
           }`
         }
@@ -76,7 +76,7 @@ export default function Header() {
                 isMobile ? "px-4 py-3 text-lg" : "px-4 py-2 text-sm"
               } rounded-md font-medium transition-all ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-primary text-cream shadow-sm"
                   : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
               }`
             }
@@ -98,12 +98,12 @@ export default function Header() {
         <GiBookshelf size={32} className="text-primary" />
         {isLoggedIn && (
           <>
-            {userClubs.length > 1 && (
+            {userClubs.length > 0 && (
               <Select
                 value={selectedClubId || undefined}
                 onValueChange={(value) => {
                   setSelectedClubId(value);
-                  setIsMobileMenuOpen(false); // Fecha ao selecionar
+                  setIsMobileMenuOpen(false);
                 }}
                 disabled={isLoadingClubs}
               >

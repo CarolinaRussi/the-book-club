@@ -36,26 +36,26 @@ export default function Readers() {
         {selectedClubId && readers && readers.length > 0 ? (
           readers.map((reader) => (
             <div
-              key={reader.id}
+              key={reader.user.id}
               className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md"
             >
               <Avatar className="mb-4 size-30 ">
                 <AvatarImage
-                  src={reader.profile_picture}
-                  alt={`Foto de perfil de ${reader.name}`}
+                  src={reader.user.profile_picture}
+                  alt={`Foto de perfil de ${reader.user.name}`}
                 />
                 <AvatarFallback className="text-4xl text-primary" delayMs={600}>
-                  {getInitials(reader.name)}
+                  {getInitials(reader.user.name)}
                 </AvatarFallback>
               </Avatar>
               <h1 className="text-2xl font-bold text-center text-foreground mb-3">
-                {reader.nickname}
+                {reader.user.nickname}
               </h1>
               <div className="text-sm text-muted-foreground text-center mb-3">
-                {reader.bio}
+                {reader.user.bio}
               </div>
               <div className="text-sm text-muted-foreground">
-                42 livros lidos
+                Membro desde: {new Date(reader.joined_at).toLocaleDateString()}
               </div>
             </div>
           ))

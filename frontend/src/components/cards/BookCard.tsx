@@ -1,14 +1,7 @@
+import { IBook } from "../../types/IBooks";
 import { getInitials } from "../../utils/formatters";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-
-export interface IBook {
-  id: string;
-  name: string;
-  author: string;
-  description: string;
-  image_url: string;
-}
 
 export function BookCard({ actualBook }: { actualBook: IBook }) {
   return (

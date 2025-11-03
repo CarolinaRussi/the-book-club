@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // Importe useQuery e useQueryClient
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { IUser } from "../types/IUser";
 import { api } from "../api/index";
 import { fetchAuthenticatedUser } from "../api/queries/fetchUser";
@@ -86,3 +86,4 @@ export function useAuth() {
   }
   return context;
 }
+
