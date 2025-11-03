@@ -117,6 +117,9 @@ importers:
       react-router:
         specifier: ^7.9.4
         version: 7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react-simple-star-rating:
+        specifier: ^5.1.7
+        version: 5.1.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react-toastify:
         specifier: ^11.0.5
         version: 11.0.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -2215,6 +2218,13 @@ packages:
     peerDependenciesMeta:
       react-dom:
         optional: true
+
+  react-simple-star-rating@5.1.7:
+    resolution: {integrity: sha512-NTFkW8W3uwvI82Fv7JW5i7gmDjEZKxJmj+Z9vn+BjYIXT6ILdnU9qnSUP2cWrWN/WAUlue81f9SgM4CQcenltQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
 
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
@@ -4479,6 +4489,11 @@ snapshots:
       react: 19.2.0
       set-cookie-parser: 2.7.2
     optionalDependencies:
+      react-dom: 19.2.0(react@19.2.0)
+
+  react-simple-star-rating@5.1.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
   react-style-singleton@2.2.3(@types/react@19.2.2)(react@19.2.0):

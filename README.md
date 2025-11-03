@@ -71,6 +71,7 @@ react-router
 tanstack/react-query
 react-toastify
 react-hook-form
+react-simple-star-rating
 shadcn (pnpm dlx shadcn@latest add nomeDoComponente)
 Vite  
 Tailwind  
