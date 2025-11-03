@@ -15,10 +15,6 @@ import CreateClubDialog from "../components/dialogs/CreateClubDialog";
 import { useState } from "react";
 import { IBook } from "../types/IBooks";
 
-//TODO  
-//Fechar Modal depois de criar clube
-//Atualizar os clubes no contexto após adicionar um clube
-
 export default function Home() {
   const { user } = useAuth();
   const { userClubs } = useClub();
@@ -60,7 +56,7 @@ export default function Home() {
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-10 mt-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-10 mt-5">
         <Card className="w-full gap-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -112,10 +108,10 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="text-2xl text-left">Seus Clubes</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col">
+          <CardContent className="flex flex-col gap-4">
             {userClubs.length > 0 ? (
               userClubs.map((club) => (
-                <Card key={club.id} className="w-full gap-0">
+                <Card key={club.id} className="w-full gap-0 ">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xl font-semibold text-primary">
                       {club.name}

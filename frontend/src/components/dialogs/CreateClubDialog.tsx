@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { IClubData } from "../../types/IClubs";
 import { IApiError } from "../../types/IApi";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClub } from "../../api/mutations/clubMutate";
 import { toast } from "react-toastify";
 import {
@@ -25,16 +25,20 @@ interface CreateClubDialogProps {
 const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   const {
     register,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<IClubData>();
   const { user } = useAuth();
   const { setSelectedClubId } = useClub();
+  const queryClient = useQueryClient();
 
   const { mutate: createClubMutate } = useMutation<any, IApiError, IClubData>({
     mutationFn: createClub,
     onSuccess: async (result) => {
-      console.log(result);
+      queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
+      reset();
+      onOpenChange(false);
       setSelectedClubId(result.club.id);
       toast.success("Clube criado com sucesso!");
     },
