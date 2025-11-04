@@ -32,7 +32,39 @@ export const getMyClubs = async (req: Request, res: Response) => {
     res.status(200).json(clubs);
   } catch (error) {
     console.error("Erro ao buscar clubes do usuário:", error);
-    res.status(500).json({ message: "Erro interno ao buscar clubes" });
+    res
+      .status(500)
+      .json({ message: "Erro interno ao buscar clubes do usuário" });
+  }
+};
+
+export const getClubByInvitationCode = async (req: Request, res: Response) => {
+  const { invitationCode } = req.params;
+
+  if (!invitationCode) {
+    return res.status(401).json({ message: "Codigo de Convite não enviado." });
+  }
+
+  try {
+    const club = await db.club.findUnique({
+      where: {
+        invitation_code: invitationCode,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(club);
+  } catch (error) {
+    console.error("Erro ao buscar clube por código de convite:", error);
+    res
+      .status(500)
+      .json({ message: "Erro interno ao buscar clubes por código de convite" });
   }
 };
 
@@ -55,7 +87,7 @@ export const createClub = async (req: Request, res: Response) => {
       },
     });
 
-    const member = await db.member.create({
+    await db.member.create({
       data: {
         club_id: club.id,
         user_id: ownerId,
@@ -64,16 +96,15 @@ export const createClub = async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "Clube criado com sucesso",
-      member,
       club,
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
-        return res.status(400).json({ message: "E-mail já cadastrado" });
+        return res.status(400).json({ message: "Clube já cadastrado" });
       }
     }
     console.error(error);
-    res.status(500).json({ message: "Erro ao registrar usuário" });
+    res.status(500).json({ message: "Erro ao criar clube" });
   }
 };
