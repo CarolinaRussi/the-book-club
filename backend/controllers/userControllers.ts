@@ -69,7 +69,7 @@ export const getUserAuthenticated = async (req: Request, res: Response) => {
 
     res.status(200).json(user);
   } catch (error) {
-    console.error("Erro ao buscar clubes do usuário:", error);
-    res.status(500).json({ message: "Erro interno ao buscar clubes" });
+    console.error("Erro ao buscar usuário", error);
+    res.status(500).json({ message: "Erro interno ao usuário" });
   }
 };

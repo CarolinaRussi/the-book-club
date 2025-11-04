@@ -36,7 +36,7 @@ const privateNavItems = [
 export default function Header() {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-  const { selectedClubId, setSelectedClubId, userClubs, isLoadingClubs } =
+  const { selectedClubId, setSelectedClubId, clubs, isLoadingClubs } =
     useClub();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -98,7 +98,7 @@ export default function Header() {
         <GiBookshelf size={32} className="text-primary" />
         {isLoggedIn && (
           <>
-            {userClubs.length > 0 && (
+            {clubs.length > 0 && (
               <Select
                 value={selectedClubId || undefined}
                 onValueChange={(value) => {
@@ -111,13 +111,13 @@ export default function Header() {
                   <SelectValue placeholder="Carregando..." />
                 </SelectTrigger>
                 <SelectContent className="border-secondary bg-background rounded-lg">
-                  {userClubs.map((userClub) => (
+                  {clubs.map((club) => (
                     <SelectItem
-                      key={userClub.id}
-                      value={userClub.id}
+                      key={club.id}
+                      value={club.id}
                       className="cursor-pointer text-lg p-3"
                     >
-                      {userClub.name}
+                      {club.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

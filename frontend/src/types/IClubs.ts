@@ -1,4 +1,4 @@
-export interface IUserClub {
+export interface IClub {
   id: string;
   name: string;
   status: string;
@@ -7,7 +7,13 @@ export interface IUserClub {
   description?: string;
 }
 
-export interface IClubData {
+export interface IClubWithOwner extends IClub {
+  user: {
+    name: string;
+  };
+}
+
+export interface IClubPayload {
   name: string;
   invitationCode: string;
   ownerId?: string;

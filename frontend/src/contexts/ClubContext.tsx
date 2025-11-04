@@ -1,13 +1,13 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserClubs } from "../api/queries/fetchUserClubs";
-import { IUserClub } from "../types/IClubs";
+import { IClub } from "../types/IClubs";
 import { useAuth } from "./AuthContext";
 
 interface ClubContextData {
   selectedClubId: string | null;
   setSelectedClubId: (id: string | null) => void;
-  userClubs: IUserClub[];
+  clubs: IClub[];
   isLoadingClubs: boolean;
 }
 
@@ -17,7 +17,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const { data: userClubs, isLoading: isLoadingClubs } = useQuery({
+  const { data: clubs, isLoading: isLoadingClubs } = useQuery({
     queryKey: ["userClubs", user?.id],
     queryFn: fetchUserClubs,
     staleTime: 1000 * 60 * 5,
@@ -25,15 +25,15 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (userClubs && userClubs.length > 0 && !selectedClubId) {
-      setSelectedClubId(userClubs[0].id);
+    if (clubs && clubs.length > 0 && !selectedClubId) {
+      setSelectedClubId(clubs[0].id);
     }
-  }, [userClubs, selectedClubId]);
+  }, [clubs, selectedClubId]);
 
   const value = {
     selectedClubId,
     setSelectedClubId,
-    userClubs: userClubs || [],
+    clubs: clubs || [],
     isLoadingClubs,
   };
 

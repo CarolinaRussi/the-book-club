@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { IClubData } from "../../types/IClubs";
+import { IClubPayload } from "../../types/IClubs";
 import { IApiError } from "../../types/IApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClub } from "../../api/mutations/clubMutate";
@@ -28,12 +28,16 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
     reset,
     handleSubmit,
     formState: { errors },
-  } = useForm<IClubData>();
+  } = useForm<IClubPayload>();
   const { user } = useAuth();
   const { setSelectedClubId } = useClub();
   const queryClient = useQueryClient();
 
-  const { mutate: createClubMutate } = useMutation<any, IApiError, IClubData>({
+  const { mutate: createClubMutate } = useMutation<
+    any,
+    IApiError,
+    IClubPayload
+  >({
     mutationFn: createClub,
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
@@ -47,7 +51,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<IClubData> = (data) => {
+  const onSubmit: SubmitHandler<IClubPayload> = (data) => {
     const { name, description, invitationCode } = data;
     const ownerId = user?.id;
 
