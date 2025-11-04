@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../db/client";
 import { UserStatus } from "../enums/userStatus";
+import { Prisma } from "../generated/prisma/client";
 
 export const getMemberFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -40,5 +41,43 @@ export const getMemberFromClub = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Erro ao buscar membros do clube:", error);
     res.status(500).json({ message: "Erro interno ao buscar membros" });
+  }
+};
+
+export const joinClub = async (req: Request, res: Response) => {
+  const { userId, clubId } = req.body;
+
+  if (!userId || !clubId) {
+    res.status(400).json({ message: "Id do clube ou de usuário inválido!" });
+    return;
+  }
+
+  try {
+    const member = await db.member.create({
+      data: {
+        club_id: clubId,
+        user_id: userId,
+      },
+      include: {
+        club: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Membro adicionado ao clube com sucesso",
+      member,
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return res.status(400).json({ message: "JoinClub já realizado" });
+      }
+    }
+    console.error(error);
+    res.status(500).json({ message: "Erro ao criar membro do clube" });
   }
 };
