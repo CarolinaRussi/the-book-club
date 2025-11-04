@@ -12,13 +12,20 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import CreateClubDialog from "../components/dialogs/CreateClubDialog";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { IBook } from "../types/IBooks";
+import ConfirmClubDialog from "../components/dialogs/ConfirmClubDialog";
 
 export default function Home() {
   const { user } = useAuth();
-  const { userClubs } = useClub();
+  const { clubs } = useClub();
   const [createClubOpen, setCreateClubOpen] = useState(false);
+  const [clubCode, setClubCode] = useState("");
+  const [isConfirmingClub, setConfirmingClub] = useState(false);
+
+  const handleCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setClubCode(e.target.value.toUpperCase());
+  };
 
   const actualBook: IBook = {
     id: "1",
@@ -90,10 +97,17 @@ export default function Home() {
               Recebeu um convite? Digite o código para entrar em um clube
             </p>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="mt-6 grid grid-cols-3">
+            <input
+              className="col-span-2 border border-secondary p-3 mr-2 shadow-md rounded-xl "
+              placeholder="Ex.: SUPERCLUBE2000"
+              value={clubCode}
+              onChange={handleCodeChange}
+            />
             <Button
-              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer"
-              onClick={() => setCreateClubOpen(true)}
+              className="col-span-1 font-semibold text-1xl py-6 rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer"
+              onClick={() => setConfirmingClub(true)}
+              disabled={clubCode.length === 0}
             >
               Inserir código
             </Button>
@@ -109,8 +123,8 @@ export default function Home() {
             <CardTitle className="text-2xl text-left">Seus Clubes</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {userClubs.length > 0 ? (
-              userClubs.map((club) => (
+            {clubs.length > 0 ? (
+              clubs.map((club) => (
                 <Card key={club.id} className="w-full gap-0 ">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xl font-semibold text-primary">
@@ -158,6 +172,12 @@ export default function Home() {
       <CreateClubDialog
         open={createClubOpen}
         onOpenChange={setCreateClubOpen}
+      />
+      <ConfirmClubDialog
+        invitationCode={clubCode}
+        open={isConfirmingClub}
+        onOpenChange={setConfirmingClub}
+        onSuccess={() => setClubCode("")}
       />
     </div>
   );
