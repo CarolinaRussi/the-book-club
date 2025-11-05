@@ -9,39 +9,43 @@ datasource db {
 }
 
 model book {
-  id          String  @id @default(cuid())
-  title       String     @db.VarChar(255)
-  author      String?    @db.VarChar(255)
-  description String?
-  cover_url   String?    @db.VarChar(255)
-  created_at  DateTime   @default(now()) @db.Timestamp(6)
-  meeting    meeting[]
-  review     review[]
+  id              String            @id @default(cuid())
+  title           String            @db.VarChar(255)
+  author          String?           @db.VarChar(255)
+  cover_url       String?           @db.VarChar(255)
+  open_library_id String?           @db.VarChar(255)
+  status          book_status_enum  @default(started)
+  club_id         String
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  meeting         meeting[]
+  review          review[]
+  club      club      @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model club {
-  id              String  @id @default(cuid())
+  id              String      @id @default(cuid())
   name            String      @db.VarChar(255)
   invitation_code String      @unique @db.VarChar(255)
   owner_id        String
   status          status_enum @default(active)
   created_at      DateTime    @default(now()) @db.Timestamp(6)
   description     String
-  user           user       @relation(fields: [owner_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user           user         @relation(fields: [owner_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  book           book[]
   meeting        meeting[]
   member         member[]
   review         review[]
 }
 
 model meeting {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   club_id    String
   location   String   @db.VarChar(255)
   date_time  DateTime @db.Timestamp(6)
   book_id    String
   created_at DateTime @default(now()) @db.Timestamp(6)
-  book      book    @relation(fields: [book_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  club      club    @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  book      book      @relation(fields: [book_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  club      club      @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model member {
@@ -79,13 +83,14 @@ model user {
   created_at                DateTime    @default(now()) @db.Timestamp(6)
   nickname                  String      @db.VarChar(255)
   profile_picture_public_id String?     @db.VarChar(255)
-  club                     club[]
-  member                   member[]
-  review                   review[]
+  club                      club[]
+  member                    member[]
+  review                    review[]
 }
 
 enum reading_status_enum {
   not_started
+  dropped
   started
   finished
 }
@@ -93,4 +98,9 @@ enum reading_status_enum {
 enum status_enum {
   active
   inactive
+}
+
+enum book_status_enum {
+  started
+  finished
 }
