@@ -1,14 +1,16 @@
 import { Card } from "../components/ui/card";
-import { IBook } from "../types/IBooks";
+import { IBook, IOpenLibraryBook } from "../types/IBooks";
 import { formatMonthYear, getInitials } from "../utils/formatters";
 import { Rating } from "react-simple-star-rating";
 import { LuCalendarDays } from "react-icons/lu";
-
-//TO DO:
-// Paginar
-// Tela de carregamento
+import { FaPlus } from "react-icons/fa6";
+import { useState } from "react";
+import { Button } from "../components/ui/button";
+import CreateBookDialog from "../components/dialogs/CreateBookDialog";
 
 export default function Library() {
+  const [createBookOpen, setCreateBookOpen] = useState(false);
+
   const clubBooks: IBook[] = [
     {
       id: "1",
@@ -29,9 +31,6 @@ export default function Library() {
           review: "gostei muito!",
         },
       ],
-
-      description:
-        "Ninguém sabe ao certo quem é o herói ou o vilão desse fascinante universo criado por Patrick Rothfuss.",
       image_url: "https://m.media-amazon.com/images/I/81CGmkRG9GL._SL1500_.jpg",
     },
     {
@@ -53,8 +52,6 @@ export default function Library() {
           review: "Adoreeei!",
         },
       ],
-
-      description: "Elspeth precisa de um monstro. E esse monstro pode ser ela",
       image_url:
         "https://m.media-amazon.com/images/I/41h4qcv+umL._SY445_SX342_ML2_.jpg",
     },
@@ -77,22 +74,32 @@ export default function Library() {
           review: "Poderia ter sido um pouco menos infantil",
         },
       ],
-      description:
-        "Uma bruxa e um caçador de bruxas. Seu inimigo mais mortal ou seu grande amor?",
       image_url: "https://m.media-amazon.com/images/I/819kt0LhQmL._SY425_.jpg",
     },
   ];
 
   return (
     <div className="flex flex-col w-full max-w-7xl">
-      <div className="flex flex-col items-start">
-        <h1 className="text-4xl font-bold text-foreground ">
-          Nossa Biblioteca
-        </h1>
-        <h2 className="text-md w-full text-warm-brown">
-          Todos os livros que já lemos juntas, com avaliações e reviews
-        </h2>
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-col items-start">
+          <h1 className="text-4xl font-bold text-foreground ">
+            Nossa Biblioteca
+          </h1>
+          <h2 className="text-md w-full text-warm-brown">
+            Todos os livros que já lemos juntas, com avaliações e reviews
+          </h2>
+        </div>
+        <div>
+          <Button
+            className="font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-background cursor-pointer hover:bg-primary/80"
+            onClick={() => setCreateBookOpen(true)}
+          >
+            <FaPlus size={24} className="text-cream" />
+            Adicionar nova leitura
+          </Button>
+        </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
         {clubBooks.map((book) => {
           const reviews = book.reviews || [];
@@ -110,17 +117,17 @@ export default function Library() {
                   <img
                     src={book.image_url}
                     alt="Capa do Livro"
-                    className="h-50 w-35 object-cover rounded-2xl"
+                    className="h-52 w-36 object-cover rounded-2xl"
                   />
                 ) : (
-                  <div className="flex h-50 w-35 items-center justify-center rounded-2xl bg-muted">
+                  <div className="flex h-52 w-36 items-center justify-center rounded-2xl bg-muted">
                     <span className="text-4xl text-primary">
                       {getInitials(book.name || "")}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="h-50 flex-1 flex flex-col justify-between">
+              <div className="h-52 flex-1 flex flex-col justify-between">
                 <div className="flex flex-row justify-between">
                   <div className="text-2xl font-semibold text-foreground">
                     {book.name}
@@ -153,6 +160,10 @@ export default function Library() {
           );
         })}
       </div>
+      <CreateBookDialog
+        open={createBookOpen}
+        onOpenChange={setCreateBookOpen}
+      />
     </div>
   );
 }
