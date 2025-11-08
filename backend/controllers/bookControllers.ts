@@ -19,13 +19,22 @@ export const createBook = async (req: Request, res: Response) => {
       status: BookStatus.STARTED,
     };
 
+    let uploadResult;
+
     if (file) {
-      console.log("Enviando arquivo para o Cloudinary...");
-      const uploadResult = await uploadToCloudinary(file.buffer);
+      console.log("Enviando arquivo (buffer) para o Cloudinary...");
+      uploadResult = await uploadToCloudinary(file.buffer);
+    } else if (cover_url) {
+      console.log(`Enviando URL (${cover_url}) para o Cloudinary...`);
 
-      console.log(uploadResult.secure_url);
-      console.log(uploadResult.public_id);
+      uploadResult = await cloudinary.uploader.upload(cover_url, {
+        folder: "book_covers_project",
+        public_id: open_library_id ? `book_${open_library_id}` : undefined,
+      });
+    }
 
+    if (uploadResult) {
+      console.log("Upload bem-sucedido:", uploadResult.secure_url);
       bookData.cover_url = uploadResult.secure_url;
       bookData.cover_public_id = uploadResult.public_id;
     }
@@ -39,5 +48,55 @@ export const createBook = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Erro ao criar o livro:", error);
     res.status(500).json({ message: "Erro interno ao criar o livro" });
+  }
+};
+
+export const getBooksByClubId = async (req: Request, res: Response) => {
+  const { clubId } = req.params;
+
+  if (!clubId) {
+    return res.status(401).json({ message: "Codigo de Convite não enviado." });
+  }
+
+  try {
+    const book = await db.book.findMany({
+      where: {
+        club_id: clubId,
+      },
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        cover_url: true,
+        status: true,
+        created_at: true,
+        review: {
+          select: {
+            id: true,
+            reading_status: true,
+            rating: true,
+            review: true,
+            member: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nickname: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json(book);
+  } catch (error) {
+    console.error("Erro ao buscar clube por código de convite:", error);
+    res
+      .status(500)
+      .json({ message: "Erro interno ao buscar clubes por código de convite" });
   }
 };

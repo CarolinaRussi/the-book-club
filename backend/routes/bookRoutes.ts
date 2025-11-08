@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { createBook } from "../controllers/bookControllers";
+import { createBook, getBooksByClubId } from "../controllers/bookControllers";
 import multer from "multer";
 
 const router = Router();
@@ -11,5 +11,6 @@ router.post(
   upload.single("coverImg"),
   createBook
 );
+router.get("/club-books/:clubId", authMiddleware, getBooksByClubId);
 
 export default router;
