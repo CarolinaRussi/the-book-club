@@ -29,22 +29,33 @@ export default function Home() {
 
   const actualBook: IBook = {
     id: "1",
-    name: "O nome do vento (A Crônica do Matador do Rei - Livro 1)",
+    title: "O nome do vento (A Crônica do Matador do Rei - Livro 1)",
     author: "Patrick Rothfuss",
-    createdAt: "2025-11-02T02:42:39.623Z",
-    image_url: "https://m.media-amazon.com/images/I/81CGmkRG9GL._SL1500_.jpg",
-    reviews: [
+    created_at: "2025-11-02T02:42:39.623Z",
+    status: "started",
+    cover_url: "https://m.media-amazon.com/images/I/81CGmkRG9GL._SL1500_.jpg",
+    review: [
       {
         id: "1",
-        userId: "2",
+        reading_status: "completed",
         rating: 2.5,
         review: "não fede nem cheira",
+        user: {
+          id: "1",
+          name: "Carolina Russi Ferla",
+          nickname: "Carol",
+        },
       },
       {
         id: "2",
-        userId: "1",
+        reading_status: "completed",
         rating: 4,
         review: "gostei muito!",
+        user: {
+          id: "2",
+          name: "Alex José Pires de Souza",
+          nickname: "Alex",
+        },
       },
     ],
   };
