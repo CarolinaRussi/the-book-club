@@ -22,9 +22,10 @@ export interface IOpenLibraryBook {
 }
 
 export interface IBookPayload {
-  OpenLibraryId?: string;
+  openLibraryId?: string;
   title: string;
   author: string;
   coverUrl?: string;
-  coverImg?: File;
+  coverImg?: FileList;
+  clubId: string;
 }

@@ -4,30 +4,29 @@ import { IBookPayload } from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {
-    if (data.coverImg) {
-      console.log("entrou no formData");
-      const formData = new FormData();
-      const file = data.coverImg;
+    const formData = new FormData();
 
-      formData.append("title", data.title);
-      formData.append("author", data.author);
+    if (data.coverImg && data.coverImg.length > 0) {
+      const file = data.coverImg[0];
       formData.append("coverImg", file);
-
-      const response = await api.post("/create-book-file", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      return response.data;
-    } else {
-      const response = await api.post("/create-book-url", data);
-      return response.data;
     }
+
+    if (data.openLibraryId && data.coverUrl) {
+      formData.append("open_library_id", data.openLibraryId);
+      formData.append("cover_url", data.coverUrl);
+    }
+
+    formData.append("title", data.title);
+    formData.append("author", data.author);
+    formData.append("club_id", data.clubId);
+
+    const response = await api.post("/create-book", formData);
+
+    return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw { message: error.response.data.message };
     }
-    throw { message: "Erro desconhecido" };
+    throw { message: "Erro desconhecido ao criar o livro" };
   }
 }
