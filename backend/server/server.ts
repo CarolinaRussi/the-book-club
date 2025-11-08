@@ -5,6 +5,7 @@ import authRoutes from "../routes/authRoutes";
 import userRoutes from "../routes/userRoutes";
 import clubRoutes from "../routes/clubRoutes";
 import memberRoutes from "../routes/memberRoutes";
+import bookRoutes from "../routes/bookRoutes";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(authRoutes);
 app.use(clubRoutes);
 app.use(userRoutes);
+app.use(bookRoutes);
 app.use(memberRoutes);
 
 app.listen(port, () => {
