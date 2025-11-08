@@ -10,7 +10,7 @@ import {
 import { Badge } from "../components/ui/badge";
 import { getInitials } from "../utils/formatters";
 import { toast } from "react-toastify";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser } from "../api/mutations/userMutate";
 import { IApiError } from "../types/IApi";
 import { IUser, IUserUpdateForm } from "../types/IUser";
@@ -18,10 +18,11 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Profile() {
-  const { user, updateUserContext } = useAuth();
+  const { user } = useAuth();
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
   const [inputValue, setInputValue] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -94,8 +95,10 @@ export default function Profile() {
     FormData
   >({
     mutationFn: updateUser,
-    onSuccess: async (result) => {
-      updateUserContext();
+    onSuccess: async () => {
+      queryClient.invalidateQueries({
+        queryKey: ["authenticatedUser"],
+      });
       toast.success("Perfil atualizado com sucesso!");
     },
     onError: (error) => {

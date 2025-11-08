@@ -10,7 +10,6 @@ interface AuthContextType {
   isLoadingUser: boolean;
   login: (token: string, user: IUser) => void;
   logout: () => void;
-  updateUserContext: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,10 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   };
 
-  const updateUserContext = () => {
-    refetchUser();
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -71,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoadingUser,
         login,
         logout,
-        updateUserContext,
       }}
     >
       {children}
@@ -86,4 +80,3 @@ export function useAuth() {
   }
   return context;
 }
-

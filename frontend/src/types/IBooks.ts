@@ -1,17 +1,25 @@
+export interface IUserReview {
+  id: string;
+  name: string;
+  nickname: string;
+}
+
 export interface IReview {
   id: string;
-  userId: string;
+  reading_status: string;
   rating: number;
   review: string;
+  user: IUserReview;
 }
 
 export interface IBook {
   id: string;
-  name: string;
+  title: string;
   author: string;
-  image_url: string;
-  createdAt: string;
-  reviews: IReview[];
+  cover_url: string;
+  status: string;
+  created_at: string;
+  review?: IReview[];
 }
 
 export interface IOpenLibraryBook {

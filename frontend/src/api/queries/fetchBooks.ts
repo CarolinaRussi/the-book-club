@@ -1,4 +1,7 @@
-const fetchBooks = async (query: any) => {
+import { api } from "../index";
+import { IBook } from "../../types/IBooks";
+
+export const fetchBooksFromOpenLibrary = async (query: any) => {
   if (!query) return { docs: [] };
   const searchTerm = encodeURIComponent(query);
   const fields = "key,title,author_name,cover_i";
@@ -11,4 +14,7 @@ const fetchBooks = async (query: any) => {
   return response.json();
 };
 
-export default fetchBooks;
+export const fetchClubBooks = async (clubId: string | null): Promise<IBook[]> => {
+  const { data } = await api.get(`/club-books/${clubId}`);
+  return data;
+};

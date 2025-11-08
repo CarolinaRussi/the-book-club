@@ -18,9 +18,9 @@ import {
   CommandItem,
 } from "../ui/command";
 import { IBookPayload, IOpenLibraryBook } from "../../types/IBooks";
-import fetchBooks from "../../api/queries/fetchBooks";
+import { fetchBooksFromOpenLibrary } from "../../api/queries/fetchBooks";
 import { BookOpen, ChevronsUpDown, Upload } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IApiError } from "../../types/IApi";
 import { toast } from "react-toastify";
 import { useClub } from "../../contexts/ClubContext";
@@ -45,6 +45,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
   const [openCombobox, setOpenCombobox] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
   const { selectedClubId } = useClub();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -65,7 +66,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
 
   const { data: searchResults, isError } = useQuery({
     queryKey: ["books", inputValue],
-    queryFn: () => fetchBooks(inputValue),
+    queryFn: () => fetchBooksFromOpenLibrary(inputValue),
     enabled: !!inputValue,
   });
 
@@ -77,6 +78,9 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     mutationFn: createBook,
     onSuccess: async (result) => {
       onOpenChange(false);
+      queryClient.invalidateQueries({
+        queryKey: ["booksFromSelectedClub", selectedClubId],
+      });
       toast.success("Livro adicionado à biblioteca com sucesso!");
       clearManualForm();
       clearOpenLibrarySelection();
