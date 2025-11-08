@@ -63,6 +63,15 @@ pnpm dev
 O terminal exibirá um endereço local (geralmente http://localhost:5173).
 Abra esse link no navegador para visualizar o app.
 
+# Atualização de tabelas
+
+Altere o que precisar em schema.prisma
+Então no terminal rode o comando:
+
+```bash
+pnpm prisma migrate dev
+```
+
 # Tecnologias utilizadas
 
 React  
