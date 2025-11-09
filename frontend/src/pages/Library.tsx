@@ -1,4 +1,4 @@
-import { Card } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { formatMonthYear, getInitials } from "../utils/formatters";
 import { Rating } from "react-simple-star-rating";
 import { LuCalendarDays } from "react-icons/lu";
@@ -7,9 +7,16 @@ import { useState } from "react";
 import { Button } from "../components/ui/button";
 import CreateBookDialog from "../components/dialogs/CreateBookDialog";
 import { useBook } from "../contexts/BookContext";
+import { Badge } from "../components/ui/badge";
+import { bookStatusLabels } from "../utils/bookStatusHelper";
+import { IBook } from "../types/IBooks";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
+  const [updateBookOpen, setUpdateBookOpen] = useState(false);
+  const [bookToUpdate, setBookToUpdate] = useState<IBook | undefined>(
+    undefined
+  );
   const { booksFromSelectedClub } = useBook();
 
   return (
@@ -34,7 +41,7 @@ export default function Library() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
         {booksFromSelectedClub.map((book) => {
           const reviews = book.review || [];
           const totalRating = reviews.reduce(
@@ -45,65 +52,61 @@ export default function Library() {
             reviews.length > 0 ? totalRating / reviews.length : 0;
 
           return (
-            <Card key={book.id} className="flex flex-row gap-3 p-8">
-              <div className="shrink-0">
-                {book.cover_url ? (
-                  <img
-                    src={book.cover_url}
-                    alt="Capa do Livro"
-                    className="h-52 w-36 object-cover rounded-2xl"
-                  />
-                ) : (
-                  <div className="flex h-52 w-36 items-center justify-center rounded-2xl bg-muted">
-                    <span className="text-4xl text-primary">
-                      {getInitials(book.title || "")}
-                    </span>
-                  </div>
-                )}
+            <Card
+              key={book.title}
+              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0"
+              onClick={() => {
+                setBookToUpdate(book);
+                setUpdateBookOpen(true);
+              }}
+            >
+              <div className="relative aspect-2/3 overflow-hidden bg-muted">
+                <img
+                  src={book.cover_url}
+                  alt={book.title}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
               </div>
-              <div
-                className={`h-52 flex-1 flex flex-col ${
-                  book.review && book.review.length > 0
-                    ? "justify-between"
-                    : "justify-start"
-                }`}
-              >
-                <div className="flex flex-row justify-between">
-                  <div className="text-2xl font-semibold text-foreground">
+
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-lg font-semibold line-clamp-2 flex-1 min-h-14">
                     {book.title}
-                  </div>
+                  </h3>
+                  <Badge className="ml-2 shrink-0">
+                    {bookStatusLabels[book.status]}
+                  </Badge>
                 </div>
-                <div className="text-foreground/70 text-1xl">{`(${book.author})`}</div>
-                {book.review && book.review.length > 0 ? (
-                  <>
-                    <div className="flex flex-row items-center gap-2">
-                      <Rating
-                        initialValue={averageRating}
-                        readonly
-                        allowFraction
-                        SVGstyle={{ display: "inline" }}
-                        size={25}
-                        fillColor="#be2c3f"
-                        emptyColor="gray"
-                      />
-                      <span className="text-1xl mt-1 text-warm-brown font-semibold">
-                        {averageRating.toFixed(1)}
-                      </span>
-                    </div>
-                    <div className="flex flex-row gap-2 text-foreground/70">
-                      <LuCalendarDays size={20} />
-                      Lido em {formatMonthYear(book.created_at)}
-                    </div>
-                    <div className="text-foreground/70">
-                      {reviews.length} reviews
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-foreground/80 text-1xl">
-                    Esse livro ainda não tem avaliações.
+                <p className="text-sm text-muted-foreground mb-3">
+                  {book.author}
+                </p>
+
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1">
+                    <Rating
+                      initialValue={averageRating}
+                      readonly
+                      allowFraction
+                      SVGstyle={{ display: "inline" }}
+                      size={25}
+                      fillColor="#be2c3f"
+                      emptyColor="gray"
+                    />
                   </div>
-                )}
-              </div>
+                  <span className="text-sm font-semibold">
+                    {averageRating.toFixed(1)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <LuCalendarDays size={20} />
+                    Lido em {formatMonthYear(book.created_at)}
+                  </div>
+                  <span>{book.review?.length} avaliações</span>
+                </div>
+              </CardContent>
             </Card>
           );
         })}
@@ -111,6 +114,17 @@ export default function Library() {
       <CreateBookDialog
         open={createBookOpen}
         onOpenChange={setCreateBookOpen}
+      />
+
+      <UpdateBookDialog
+        open={updateBookOpen}
+        onOpenChange={(isOpen) => {
+          setUpdateBookOpen(isOpen);
+          if (!isOpen) {
+            setBookToUpdate(undefined);
+          }
+        }}
+        bookToUpdate={bookToUpdate}
       />
     </div>
   );

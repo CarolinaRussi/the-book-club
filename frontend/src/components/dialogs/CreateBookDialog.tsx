@@ -1,4 +1,4 @@
-import { ChangeEvent, useState, useEffect } from "react";
+import { ChangeEvent, useState, useEffect, useCallback } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import {
   Dialog,
@@ -90,15 +90,26 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     },
   });
 
-  const clearManualForm = () => {
+  const clearManualForm = useCallback(() => {
     reset();
     setPreviewUrl(undefined);
-  };
+  }, [reset]);
 
-  const clearOpenLibrarySelection = () => {
+  const clearOpenLibrarySelection = useCallback(() => {
     setSelectedBook(null);
     setInputValue("");
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        clearManualForm();
+        clearOpenLibrarySelection();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [open, clearManualForm, clearOpenLibrarySelection]);
 
   useEffect(() => {
     if (watchedTitle || watchedAuthor) {

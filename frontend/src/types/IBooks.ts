@@ -1,3 +1,5 @@
+export type BookStatus = "suggested" | "started" | "dropped" | "finished";
+
 export interface IUserReview {
   id: string;
   name: string;
@@ -17,7 +19,7 @@ export interface IBook {
   title: string;
   author: string;
   cover_url: string;
-  status: string;
+  status: BookStatus;
   created_at: string;
   review?: IReview[];
 }

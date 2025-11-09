@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useContext, useMemo } from "react"; // Adicione useMemo
 import { useQuery } from "@tanstack/react-query";
 import { useClub } from "./ClubContext";
 import { IBook } from "../types/IBooks";
@@ -13,10 +13,6 @@ interface BookContextData {
 const BookContext = createContext<BookContextData | undefined>(undefined);
 
 export function BookProvider({ children }: { children: React.ReactNode }) {
-  const [actualBook, setActualBook] = useState<IBook[]>([]);
-  const [booksFromSelectedClub, setBooksFromSelectedClub] = useState<IBook[]>(
-    []
-  );
   const { selectedClubId } = useClub();
 
   const { data: books, isLoading: isLoadingBooks } = useQuery<IBook[]>({
@@ -26,29 +22,19 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
     enabled: !!selectedClubId,
   });
 
-  useEffect(() => {
-    if (books && books.length > 0) {
-      setBooksFromSelectedClub(books);
+  const booksFromSelectedClub = books || [];
 
-      const startedBooks = books.filter(
-        (book: IBook) => book.status === "started"
-      );
-      setActualBook(startedBooks);
-    }
-  }, [books, booksFromSelectedClub]);
+  const actualBook = useMemo(() => {
+    return booksFromSelectedClub.filter(
+      (book: IBook) => book.status === "started"
+    );
+  }, [booksFromSelectedClub]);
 
   const value = {
     booksFromSelectedClub,
     actualBook,
     isLoadingBooks,
   };
-
-  useEffect(() => {
-    if (!selectedClubId) {
-      setBooksFromSelectedClub([]);
-      setActualBook([]);
-    }
-  }, [selectedClubId]);
 
   return <BookContext.Provider value={value}>{children}</BookContext.Provider>;
 }
@@ -57,7 +43,7 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
 export function useBook() {
   const context = useContext(BookContext);
   if (!context) {
-    throw new Error("useClub deve ser usado dentro de ClubProvider");
+    throw new Error("useBook deve ser usado dentro de BookProvider"); // Corrigido de useClub para useBook
   }
   return context;
 }

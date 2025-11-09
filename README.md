@@ -74,6 +74,7 @@ pnpm prisma migrate dev
 
 # Tecnologias utilizadas
 
+#Frontend 
 React  
 react-icons  
 react-router
@@ -86,9 +87,11 @@ Vite
 Tailwind  
 Context API  
 TypeScript
+
+#Back-end
 Node
-Cors  
 Express
+Cors  
 Axios
 bcryptjs 
 jsonwebtoken
