@@ -99,6 +99,8 @@ enum status_enum {
 }
 
 enum book_status_enum {
+  suggested
   started
+  dropped
   finished
 }
