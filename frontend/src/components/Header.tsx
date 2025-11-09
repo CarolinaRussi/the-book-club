@@ -25,6 +25,7 @@ import {
 } from "./ui/sheet";
 import { FiMenu } from "react-icons/fi";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const privateNavItems = [
   { to: "/meetings", label: "Próximo Encontro", Icon: TbCoffee, size: 24 },
@@ -38,6 +39,8 @@ export default function Header() {
   const { isLoggedIn, logout } = useAuth();
   const { selectedClubId, setSelectedClubId, clubs, isLoadingClubs } =
     useClub();
+
+  const queryClient = useQueryClient();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -103,6 +106,9 @@ export default function Header() {
                 value={selectedClubId || undefined}
                 onValueChange={(value) => {
                   setSelectedClubId(value);
+                  queryClient.invalidateQueries({
+                    queryKey: ["booksFromSelectedClub", selectedClubId],
+                  });
                   setIsMobileMenuOpen(false);
                 }}
                 disabled={isLoadingClubs}

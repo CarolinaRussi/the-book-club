@@ -17,31 +17,35 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const { data: clubs, isLoading: isLoadingClubs } = useQuery({
+  const { data: clubsData, isLoading: isLoadingClubs } = useQuery({
     queryKey: ["userClubs", user?.id],
     queryFn: fetchUserClubs,
     staleTime: 1000 * 60 * 5,
     enabled: !!user,
   });
 
-  useEffect(() => {
-    if (clubs && clubs.length > 0 && !selectedClubId) {
-      setSelectedClubId(clubs[0].id);
-    }
-  }, [clubs, selectedClubId]);
-
-  const value = {
-    selectedClubId,
-    setSelectedClubId,
-    clubs: clubs || [],
-    isLoadingClubs,
-  };
+  const clubs = clubsData || [];
 
   useEffect(() => {
     if (!user) {
       setSelectedClubId(null);
+    } else if (clubs && clubs.length > 0) {
+      const currentSelectionIsValid = clubs.some(
+        (club) => club.id === selectedClubId
+      );
+
+      if (!selectedClubId || !currentSelectionIsValid) {
+        setSelectedClubId(clubs[0].id);
+      }
     }
-  }, [user]);
+  }, [user, clubs, selectedClubId]);
+
+  const value = {
+    selectedClubId,
+    setSelectedClubId,
+    clubs,
+    isLoadingClubs,
+  };
 
   return <ClubContext.Provider value={value}>{children}</ClubContext.Provider>;
 }

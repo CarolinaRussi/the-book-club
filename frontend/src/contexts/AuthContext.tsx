@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useContext } from "react"; // Removido useEffect
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { IUser } from "../types/IUser";
 import { api } from "../api/index";
@@ -14,21 +14,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const queryClient = useQueryClient();
+const token = localStorage.getItem("token");
+if (token) {
+  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}
+// ---------------------------------------------------------
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      setIsLoggedIn(true);
-    }
-  }, []);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+  const queryClient = useQueryClient();
 
   const {
     data: user,
-    refetch: refetchUser,
     isLoading: isLoadingUser,
   } = useQuery({
     queryKey: ["authenticatedUser"],
@@ -54,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoggedIn(false);
 
-    queryClient.removeQueries({ queryKey: ["authenticatedUser"] });
     queryClient.clear();
   };
 

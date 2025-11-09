@@ -16,16 +16,16 @@ export function BookCard({ actualBook }: { actualBook: IBook }) {
           <CardContent>
             <Card className="flex flex-row gap-3 p-5">
               <div className="shrink-0">
-                {actualBook.image_url ? (
+                {actualBook.cover_url ? (
                   <img
-                    src={actualBook.image_url}
+                    src={actualBook.cover_url}
                     alt="Capa do Livro"
                     className="h-70 object-cover rounded-2xl"
                   />
                 ) : (
                   <div className="flex h-70 w-32 items-center justify-center rounded-2xl bg-muted">
                     <span className="text-4xl text-primary">
-                      {getInitials(actualBook.name || "")}
+                      {getInitials(actualBook.title || "")}
                     </span>
                   </div>
                 )}
@@ -33,7 +33,7 @@ export function BookCard({ actualBook }: { actualBook: IBook }) {
               <div className="h-70 flex-1 flex flex-col">
                 <div className="flex flex-row justify-between">
                   <div className="text-2xl font-semibold text-primary">
-                    {actualBook.name}
+                    {actualBook.title}
                   </div>
                   <Badge>Mundo Fantástico</Badge>
                 </div>
@@ -41,12 +41,6 @@ export function BookCard({ actualBook }: { actualBook: IBook }) {
                   <b>Autor: </b>
                   {actualBook.author}
                 </div>
-                {actualBook.description && (
-                  <div className="text-sm text-muted-foreground mt-2 flex-1 overflow-hidden">
-                    <b>Descrição: </b>
-                    {actualBook.description}
-                  </div>
-                )}
               </div>
             </Card>
           </CardContent>
