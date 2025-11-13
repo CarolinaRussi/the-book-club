@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { createBook, getBooksByClubId } from "../controllers/bookControllers";
+import { createBook, getBooksByClubId, saveReview } from "../controllers/bookControllers";
 import multer from "multer";
 
 const router = Router();
@@ -12,5 +12,6 @@ router.post(
   createBook
 );
 router.get("/club-books/:clubId", authMiddleware, getBooksByClubId);
+router.post("/save-review", authMiddleware, saveReview);
 
 export default router;
