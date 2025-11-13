@@ -10,6 +10,7 @@ import { useBook } from "../contexts/BookContext";
 import { Badge } from "../components/ui/badge";
 import { bookStatusLabels } from "../utils/bookStatusHelper";
 import { IBook } from "../types/IBooks";
+import AddReviewDialog from "../components/dialogs/AddReviewDialog";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -91,7 +92,7 @@ export default function Library() {
                       SVGstyle={{ display: "inline" }}
                       size={25}
                       fillColor="#be2c3f"
-                      emptyColor="gray"
+                      emptyColor="#e2cad0"
                     />
                   </div>
                   <span className="text-sm font-semibold">
@@ -102,9 +103,12 @@ export default function Library() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <LuCalendarDays size={20} />
-                    Lido em {formatMonthYear(book.created_at)}
+                    Lido em {formatMonthYear(book.added_at)}
                   </div>
-                  <span>{book.review?.length} avaliações</span>
+                  <span>
+                    {book.review?.length}{" "}
+                    {book.review?.length === 1 ? "avaliação" : "avaliações"}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -116,7 +120,7 @@ export default function Library() {
         onOpenChange={setCreateBookOpen}
       />
 
-      <UpdateBookDialog
+      <AddReviewDialog
         open={updateBookOpen}
         onOpenChange={(isOpen) => {
           setUpdateBookOpen(isOpen);
@@ -124,7 +128,7 @@ export default function Library() {
             setBookToUpdate(undefined);
           }
         }}
-        bookToUpdate={bookToUpdate}
+        book={bookToUpdate}
       />
     </div>
   );

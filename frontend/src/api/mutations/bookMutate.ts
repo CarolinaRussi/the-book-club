@@ -1,6 +1,6 @@
 import axios from "axios";
 import { api } from "../index";
-import { IBookPayload } from "../../types/IBooks";
+import { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {
@@ -28,5 +28,17 @@ export async function createBook(data: IBookPayload): Promise<any> {
       throw { message: error.response.data.message };
     }
     throw { message: "Erro desconhecido ao criar o livro" };
+  }
+}
+
+export async function saveReview(data: IBookReviewPayload): Promise<any> {
+   try {
+    const response = await api.post("/save-review", data);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido" };
   }
 }

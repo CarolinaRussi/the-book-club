@@ -1,17 +1,24 @@
 export type BookStatus = "suggested" | "started" | "dropped" | "finished";
 
-export interface IUserReview {
+export type ReadingStatus = "not_started" | "dropped" | "started" | "finished";
+
+export interface IUserPreview {
   id: string;
   name: string;
   nickname: string;
+  profile_picture: string;
+}
+
+export interface IMemberReview {
+  user: IUserPreview;
 }
 
 export interface IReview {
   id: string;
-  reading_status: string;
+  reading_status: ReadingStatus;
   rating: number;
   review: string;
-  user: IUserReview;
+  member: IMemberReview;
 }
 
 export interface IBook {
@@ -19,7 +26,9 @@ export interface IBook {
   title: string;
   author: string;
   cover_url: string;
+  open_library_id?: string | null;
   status: BookStatus;
+  added_at: string;
   created_at: string;
   review?: IReview[];
 }
@@ -38,4 +47,12 @@ export interface IBookPayload {
   coverUrl?: string;
   coverImg?: FileList;
   clubId: string;
+}
+
+export interface IBookReviewPayload {
+  rating: number;
+  review: string;
+  reading_status: ReadingStatus | undefined;
+  userId: string;
+  bookId: string;
 }
