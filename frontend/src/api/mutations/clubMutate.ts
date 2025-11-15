@@ -1,7 +1,7 @@
 import axios from "axios";
 import { api } from "../index";
-import { IClubPayload } from "../../types/IClubs";
-import { IMembersPayload } from "../../types/IMember";
+import type { IClubPayload } from "../../types/IClubs";
+import type { IMembersPayload } from "../../types/IMember";
 
 export async function createClub(data: IClubPayload): Promise<any> {
   try {

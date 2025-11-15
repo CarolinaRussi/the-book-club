@@ -13,7 +13,7 @@ import {
 export default function Readers() {
   const { selectedClubId } = useClub();
 
-  const { data: readers, isLoading } = useQuery({
+  const { data: readers } = useQuery({
     queryKey: ["readers", selectedClubId],
     queryFn: () => fetchReadersByClubId(selectedClubId),
     staleTime: 1000 * 60 * 5,
@@ -22,7 +22,7 @@ export default function Readers() {
 
   //TODO implementar tela de carregamento
   return (
-    <div className="flex flex-col w-full max-w-7xl">
+    <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
       <div className="flex flex-col items-start">
         <h1 className="text-4xl font-bold text-foreground ">
           Leitores do Clube

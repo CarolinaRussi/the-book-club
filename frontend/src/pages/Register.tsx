@@ -5,8 +5,8 @@ import { registerUser } from "../api/mutations/authMutate";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { IFormInput, IRegisterData } from "../types/IRegister";
-import { IApiError, IApiReturnData } from "../types/IApi";
+import type { IFormInput, IRegisterData } from "../types/IRegister";
+import type { IApiError, IApiReturnData } from "../types/IApi";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function Register() {
   };
 
   return (
-    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
+    <div className="p-8 border-2 text-foreground border-secondary rounded-lg w-120 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Criar conta</h1>
       <h2 className="text-warm-brown mb-4 w-80">

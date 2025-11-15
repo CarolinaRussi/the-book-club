@@ -1,4 +1,4 @@
-import { IClubWithOwner } from "../../types/IClubs";
+import type { IClubWithOwner } from "../../types/IClubs";
 import { api } from "../index";
 
 export const fetchClubByInvitationCode = async (

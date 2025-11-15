@@ -11,12 +11,12 @@ import {
 import { Button } from "../ui/button";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClub } from "../../contexts/ClubContext";
-import { IApiError } from "../../types/IApi";
+import type { IApiError } from "../../types/IApi";
 import { Loader2 } from "lucide-react";
 import { fetchClubByInvitationCode } from "../../api/queries/fetchClubs";
-import { IClubWithOwner } from "../../types/IClubs";
+import type { IClubWithOwner } from "../../types/IClubs";
 import { joinClub } from "../../api/mutations/clubMutate";
-import { IMembersPayload } from "../../types/IMember";
+import type { IMembersPayload } from "../../types/IMember";
 
 interface JoinClubDialogProps {
   open: boolean;
@@ -32,7 +32,7 @@ const JoinClubDialog = ({
   onSuccess,
 }: JoinClubDialogProps) => {
   const { user } = useAuth();
-  const { setSelectedClubId, clubs } = useClub();
+  const { setSelectedClubId } = useClub();
   const queryClient = useQueryClient();
 
   const {

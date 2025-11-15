@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useEffect } from "react";
+import { useState, type ChangeEvent, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import {
   Card,
@@ -12,9 +12,9 @@ import { getInitials } from "../utils/formatters";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser } from "../api/mutations/userMutate";
-import { IApiError } from "../types/IApi";
-import { IUser, IUserUpdateForm } from "../types/IUser";
-import { useForm, SubmitHandler } from "react-hook-form";
+import type { IApiError } from "../types/IApi";
+import type { IUser, IUserUpdateForm } from "../types/IUser";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Profile() {
@@ -134,7 +134,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-7xl">
+    <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
       <div className="flex flex-col items-start">
         <h1 className="text-4xl font-bold text-foreground ">Meu Perfil</h1>
       </div>

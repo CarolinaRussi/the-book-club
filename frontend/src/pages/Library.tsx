@@ -1,5 +1,5 @@
 import { Card, CardContent } from "../components/ui/card";
-import { formatMonthYear, getInitials } from "../utils/formatters";
+import { formatMonthYear } from "../utils/formatters";
 import { Rating } from "react-simple-star-rating";
 import { LuCalendarDays } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
@@ -9,7 +9,7 @@ import CreateBookDialog from "../components/dialogs/CreateBookDialog";
 import { useBook } from "../contexts/BookContext";
 import { Badge } from "../components/ui/badge";
 import { bookStatusLabels } from "../utils/bookStatusHelper";
-import { IBook } from "../types/IBooks";
+import type { IBook } from "../types/IBooks";
 import AddReviewDialog from "../components/dialogs/AddReviewDialog";
 
 export default function Library() {
@@ -21,10 +21,10 @@ export default function Library() {
   const { booksFromSelectedClub } = useBook();
 
   return (
-    <div className="flex flex-col w-full max-w-7xl">
-      <div className="flex flex-row justify-between items-center">
+    <div className="flex flex-col w-full max-w-7xl py-5 md:py-15 px-4 mx-auto">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
         <div className="flex flex-col items-start">
-          <h1 className="text-4xl font-bold text-foreground ">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground ">
             Nossa Biblioteca
           </h1>
           <h2 className="text-md w-full text-warm-brown">
@@ -55,7 +55,7 @@ export default function Library() {
           return (
             <Card
               key={book.title}
-              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0"
+              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
               onClick={() => {
                 setBookToUpdate(book);
                 setUpdateBookOpen(true);

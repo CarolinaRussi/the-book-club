@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserClubs } from "../api/queries/fetchUserClubs";
-import { IClub } from "../types/IClubs";
+import type { IClub } from "../types/IClubs";
 import { useAuth } from "./AuthContext";
 
 interface ClubContextData {

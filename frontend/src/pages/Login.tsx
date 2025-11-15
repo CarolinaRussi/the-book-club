@@ -4,8 +4,8 @@ import { GiBookCover } from "react-icons/gi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { IApiError, IApiReturnData } from "../types/IApi";
-import { ILoginData } from "../types/ILogin";
+import type { IApiError, IApiReturnData } from "../types/IApi";
+import type { ILoginData } from "../types/ILogin";
 import { loginUser } from "../api/mutations/authMutate";
 
 export default function Login() {
@@ -39,7 +39,7 @@ export default function Login() {
     loginMutate({ email, password });
   };
   return (
-    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 h-160 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
+    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 h-160 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Entrar</h1>
       <h2 className="text-warm-brown mb-4">

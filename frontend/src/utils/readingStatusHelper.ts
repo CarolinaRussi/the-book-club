@@ -1,4 +1,4 @@
-import { ReadingStatus } from "../types/IBooks";
+import type { ReadingStatus } from "../types/IBooks";
 
 export const readingStatusLabels: Record<ReadingStatus, string> = {
   not_started: "Não Iniciado",

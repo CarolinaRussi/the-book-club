@@ -1,6 +1,6 @@
 import axios from "axios";
 import { api } from "../index";
-import { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
+import type { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {

@@ -1,5 +1,5 @@
 import { api } from "../index";
-import { IBook } from "../../types/IBooks";
+import type { IBook } from "../../types/IBooks";
 
 export const fetchBooksFromOpenLibrary = async (query: any) => {
   if (!query) return { docs: [] };
@@ -14,7 +14,9 @@ export const fetchBooksFromOpenLibrary = async (query: any) => {
   return response.json();
 };
 
-export const fetchClubBooks = async (clubId: string | null): Promise<IBook[]> => {
+export const fetchClubBooks = async (
+  clubId: string | null
+): Promise<IBook[]> => {
   const { data } = await api.get(`/club-books/${clubId}`);
   return data;
 };

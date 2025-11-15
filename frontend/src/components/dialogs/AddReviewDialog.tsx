@@ -1,8 +1,8 @@
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
-import {
+import type {
   IBook,
   IBookReviewPayload,
   IReview,
@@ -22,10 +22,10 @@ import { useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IApiError } from "../../types/IApi";
+import type { IApiError } from "../../types/IApi";
 import { saveReview } from "../../api/mutations/bookMutate";
 import { readingStatusLabels } from "../../utils/readingStatusHelper";
-import { Card, CardContent, CardTitle } from "../ui/card";
+import { Card, CardTitle } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 interface IBookReviewForm {
@@ -51,7 +51,7 @@ const AddReviewDialog = ({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: {},
     reset,
     control,
     setValue,
@@ -92,7 +92,7 @@ const AddReviewDialog = ({
     IBookReviewPayload
   >({
     mutationFn: saveReview,
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       toast.success("Avaliação salva com sucesso!");
       await queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub"],
@@ -255,7 +255,7 @@ const AddReviewDialog = ({
                       alt="Foto de perfil"
                     />
                     <AvatarFallback
-                      className="text-4xl text-primary"
+                      className="text-1xl font-semibold text-primary"
                       delayMs={600}
                     >
                       {getInitials(r.member.user.name || "")}

@@ -1,11 +1,11 @@
 import { createContext, useContext, useMemo } from "react";
 import {
   useQuery,
-  RefetchOptions,
-  QueryObserverResult,
+  type RefetchOptions,
+  type QueryObserverResult,
 } from "@tanstack/react-query";
 import { useClub } from "./ClubContext";
-import { IBook } from "../types/IBooks";
+import type { IBook } from "../types/IBooks";
 import { fetchClubBooks } from "../api/queries/fetchBooks";
 
 interface BookContextData {

@@ -1,5 +1,5 @@
-import { ChangeEvent, useState, useEffect, useCallback } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { type ChangeEvent, useState, useEffect, useCallback } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,11 @@ import {
   CommandInput,
   CommandItem,
 } from "../ui/command";
-import { IBookPayload, IOpenLibraryBook } from "../../types/IBooks";
+import type { IBookPayload, IOpenLibraryBook } from "../../types/IBooks";
 import { fetchBooksFromOpenLibrary } from "../../api/queries/fetchBooks";
 import { BookOpen, ChevronsUpDown, Upload } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IApiError } from "../../types/IApi";
+import type { IApiError } from "../../types/IApi";
 import { toast } from "react-toastify";
 import { useClub } from "../../contexts/ClubContext";
 import { createBook } from "../../api/mutations/bookMutate";
@@ -76,7 +76,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     IBookPayload
   >({
     mutationFn: createBook,
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       onOpenChange(false);
       queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub", selectedClubId],

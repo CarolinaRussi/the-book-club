@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { IClubPayload } from "../../types/IClubs";
-import { IApiError } from "../../types/IApi";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import type { IClubPayload } from "../../types/IClubs";
+import type { IApiError } from "../../types/IApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClub } from "../../api/mutations/clubMutate";
 import { toast } from "react-toastify";

@@ -1,4 +1,4 @@
-import { IBook } from "../../types/IBooks";
+import type { IBook } from "../../types/IBooks";
 import { getInitials } from "../../utils/formatters";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";

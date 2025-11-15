@@ -1,8 +1,8 @@
-import { createContext, useState, useContext } from "react"; // Removido useEffect
+import { createContext, useState, useContext } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { IUser } from "../types/IUser";
 import { api } from "../api/index";
 import { fetchAuthenticatedUser } from "../api/queries/fetchUser";
+import type { IUser } from "../types/IUser";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -24,10 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
   const queryClient = useQueryClient();
 
-  const {
-    data: user,
-    isLoading: isLoadingUser,
-  } = useQuery({
+  const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ["authenticatedUser"],
     queryFn: fetchAuthenticatedUser,
     enabled: isLoggedIn,

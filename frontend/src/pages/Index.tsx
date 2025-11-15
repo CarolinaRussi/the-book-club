@@ -5,7 +5,7 @@ import { Link } from "react-router";
 
 export default function Index() {
   return (
-    <>
+    <div className="p-5 md:p-20 place-items-center mt-20">
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-5xl mt-5 font-bold text-foreground">
         Bem-vindo ao Clube do Livro
@@ -65,6 +65,6 @@ export default function Index() {
           Entrar
         </Link>
       </div>
-    </>
+    </div>
   );
 }

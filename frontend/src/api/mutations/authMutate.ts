@@ -1,9 +1,9 @@
 import axios from "axios";
 import { api } from "../index";
-import { IRegisterData } from "../../types/IRegister";
-import { IApiReturnData } from "../../types/IApi";
-import { ILoginData } from "../../types/ILogin";
-import { IUser } from "../../types/IUser";
+import type { IRegisterData } from "../../types/IRegister";
+import type { IApiReturnData } from "../../types/IApi";
+import type { ILoginData } from "../../types/ILogin";
+import type { IUser } from "../../types/IUser";
 
 export async function registerUser(
   data: IRegisterData
