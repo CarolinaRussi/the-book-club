@@ -1,12 +1,4 @@
-import {
-  Book,
-  Calendar,
-  Clock,
-  Edit,
-  MapPin,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Book, Calendar, MapPin, Plus } from "lucide-react";
 import meeting from "../assets/meeting.png";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -16,6 +8,7 @@ import { fetchMeetingsByClubId } from "../api/queries/fetchMeetings";
 import type { IMeeting } from "../types/IMeetings";
 import { useState } from "react";
 import CreateMeetingDialog from "../components/dialogs/CreateMeetingDialog";
+import NextMeeting from "../components/meetings/nextMeeting";
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
@@ -52,10 +45,11 @@ export default function Meetings() {
         <div className="container relative mx-auto px-4 h-full flex items-end">
           <div className="max-w-2xl p-5 md:px-20">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Próximo Encontro
+              Encontros
             </h1>
             <p className="text-xl text-muted-foreground">
-              Junte-se a nós para discutir o livro da vez!
+              Onde nos encontramos para discutir o livro da vez enquanto
+              saboreamos um cafézinho!
             </p>
           </div>
         </div>
@@ -69,78 +63,15 @@ export default function Meetings() {
               <div className="flex gap-2">
                 <Button size="lg" onClick={() => setCreateMeetingOpen(true)}>
                   <Plus className="h-4 w-4" />
-                  Marcar Novo Encontro
+                  Novo Encontro
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-4">
-              {isLoading ? (
-                <Card>
-                  <CardContent className="p-4">
-                    <p>Carregando encontros...</p>
-                  </CardContent>
-                </Card>
-              ) : scheduledMeetings && scheduledMeetings.length > 0 ? (
-                scheduledMeetings.map((meeting) => (
-                  <Card key={meeting.id} className="shadow-(--shadow-soft)">
-                    <CardContent className="space-y-4 px-8 relative">
-                      <div className="absolute right-6 flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                          Editar
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                          Excluir
-                        </Button>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium">Data e Hora</p>
-                          <p className="text-sm text-muted-foreground">
-                            {meeting.meeting_date}
-                          </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                            <Clock className="h-4 w-4" />
-                            {meeting.meeting_time}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium">Local</p>
-                          <p className="text-sm text-muted-foreground">
-                            {meeting.location}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="md:hidden flex items-start gap-3">
-                        <Book className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium">Livro</p>
-                          <p className="text-sm text-muted-foreground">
-                            {meeting.book?.title ?? "Ainda não definido"}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="p-6">
-                    <p className="text-muted-foreground text-center">
-                      Ainda não há nenhum encontro marcado.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <NextMeeting
+              isLoading={isLoading}
+              scheduledMeetings={scheduledMeetings}
+            />
           </section>
 
           <section>

@@ -32,3 +32,48 @@ export const formatMonthYear = (dateString: string): string => {
     return "";
   }
 };
+
+export const formatDayMonthYear = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      console.warn("formatDayMonthYear: Data inválida recebida", dateString);
+      return "";
+    }
+
+    const day = date.getDate().toString().padStart(2, "0");
+
+    const month = new Intl.DateTimeFormat("pt-BR", {
+      month: "long",
+    }).format(date);
+
+    const year = date.getFullYear();
+
+    const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+
+    return `${day} de ${capitalizedMonth} de ${year}`;
+  } catch (error) {
+    console.error("Erro ao formatar data (dia/mês/ano):", error);
+    return "";
+  }
+};
+
+export const formatTime = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      console.warn("formatTime: Data inválida recebida", dateString);
+      return "";
+    }
+
+    const hours = date.getUTCHours().toString().padStart(2, "0");
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  } catch (error) {
+    console.error("Erro ao formatar hora:", error);
+    return "";
+  }
+};
