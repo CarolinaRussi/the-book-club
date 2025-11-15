@@ -3,7 +3,7 @@ import { db } from "../db/client";
 import { UserStatus } from "../enums/userStatus";
 import { Prisma } from "../generated/prisma/client";
 
-export const getMemberFromClub = async (req: Request, res: Response) => {
+export const getMembersFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {
