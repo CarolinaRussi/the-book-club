@@ -14,10 +14,8 @@ export const createBook = async (req: Request, res: Response) => {
     const bookPayload: BookCreateInput = {
       title: title,
       author: author,
-      club_id: club_id,
       open_library_id: open_library_id,
       cover_url: cover_url,
-      status: BookStatus.STARTED,
     };
 
     let uploadResult;
@@ -59,6 +57,7 @@ export const createBook = async (req: Request, res: Response) => {
         where: {
           club_id: club_id,
           book_id: book.id,
+          status: BookStatus.SUGGESTED,
         },
       });
 

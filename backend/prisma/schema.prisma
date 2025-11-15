@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model book {
+model Book {
   id              String       @id @default(cuid())
   title           String       @db.VarChar(255)
   author          String?      @db.VarChar(255)
@@ -17,60 +17,65 @@ model book {
   created_at      DateTime     @default(now()) @db.Timestamp(6)
   cover_public_id String?      @db.VarChar(255)
   
-  meeting         meeting[]
-  review          review[]
+  meeting         Meeting[]
+  review          Review[]
   clubs           ClubBook[]
 }
 
-model club {
+model Club {
   id              String      @id @default(cuid())
   name            String      @db.VarChar(255)
   invitation_code String      @unique @db.VarChar(255)
   owner_id        String
-  status          status_enum @default(active)
+  status          StatusEnum @default(active)
   created_at      DateTime    @default(now()) @db.Timestamp(6)
   description     String
   
-  user            user        @relation(fields: [owner_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  meeting         meeting[]
-  member          member[]
+  user            User        @relation(fields: [owner_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  meeting         Meeting[]
+  member          Member[]
   books           ClubBook[]
 }
 
-model meeting {
-  id         String   @id @default(cuid())
-  club_id    String
-  location   String   @db.VarChar(255)
-  date_time  DateTime @db.Timestamp(6)
-  book_id    String
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  book      book      @relation(fields: [book_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  club      club      @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model Meeting {
+  id           String   @id @default(cuid())
+  club_id      String
+  location     String   @db.VarChar(255)
+  meeting_date DateTime @db.Date
+  meeting_time DateTime @db.Time(0)
+  description  String?  @db.Text
+  status       MeetingStatusEnum @default(scheduled)
+  book_id      String
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  book       Book     @relation(fields: [book_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  club       Club     @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  confirmations MeetingConfirmation[]
 }
 
-model member {
+model Member {
   id        String  @id @default(cuid())
   user_id   String
   club_id   String
   joined_at DateTime @default(now()) @db.Timestamp(6)
-  club     club    @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  review   review[]
+  club     Club    @relation(fields: [club_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  review        Review[]
+  confirmations MeetingConfirmation[]
 }
 
-model review {
+model Review {
   id             String  @id @default(cuid())
   member_id      String
   book_id        String
-  reading_status reading_status_enum
+  reading_status ReadingStatusEnum
   rating         Int?
   review         String?
   created_at     DateTime            @default(now()) @db.Timestamp(6)
-  book          book               @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  member        member             @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  book          Book               @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  member        Member             @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model user {
+model User {
   id                        String  @id @default(cuid())
   name                      String      @db.VarChar(255)
   email                     String      @unique @db.VarChar(255)
@@ -78,42 +83,68 @@ model user {
   profile_picture           String?     @db.VarChar(255)
   favorites_genres          String[]    
   bio                       String?
-  status                    status_enum @default(active)
+  status                    StatusEnum @default(active)
   created_at                DateTime    @default(now()) @db.Timestamp(6)
   nickname                  String      @db.VarChar(255)
   profile_picture_public_id String?     @db.VarChar(255)
-  club                      club[]
-  member                    member[]
+  club                      Club[]
+  member                    Member[]
 }
 
 model ClubBook {
   id        String           @id @default(cuid())
   club_id   String
   book_id   String
-  status    book_status_enum @default(suggested) // O status agora vive aqui!
+  status    BookStatusEnum   @default(suggested)
   added_at  DateTime         @default(now())
 
-  club      club             @relation(fields: [club_id], references: [id], onDelete: Cascade)
-  book      book             @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  club      Club             @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  book      Book             @relation(fields: [book_id], references: [id], onDelete: Cascade)
   
   @@unique([club_id, book_id]) 
+
 }
 
-enum reading_status_enum {
+model MeetingConfirmation {
+  id         String   @id @default(cuid())
+  meeting_id String
+  member_id    String
+  status     ConfirmationStatusEnum
+  created_at DateTime @default(now())
+
+  meeting   Meeting   @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  member    Member    @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+  @@unique([meeting_id, member_id])
+}
+
+enum ReadingStatusEnum {
   not_started
   dropped
   started
   finished
 }
 
-enum status_enum {
+enum StatusEnum {
   active
   inactive
 }
 
-enum book_status_enum {
+enum BookStatusEnum {
   suggested
   started
   dropped
   finished
+}
+
+enum MeetingStatusEnum {
+  scheduled
+  completed
+  cancelled
+}
+
+enum ConfirmationStatusEnum {
+  going
+  not_going
+  maybe
 }
