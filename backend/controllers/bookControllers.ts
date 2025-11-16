@@ -218,7 +218,7 @@ export const saveReview = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(200).json({
+    return res.status(201).json({
       message: "Avaliação salva com sucesso!",
       review: savedReview,
     });
