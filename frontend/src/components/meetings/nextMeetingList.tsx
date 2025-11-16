@@ -6,12 +6,15 @@ import EditMeetingDialog from "../dialogs/EditMeetingDialog";
 import { useState } from "react";
 import { formatDayMonthYear, formatTime } from "@//utils/formatters";
 
-interface NextMeetingProps {
+interface NextMeetingListProps {
   isLoading: boolean;
   scheduledMeetings: IMeeting[] | undefined;
 }
 
-const NextMeeting = ({ isLoading, scheduledMeetings }: NextMeetingProps) => {
+const NextMeetingList = ({
+  isLoading,
+  scheduledMeetings,
+}: NextMeetingListProps) => {
   const [editMeetingOpen, setEditMeetingOpen] = useState(false);
   const [meetingToUpdate, setMeetingToUpdate] = useState<IMeeting | undefined>(
     undefined
@@ -89,6 +92,7 @@ const NextMeeting = ({ isLoading, scheduledMeetings }: NextMeetingProps) => {
         </Card>
       )}
       <EditMeetingDialog
+        key={meetingToUpdate?.id}
         openDialog={editMeetingOpen}
         onOpenChange={setEditMeetingOpen}
         meeting={meetingToUpdate}
@@ -97,4 +101,4 @@ const NextMeeting = ({ isLoading, scheduledMeetings }: NextMeetingProps) => {
   );
 };
 
-export default NextMeeting;
+export default NextMeetingList;

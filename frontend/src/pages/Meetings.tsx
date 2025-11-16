@@ -1,6 +1,5 @@
-import { Book, Calendar, MapPin, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import meeting from "../assets/meeting.png";
-import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useClub } from "../contexts/ClubContext";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +7,9 @@ import { fetchMeetingsByClubId } from "../api/queries/fetchMeetings";
 import type { IMeeting } from "../types/IMeetings";
 import { useState } from "react";
 import CreateMeetingDialog from "../components/dialogs/CreateMeetingDialog";
-import NextMeeting from "../components/meetings/nextMeeting";
+import MeetingHistoryList from "../components/meetings/meetingHistoryList";
+import NextMeetingList from "../components/meetings/nextMeetingList";
+import NextMeetingBook from "../components/meetings/nextMeetingBook";
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
@@ -49,7 +50,7 @@ export default function Meetings() {
             </h1>
             <p className="text-xl text-muted-foreground">
               Onde nos encontramos para discutir o livro da vez enquanto
-              saboreamos um cafézinho!
+              saboreamos um café quentinho!
             </p>
           </div>
         </div>
@@ -68,110 +69,22 @@ export default function Meetings() {
               </div>
             </div>
 
-            <NextMeeting
+            {/* Componente que lista os próximos encontros agendados */}
+            <NextMeetingList
               isLoading={isLoading}
               scheduledMeetings={scheduledMeetings}
             />
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Histórico de Encontros</h2>
-            <div className="space-y-4">
-              {isLoading ? (
-                <p>Carregando histórico...</p>
-              ) : pastMeetings && pastMeetings.length > 0 ? (
-                pastMeetings.map((meeting) => (
-                  <Card
-                    key={meeting.id}
-                    className="shadow-(--shadow-soft) py-3"
-                  >
-                    <CardContent className="flex justify-between items-center">
-                      <div>
-                        <div className="flex gap-3 mb-2">
-                          <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="font-medium text-sm">Data e Hora</p>
-                            <p className="text-sm text-muted-foreground">
-                              {meeting.meeting_date} às {meeting.meeting_time}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3 ">
-                          <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="font-medium text-sm">Local</p>
-                            <p className="text-sm text-muted-foreground">
-                              {meeting.location}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-end">
-                        <p className="font-regular text-sm text-muted-foreground">
-                          Livro discutido:
-                        </p>
-                        <p className="font-medium text-sm">
-                          {meeting.book?.title ?? "N/A"}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-muted-foreground px-2">
-                  Nenhum encontro no histórico.
-                </p>
-              )}
-            </div>
-          </section>
+          {/* Componente que lista o histórico de encontros concluídos ou cancelados */}
+          <MeetingHistoryList
+            isLoading={isLoading}
+            pastMeetings={pastMeetings}
+          />
         </div>
 
-        <div className="hidden md:block max-w-md">
-          <h2 className="text-2xl font-bold mb-4">Livro da Vez</h2>
-          {isLoading ? (
-            <p>Carregando livro...</p>
-          ) : nextBook ? (
-            <Card
-              key={nextBook.id}
-              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
-            >
-              <div className="relative aspect-2/3 overflow-hidden bg-muted">
-                <img
-                  src={nextBook.cover_url}
-                  alt={nextBook.title}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
-              </div>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-semibold line-clamp-2 flex-1 min-h-14">
-                    {nextBook.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {nextBook.author}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="overflow-hidden py-0">
-              <CardContent className="p-0">
-                <div className="relative aspect-2/3 overflow-hidden bg-muted flex items-center justify-center">
-                  <Book className="h-16 w-16 text-muted-foreground/50" />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold min-h-14">
-                    Nenhum livro definido
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Nenhum encontro agendado.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Componente que mostra o livro da vez*/}
+        <NextMeetingBook isLoading={isLoading} nextBook={nextBook} />
       </div>
       <CreateMeetingDialog
         openDialog={createMeetingOpen}

@@ -9,7 +9,7 @@ import {
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import { useClub } from "../../contexts/ClubContext";
-import type { IMeetingPayload, MeetingStatus } from "@//types/IMeetings";
+import type { IMeetingCreatePayload, MeetingStatus } from "@//types/IMeetings";
 import {
   Select,
   SelectContent,
@@ -24,7 +24,7 @@ import { ChevronDownIcon } from "lucide-react";
 import React from "react";
 import { Input } from "../ui/input";
 import { useBook } from "@//contexts/BookContext";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { createMeeting } from "@//api/mutations/meetingMutate";
 
@@ -49,6 +49,7 @@ const CreateMeetingDialog = ({
   const { selectedClubId } = useClub();
   const [open, setOpen] = React.useState(false);
   const { booksFromSelectedClub } = useBook();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -70,12 +71,13 @@ const CreateMeetingDialog = ({
   const { mutate: createMeetingMutate } = useMutation<
     any,
     IApiError,
-    IMeetingPayload
+    IMeetingCreatePayload
   >({
     mutationFn: createMeeting,
-    onSuccess: async (result) => {
-      console.log(result);
-      //queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
+    onSuccess: async () => {
+      queryClient.invalidateQueries({
+        queryKey: ["meetings", selectedClubId],
+      });
       reset();
       onOpenChange(false);
       toast.success("Encontro marcado com sucesso!");
@@ -85,6 +87,10 @@ const CreateMeetingDialog = ({
     },
   });
 
+  React.useEffect(() => {
+    reset();
+  }, [openDialog]);
+
   const onSubmit: SubmitHandler<ICreateMeetingForm> = (data) => {
     if (!selectedClubId) {
       toast.error("Você não pode adicionar um livro sem estar em um clube");
@@ -93,10 +99,10 @@ const CreateMeetingDialog = ({
 
     const { bookId, description, location, meetingDate, meetingTime, status } =
       data;
-    
-    const [hours, minutes] = meetingTime.split(':').map(Number);
-    const timeObject = new Date(); 
-    timeObject.setHours(hours, minutes, 0, 0);
+
+    const [hours, minutes] = meetingTime.split(":").map(Number);
+    const timeObject = new Date();
+    timeObject.setUTCHours(hours, minutes, 0, 0);
 
     createMeetingMutate({
       bookId,
@@ -210,7 +216,7 @@ const CreateMeetingDialog = ({
             <div>
               <h3 className="text-lg font-medium mb-1">Observação:</h3>
               <textarea
-                {...register("description", { required: true })}
+                {...register("description")}
                 placeholder="Trazer canetas e papéis..."
                 className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
               />
