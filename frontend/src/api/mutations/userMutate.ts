@@ -3,7 +3,7 @@ import { api } from "../index";
 
 export async function updateUser(data: FormData): Promise<any> {
   try {
-    const response = await api.post("/update-user", data);
+    const response = await api.put("/update-user", data);
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
