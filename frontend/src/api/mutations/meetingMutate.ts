@@ -35,3 +35,18 @@ export async function updateMeeting(
     throw { message: "Erro desconhecido" };
   }
 }
+
+export async function cancelMeeting(id: string | undefined): Promise<any> {
+  if (!id) {
+    throw { message: "ID do encontro é obrigatório para cancelar." };
+  }
+  try {
+    const response = await api.put(`/cancel-meeting/${id}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido" };
+  }
+}

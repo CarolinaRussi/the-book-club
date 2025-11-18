@@ -9,7 +9,7 @@ import {
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import { useClub } from "../../contexts/ClubContext";
-import type { IMeetingCreatePayload, MeetingStatus } from "@//types/IMeetings";
+import type { IMeetingCreatePayload } from "@//types/IMeetings";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Calendar } from "../ui/calendar";
-import { meetingStatusLabels } from "@//utils/meetingStatusHelper";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import React from "react";
@@ -27,6 +26,7 @@ import { useBook } from "@//contexts/BookContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { createMeeting } from "@//api/mutations/meetingMutate";
+import { BOOK_STATUS_SUGGESTED } from "@//utils/constants/books";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;
@@ -38,7 +38,6 @@ interface ICreateMeetingForm {
   meetingDate: Date;
   meetingTime: string;
   description?: string;
-  status: MeetingStatus;
   bookId: string;
 }
 
@@ -63,7 +62,6 @@ const CreateMeetingDialog = ({
       meetingDate: undefined,
       meetingTime: "",
       description: "",
-      status: undefined,
       bookId: undefined,
     },
   });
@@ -97,8 +95,7 @@ const CreateMeetingDialog = ({
       return;
     }
 
-    const { bookId, description, location, meetingDate, meetingTime, status } =
-      data;
+    const { bookId, description, location, meetingDate, meetingTime } = data;
 
     const [hours, minutes] = meetingTime.split(":").map(Number);
     const timeObject = new Date();
@@ -110,7 +107,6 @@ const CreateMeetingDialog = ({
       location,
       meetingDate,
       meetingTime: timeObject,
-      status,
       clubId: selectedClubId,
     });
   };
@@ -187,33 +183,6 @@ const CreateMeetingDialog = ({
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-1">Status:</h3>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full border-2 border-secondary text-md py-5 cursor-pointer">
-                      <SelectValue placeholder="Selecione um status" />
-                    </SelectTrigger>
-                    <SelectContent className="border-secondary bg-background rounded-lg">
-                      {Object.entries(meetingStatusLabels).map(
-                        ([statusKey, statusLabel]) => (
-                          <SelectItem
-                            key={statusKey}
-                            value={statusKey}
-                            className="cursor-pointer text-md p-3"
-                          >
-                            {statusLabel}{" "}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <div>
               <h3 className="text-lg font-medium mb-1">Observação:</h3>
               <textarea
                 {...register("description")}
@@ -234,15 +203,17 @@ const CreateMeetingDialog = ({
                       <SelectValue placeholder="Selecione um livro" />
                     </SelectTrigger>
                     <SelectContent className="border-secondary bg-background rounded-lg">
-                      {booksFromSelectedClub.map((book) => (
-                        <SelectItem
-                          key={book.id}
-                          value={book.id}
-                          className="cursor-pointer text-md p-3"
-                        >
-                          {book.title}
-                        </SelectItem>
-                      ))}
+                      {booksFromSelectedClub
+                        .filter((book) => book.status === BOOK_STATUS_SUGGESTED)
+                        .map((book) => (
+                          <SelectItem
+                            key={book.id}
+                            value={book.id}
+                            className="cursor-pointer text-md p-3"
+                          >
+                            {book.title}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 )}

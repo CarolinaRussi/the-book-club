@@ -5,6 +5,8 @@ import type { IMeeting } from "@//types/IMeetings";
 import EditMeetingDialog from "../dialogs/EditMeetingDialog";
 import { useState } from "react";
 import { formatDayMonthYear, formatTime } from "@//utils/formatters";
+import { LuCalendarX2 } from "react-icons/lu";
+import CancelMeetingDialog from "../dialogs/CancelMeetingDialog";
 
 interface NextMeetingListProps {
   isLoading: boolean;
@@ -19,9 +21,10 @@ const NextMeetingList = ({
   const [meetingToUpdate, setMeetingToUpdate] = useState<IMeeting | undefined>(
     undefined
   );
+  const [cancelMeetingOpen, setCancelMeetingOpen] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div className="">
       {isLoading ? (
         <Card>
           <CardContent className="p-4">
@@ -64,8 +67,7 @@ const NextMeetingList = ({
                   </p>
                 </div>
               </div>
-
-              <div className="mt-4 flex gap-2 md:absolute md:right-6 md:top-0 md:mt-0">
+              <div className="mt-4 flex flex-col gap-2 md:flex-row md:absolute md:right-6 md:top-0 md:mt-0">
                 <Button
                   variant="outline"
                   size="sm"
@@ -75,8 +77,21 @@ const NextMeetingList = ({
                   }}
                   className="w-full md:w-auto"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 mr-1" />
                   Editar
+                </Button>
+
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setMeetingToUpdate(meeting);
+                    setCancelMeetingOpen(true);
+                  }}
+                  className="w-full md:w-auto"
+                >
+                  <LuCalendarX2 className="mr-1" />
+                  Cancelar encontro
                 </Button>
               </div>
             </CardContent>
@@ -95,6 +110,12 @@ const NextMeetingList = ({
         key={meetingToUpdate?.id}
         openDialog={editMeetingOpen}
         onOpenChange={setEditMeetingOpen}
+        meeting={meetingToUpdate}
+      />
+      <CancelMeetingDialog
+        key={meetingToUpdate?.id}
+        openDialog={cancelMeetingOpen}
+        onOpenChange={setCancelMeetingOpen}
         meeting={meetingToUpdate}
       />
     </div>
