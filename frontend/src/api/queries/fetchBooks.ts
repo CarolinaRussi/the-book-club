@@ -1,17 +1,24 @@
 import { api } from "../index";
 import type { IBook } from "../../types/IBooks";
 
-export const fetchBooksFromOpenLibrary = async (query: any) => {
+export const fetchBooksFromOpenLibrary = async (query: string) => {
   if (!query) return { docs: [] };
   const searchTerm = encodeURIComponent(query);
-  const fields = "key,title,author_name,cover_i";
-  const url = `https://openlibrary.org/search.json?q=${searchTerm}&fields=${fields}&limit=10`;
+  const url = `https://openlibrary.org/search.json?q=${searchTerm}&fields=key,title,author_name,cover_i&limit=20`;
 
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Erro ao buscar os livros");
-  }
+  if (!response.ok) throw new Error("Erro na OpenLibrary");
   return response.json();
+};
+
+export const fetchBooksFromMyDatabase = async (query: string) => {
+  const { data } = await api.get<IBook[]>("/books", {
+    params: {
+      q: query,
+    },
+  });
+
+  return data || [];
 };
 
 export const fetchClubBooks = async (

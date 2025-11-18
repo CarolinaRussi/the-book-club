@@ -17,8 +17,11 @@ import {
   CommandInput,
   CommandItem,
 } from "../ui/command";
-import type { IBookPayload, IOpenLibraryBook } from "../../types/IBooks";
-import { fetchBooksFromOpenLibrary } from "../../api/queries/fetchBooks";
+import type { IBook, IBookPayload, IOpenLibraryBook } from "../../types/IBooks";
+import {
+  fetchBooksFromMyDatabase,
+  fetchBooksFromOpenLibrary,
+} from "../../api/queries/fetchBooks";
 import { BookOpen, ChevronsUpDown, Upload } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "../../types/IApi";
@@ -38,9 +41,7 @@ interface ICreateBookForm {
 }
 
 const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
-  const [selectedBook, setSelectedBook] = useState<IOpenLibraryBook | null>(
-    null
-  );
+  const [selectedBook, setSelectedBook] = useState<any | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [openCombobox, setOpenCombobox] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
@@ -66,8 +67,33 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
 
   const { data: searchResults, isError } = useQuery({
     queryKey: ["books", inputValue],
-    queryFn: () => fetchBooksFromOpenLibrary(inputValue),
     enabled: !!inputValue,
+    queryFn: async () => {
+      const [localResponse, openLibResponse] = await Promise.all([
+        fetchBooksFromMyDatabase(inputValue),
+        fetchBooksFromOpenLibrary(inputValue),
+      ]);
+
+      const localBooks = localResponse.map((book: IBook) => ({
+        id: book.id,
+        title: book.title,
+        author: book.author ? [book.author] : ["Autor desconhecido"],
+        cover: book.cover_url,
+        source: "local",
+      }));
+
+      const externalBooks = (openLibResponse.docs || [])
+        .filter((book: any) => book.cover_i && book.cover_i > 0)
+        .map((book: IOpenLibraryBook) => ({
+          id: book.key,
+          title: book.title,
+          author: book.author_name || ["Autor desconhecido"],
+          cover: `https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg?default=false`,
+          cover_i: book.cover_i,
+          source: "openlibrary",
+        }));
+      return [...localBooks, ...externalBooks];
+    },
   });
 
   const { mutate: createBookMutate, isPending } = useMutation<
@@ -119,7 +145,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     }
   }, [watchedTitle, watchedAuthor, selectedBook]);
 
-  const handleSelect = (book: IOpenLibraryBook) => {
+  const handleSelect = (book: any) => {
     setSelectedBook(book);
     setInputValue(book.title);
     setOpenCombobox(false);
@@ -143,14 +169,13 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
       return;
     }
     const { title: manualTitle, author: manualAuthor, coverImg } = data;
-
     const payload: IBookPayload = {
-      openLibraryId: selectedBook?.key?.split("/").pop(),
+      openLibraryId: selectedBook?.id?.split("/").pop(),
       title: selectedBook ? selectedBook.title : manualTitle,
       author: selectedBook
-        ? (selectedBook.author_name || ["Autor desconhecido"]).join(", ")
+        ? (selectedBook.author || ["Autor desconhecido"]).join(", ")
         : manualAuthor,
-      coverUrl: selectedBook?.cover_i
+      coverUrl: selectedBook?.cover
         ? `https://covers.openlibrary.org/b/id/${selectedBook.cover_i}-L.jpg`
         : undefined,
       coverImg: coverImg && coverImg.length > 0 ? coverImg : undefined,
@@ -213,18 +238,18 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                     {isError ? "Erro ao buscar." : "Nenhum livro encontrado."}
                   </CommandEmpty>
 
-                  {searchResults && searchResults.docs.length > 0 && (
+                  {searchResults && searchResults.length > 0 && (
                     <CommandGroup>
-                      {searchResults.docs.map((book: IOpenLibraryBook) => (
+                      {searchResults.map((book: any) => (
                         <CommandItem
-                          key={book.key}
+                          key={book.id}
                           value={book.title}
                           onSelect={() => handleSelect(book)}
                           className="flex items-center gap-3"
                         >
-                          {book.cover_i ? (
+                          {book.cover ? (
                             <img
-                              src={`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`}
+                              src={book.cover}
                               alt="capa"
                               className="h-12 w-9 object-cover rounded-sm"
                             />
@@ -233,10 +258,16 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                               <BookOpen className="h-4 w-4 text-muted-foreground" />
                             </div>
                           )}
+
                           <div className="flex flex-col overflow-hidden">
-                            <span className="truncate">{book.title}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="truncate font-medium">
+                                {book.title}
+                              </span>
+                            </div>
+
                             <span className="text-xs text-muted-foreground truncate">
-                              {book.author_name}
+                              {book.author.join(", ")} ({book.source})
                             </span>
                           </div>
                         </CommandItem>
