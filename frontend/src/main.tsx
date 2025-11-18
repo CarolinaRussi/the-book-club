@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
       <App />
       <ToastContainer
         transition={Zoom}
-        autoClose={2000}
+        autoClose={3000}
         closeOnClick
         position="bottom-right"
       />

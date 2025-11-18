@@ -2,12 +2,7 @@ import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
-import type {
-  IBook,
-  IBookReviewPayload,
-  IReview,
-  ReadingStatus,
-} from "../../types/IBooks";
+import type { IBook, IBookReviewPayload, IReview } from "../../types/IBooks";
 import { Rating } from "react-simple-star-rating";
 import { LuCalendarDays } from "react-icons/lu";
 import { formatMonthYear, getInitials } from "../../utils/formatters";
@@ -24,9 +19,10 @@ import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "../../types/IApi";
 import { saveReview } from "../../api/mutations/bookMutate";
-import { readingStatusLabels } from "../../utils/readingStatusHelper";
 import { Card, CardTitle } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { RiResetLeftFill } from "react-icons/ri";
+import { READING_STATUS_NOT_STARTED, READING_STATUS_STARTED, readingStatusLabels, type ReadingStatus } from "@//utils/constants/reading";
 
 interface IBookReviewForm {
   rating: number;
@@ -111,6 +107,25 @@ const AddReviewDialog = ({
       return;
     }
 
+    const hasRatingOrReview = data.rating > 0 || data.review.trim() !== "";
+
+    const isInvalidStatusForRating =
+      data.reading_status === READING_STATUS_NOT_STARTED ||
+      data.reading_status === READING_STATUS_STARTED;
+
+    if (hasRatingOrReview && isInvalidStatusForRating) {
+      toast.error(
+        "Para adicionar nota ou comentário, o status deve ser 'Finalizado' ou 'Abandonado'."
+      );
+      return;
+    }
+
+    if (!hasRatingOrReview && !isInvalidStatusForRating) {
+      toast.error(
+        "Ao finalizar ou abandonar um livro, dê uma nota e/ou deixe um comentário."
+      );
+    }
+
     const payload = {
       ...data,
       userId: user.id,
@@ -181,15 +196,23 @@ const AddReviewDialog = ({
                   name="rating"
                   control={control}
                   render={({ field }) => (
-                    <Rating
-                      initialValue={field.value}
-                      onClick={(rate) => field.onChange(rate)}
-                      allowFraction
-                      SVGstyle={{ display: "inline" }}
-                      size={25}
-                      fillColor="#be2c3f"
-                      emptyColor="#e2cad0"
-                    />
+                    <div className="flex flex-row items-end">
+                      <Rating
+                        initialValue={field.value}
+                        onClick={(rate) => field.onChange(rate)}
+                        allowFraction
+                        SVGstyle={{ display: "inline" }}
+                        size={25}
+                        fillColor="#be2c3f"
+                        emptyColor="#e2cad0"
+                      />
+
+                      <RiResetLeftFill
+                        onClick={() => field.onChange(0)}
+                        size={20}
+                        className="text-primary -bold inline-flex ml-3 cursor-pointer"
+                      />
+                    </div>
                   )}
                 />
               </div>
@@ -246,9 +269,9 @@ const AddReviewDialog = ({
               {book?.review?.map((r) => (
                 <Card
                   key={r.id}
-                  className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 h-full bg-cream"
+                  className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 h-full bg-cream my-4"
                 >
-                  <Avatar className="size-15">
+                  <Avatar className="size-15 self-center">
                     {" "}
                     <AvatarImage
                       src={r.member.user.profile_picture || undefined}
