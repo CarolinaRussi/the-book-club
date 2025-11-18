@@ -1,6 +1,5 @@
+import type { MeetingStatus } from "../utils/constants/meeting";
 import type { IBook } from "./IBooks";
-
-export type MeetingStatus = "scheduled" | "completed" | "cancelled";
 
 export interface IMeeting {
   id: string;
@@ -18,7 +17,6 @@ export interface IMeetingCreatePayload {
   description?: string;
   meetingDate: Date;
   meetingTime: Date;
-  status: MeetingStatus;
   bookId: string;
   clubId: string;
 }
@@ -32,4 +30,11 @@ export interface IMeetingUpdatePayload {
   status: MeetingStatus;
   bookId: string;
   clubId: string;
+}
+
+export interface IPaginatedResponse<T> {
+  data: T[];
+  totalPages: number;
+  currentPage: number;
+  totalItems: number;
 }

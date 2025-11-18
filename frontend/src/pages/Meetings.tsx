@@ -3,17 +3,23 @@ import meeting from "../assets/meeting.png";
 import { Button } from "../components/ui/button";
 import { useClub } from "../contexts/ClubContext";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMeetingsByClubId } from "../api/queries/fetchMeetings";
+import {
+  fetchMeetingsByClubId,
+  fetchPastMeetingsByClubId,
+} from "../api/queries/fetchMeetings";
 import type { IMeeting } from "../types/IMeetings";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateMeetingDialog from "../components/dialogs/CreateMeetingDialog";
 import MeetingHistoryList from "../components/meetings/meetingHistoryList";
 import NextMeetingList from "../components/meetings/nextMeetingList";
 import NextMeetingBook from "../components/meetings/nextMeetingBook";
+import { MEETING_STATUS_SCHEDULED } from "../utils/constants/meeting";
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
   const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
+  const [pastMeetingsPage, setPastMeetingsPage] = useState(1);
+  const itemsPerPage = 3;
 
   const { data: meetings, isLoading } = useQuery<IMeeting[]>({
     queryKey: ["meetings", selectedClubId],
@@ -23,16 +29,29 @@ export default function Meetings() {
   });
 
   const scheduledMeetings = meetings?.filter(
-    (meeting) => meeting.status === "scheduled"
+    (meeting) => meeting.status === MEETING_STATUS_SCHEDULED
   );
 
   const veryNextMeeting = scheduledMeetings?.[0];
   const nextBook = veryNextMeeting?.book;
 
-  const pastMeetings = meetings?.filter(
-    (meeting) =>
-      meeting.status === "completed" || meeting.status === "cancelled"
+  const { data: pastMeetingsData, isLoading: isLoadingPastMeetings } = useQuery(
+    {
+      queryKey: ["pastMeetings", selectedClubId, pastMeetingsPage],
+      queryFn: () =>
+        fetchPastMeetingsByClubId(
+          selectedClubId,
+          pastMeetingsPage,
+          itemsPerPage
+        ),
+      staleTime: 1000 * 60 * 5,
+      enabled: !!selectedClubId,
+    }
   );
+
+  useEffect(() => {
+    setPastMeetingsPage(1);
+  }, [selectedClubId]);
 
   return (
     <div className="min-h-screen w-full">
@@ -56,9 +75,9 @@ export default function Meetings() {
         </div>
       </section>
 
-      <div className="container mx-auto p-5 md:px-20 md:py-10 grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-start">
-        <div className="md:col-span-2 space-y-8 mt-2">
-          <section>
+      <div className="container mx-auto p-5 md:px-20 md:py-10 grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 ">
+        <div className="md:col-span-2 space-y-6 mt-2">
+          <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold px-2">Próximos Encontros</h2>
               <div className="flex gap-2">
@@ -74,17 +93,22 @@ export default function Meetings() {
               isLoading={isLoading}
               scheduledMeetings={scheduledMeetings}
             />
-          </section>
+          </div>
 
           {/* Componente que lista o histórico de encontros concluídos ou cancelados */}
           <MeetingHistoryList
-            isLoading={isLoading}
-            pastMeetings={pastMeetings}
+            isLoading={isLoadingPastMeetings}
+            pastMeetings={pastMeetingsData?.data}
+            currentPage={pastMeetingsPage}
+            totalPages={pastMeetingsData?.totalPages ?? 1}
+            onPageChange={setPastMeetingsPage}
           />
         </div>
 
         {/* Componente que mostra o livro da vez*/}
-        <NextMeetingBook isLoading={isLoading} nextBook={nextBook} />
+        <div className="h-full">
+          <NextMeetingBook isLoading={isLoading} nextBook={nextBook} />
+        </div>
       </div>
       <CreateMeetingDialog
         openDialog={createMeetingOpen}
