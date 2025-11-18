@@ -3,12 +3,12 @@ import { Card, CardContent } from "../ui/card";
 import { Book } from "lucide-react";
 
 interface NextMeetingBookProps {
-    isLoading: boolean,
-    nextBook: IBook | undefined;
+  isLoading: boolean;
+  nextBook: IBook | undefined;
 }
-const NextMeetingBook = ({isLoading, nextBook}:NextMeetingBookProps) => {
+const NextMeetingBook = ({ isLoading, nextBook }: NextMeetingBookProps) => {
   return (
-    <div className="hidden md:block max-w-md">
+    <div className="hidden md:block max-w-md h-full">
       <h2 className="text-2xl font-bold mb-4">Livro da Vez</h2>
       {isLoading ? (
         <p>Carregando livro...</p>
@@ -35,7 +35,7 @@ const NextMeetingBook = ({isLoading, nextBook}:NextMeetingBookProps) => {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden py-0">
+        <Card className="overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0">
           <CardContent className="p-0">
             <div className="relative aspect-2/3 overflow-hidden bg-muted flex items-center justify-center">
               <Book className="h-16 w-16 text-muted-foreground/50" />

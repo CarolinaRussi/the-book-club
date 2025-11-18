@@ -7,6 +7,7 @@ import {
 import { useClub } from "./ClubContext";
 import type { IBook } from "../types/IBooks";
 import { fetchClubBooks } from "../api/queries/fetchBooks";
+import { BOOK_STATUS_STARTED } from "../utils/constants/books";
 
 interface BookContextData {
   currentBooks: IBook[];
@@ -37,7 +38,7 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
 
   const currentBooks = useMemo(() => {
     return booksFromSelectedClub.filter(
-      (book: IBook) => book.status === "started"
+      (book: IBook) => book.status === BOOK_STATUS_STARTED
     );
   }, [booksFromSelectedClub]);
 

@@ -20,9 +20,10 @@ export const formatMonthYear = (dateString: string): string => {
 
     const month = new Intl.DateTimeFormat("pt-BR", {
       month: "long",
+      timeZone: "UTC",
     }).format(date);
 
-    const year = date.getFullYear();
+    const year = date.getUTCFullYear();
 
     const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
 
@@ -33,8 +34,9 @@ export const formatMonthYear = (dateString: string): string => {
   }
 };
 
-export const formatDayMonthYear = (dateString: string): string => {
+export const formatDayMonthYear = (dateString: string | undefined): string => {
   try {
+    if (!dateString) return "";
     const date = new Date(dateString);
 
     if (isNaN(date.getTime())) {
@@ -42,13 +44,14 @@ export const formatDayMonthYear = (dateString: string): string => {
       return "";
     }
 
-    const day = date.getDate().toString().padStart(2, "0");
+    const day = date.getUTCDate().toString().padStart(2, "0");
 
     const month = new Intl.DateTimeFormat("pt-BR", {
       month: "long",
+      timeZone: "UTC",
     }).format(date);
 
-    const year = date.getFullYear();
+    const year = date.getUTCFullYear();
 
     const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
 

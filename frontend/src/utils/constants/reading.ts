@@ -1,0 +1,20 @@
+export const READING_STATUS_VALUES = [
+  "not_started",
+  "started",
+  "dropped",
+  "finished",
+] as const;
+
+export type ReadingStatus = (typeof READING_STATUS_VALUES)[number];
+
+export const READING_STATUS_NOT_STARTED: ReadingStatus = "not_started";
+export const READING_STATUS_STARTED: ReadingStatus = "started";
+export const READING_STATUS_DROPPED: ReadingStatus = "dropped";
+export const READING_STATUS_FINISHED: ReadingStatus = "finished";
+
+export const readingStatusLabels: Record<ReadingStatus, string> = {
+  [READING_STATUS_NOT_STARTED]: "Não Iniciado",
+  [READING_STATUS_STARTED]: "Leitura Atual",
+  [READING_STATUS_DROPPED]: "Abandonado",
+  [READING_STATUS_FINISHED]: "Finalizado",
+};

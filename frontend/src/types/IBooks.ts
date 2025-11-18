@@ -1,6 +1,5 @@
-export type BookStatus = "suggested" | "started" | "dropped" | "finished";
-
-export type ReadingStatus = "not_started" | "dropped" | "started" | "finished";
+import type { BookStatus } from "../utils/constants/books";
+import type { ReadingStatus } from "../utils/constants/reading";
 
 export interface IUserPreview {
   id: string;

@@ -8,9 +8,13 @@ import { Button } from "../components/ui/button";
 import CreateBookDialog from "../components/dialogs/CreateBookDialog";
 import { useBook } from "../contexts/BookContext";
 import { Badge } from "../components/ui/badge";
-import { bookStatusLabels } from "../utils/bookStatusHelper";
 import type { IBook } from "../types/IBooks";
 import AddReviewDialog from "../components/dialogs/AddReviewDialog";
+import { bookStatusLabels } from "../utils/constants/books";
+import {
+  READING_STATUS_DROPPED,
+  READING_STATUS_FINISHED,
+} from "../utils/constants/reading";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -45,12 +49,20 @@ export default function Library() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
         {booksFromSelectedClub.map((book) => {
           const reviews = book.review || [];
-          const totalRating = reviews.reduce(
+
+          const validReviews = reviews.filter(
+            (review) =>
+              review.reading_status === READING_STATUS_FINISHED ||
+              review.reading_status === READING_STATUS_DROPPED
+          );
+
+          const totalRating = validReviews.reduce(
             (acc, review) => acc + review.rating,
             0
           );
+
           const averageRating =
-            reviews.length > 0 ? totalRating / reviews.length : 0;
+            validReviews.length > 0 ? totalRating / validReviews.length : 0;
 
           return (
             <Card
@@ -106,8 +118,8 @@ export default function Library() {
                     Lido em {formatMonthYear(book.added_at)}
                   </div>
                   <span>
-                    {book.review?.length}{" "}
-                    {book.review?.length === 1 ? "avaliação" : "avaliações"}
+                    {validReviews.length}{" "}
+                    {validReviews.length === 1 ? "avaliação" : "avaliações"}
                   </span>
                 </div>
               </CardContent>
