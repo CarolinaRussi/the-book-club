@@ -229,3 +229,45 @@ export const saveReview = async (req: Request, res: Response) => {
       .json({ message: "Erro interno ao processar a avaliação." });
   }
 };
+
+export const getBooksByTitleOrAuthor = async (req: Request, res: Response) => {
+  const { q } = req.query;
+
+  if (!q || typeof q !== 'string') {
+    return res.status(200).json([]);
+  }
+
+  try {
+    const books = await db.book.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: q,
+              mode: 'insensitive',
+            },
+          },
+          {
+            author: {
+              contains: q,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        cover_url: true,
+      },
+      take: 10,
+    });
+
+    res.status(200).json(books);
+
+  } catch (error) {
+    console.error("Erro ao buscar livros:", error);
+    res.status(500).json({ message: "Erro interno ao buscar livros" });
+  }
+};

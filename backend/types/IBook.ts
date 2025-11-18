@@ -1,5 +1,3 @@
-import { BookStatus } from "../enums/bookStatus";
-
 export interface BookCreateInput {
   title: string;
   author: string;
