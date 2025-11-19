@@ -18,7 +18,7 @@ const token = localStorage.getItem("token");
 if (token) {
   api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 }
-// ---------------------------------------------------------
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);

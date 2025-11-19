@@ -56,7 +56,7 @@ const FavoriteGenres = ({ tags, setTags, setValue }: FavoriteGenresProps) => {
             />
             <button
               type="button"
-              className="bg-primary text-background font-semibold rounded-lg p-2 w-30 cursor-pointer"
+              className="bg-primary text-primary-foreground font-semibold rounded-lg p-2 w-30 cursor-pointer"
               onClick={addTag}
             >
               Adicionar

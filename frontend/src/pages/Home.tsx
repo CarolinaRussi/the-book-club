@@ -53,7 +53,7 @@ export default function Home() {
           </CardContent>
           <CardFooter>
             <Button
-              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-background cursor-pointer hover:bg-primary/80"
+              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-primary-foreground cursor-pointer hover:bg-primary/80"
               onClick={() => setCreateClubOpen(true)}
             >
               Criar Clube

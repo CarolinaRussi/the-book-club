@@ -33,6 +33,7 @@ import {
   readingStatusLabels,
   type ReadingStatus,
 } from "@//utils/constants/reading";
+import { useClub } from "@//contexts/ClubContext";
 
 interface IBookReviewForm {
   rating: number;
@@ -52,6 +53,7 @@ const AddReviewDialog = ({
   book,
 }: AddReviewDialogProps) => {
   const { user } = useAuth();
+  const { selectedClubId } = useClub();
   const queryClient = useQueryClient();
 
   const {
@@ -112,8 +114,10 @@ const AddReviewDialog = ({
   });
 
   const onSubmit: SubmitHandler<IBookReviewForm> = (data) => {
-    if (!user || !book) {
-      toast.error("Usuário ou Livro não encontrado, não é possível salvar.");
+    if (!selectedClubId || !user || !book) {
+      toast.error(
+        "Clube, livro ou usuário não encontrado, não é possível salvar."
+      );
       return;
     }
 
@@ -138,6 +142,7 @@ const AddReviewDialog = ({
 
     const payload = {
       ...data,
+      clubId: selectedClubId,
       userId: user.id,
       bookId: book.id,
     };

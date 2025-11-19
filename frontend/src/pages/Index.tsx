@@ -53,7 +53,7 @@ export default function Index() {
       <div className="flex flex-row gap-6 mt-5">
         <Link
           to="/register"
-          className={`font-semibold px-8 py-3 rounded-xl flex items-center gap-2 bg-primary text-background  cursor-pointer `}
+          className={`font-semibold px-8 py-3 rounded-xl flex items-center gap-2 bg-primary text-primary-foreground  cursor-pointer `}
         >
           Criar conta
         </Link>

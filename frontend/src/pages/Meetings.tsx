@@ -54,7 +54,7 @@ export default function Meetings() {
   }, [selectedClubId]);
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen bg-background w-full">
       <section className="relative h-[300px] ">
         <div
           className="absolute inset-0 bg-cover bg-center"

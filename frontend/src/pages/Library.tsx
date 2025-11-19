@@ -37,10 +37,10 @@ export default function Library() {
         </div>
         <div>
           <Button
-            className="font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-background cursor-pointer hover:bg-primary/80"
+            className="font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-primary-foreground cursor-pointer hover:bg-primary/80"
             onClick={() => setCreateBookOpen(true)}
           >
-            <FaPlus size={24} className="text-cream" />
+            <FaPlus size={24} />
             Adicionar nova leitura
           </Button>
         </div>

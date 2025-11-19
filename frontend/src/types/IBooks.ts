@@ -52,6 +52,7 @@ export interface IBookReviewPayload {
   rating: number;
   review: string;
   reading_status: ReadingStatus | undefined;
+  clubId: string;
   userId: string;
   bookId: string;
 }
