@@ -1,9 +1,9 @@
 import { Calendar, MapPin } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "../../ui/card";
 import type { IMeeting } from "@//types/IMeetings";
 import { formatDayMonthYear, formatTime } from "@//utils/formatters";
-import { Badge } from "../ui/badge";
-import Pagination from "../ui/pagination";
+import { Badge } from "../../ui/badge";
+import Pagination from "../../ui/pagination";
 import { meetingStatusLabels } from "@//utils/constants/meeting";
 
 interface MeetingHistoryListProps {
@@ -23,7 +23,7 @@ const MeetingHistoryList = ({
 }: MeetingHistoryListProps) => {
   const handlePageChange = (page: number) => {
     onPageChange(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    //window.scrollTo({ top: 200, behavior: "smooth" }); //nao sei se eu gosto disso ainda
   };
 
   return (

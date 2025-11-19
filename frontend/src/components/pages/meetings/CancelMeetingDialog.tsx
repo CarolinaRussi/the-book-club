@@ -5,10 +5,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
 import { toast } from "react-toastify";
-import { useClub } from "../../contexts/ClubContext";
+import { useClub } from "@//contexts/ClubContext";
 import type { IMeeting } from "@//types/IMeetings";
 
 import { formatDayMonthYear } from "@//utils/formatters";

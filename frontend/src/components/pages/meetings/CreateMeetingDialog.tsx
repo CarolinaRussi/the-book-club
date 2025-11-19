@@ -5,10 +5,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
 import { toast } from "react-toastify";
-import { useClub } from "../../contexts/ClubContext";
 import type { IMeetingCreatePayload } from "@//types/IMeetings";
 import {
   Select,
@@ -16,12 +15,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Calendar } from "../ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+} from "../../ui/select";
+import { Calendar } from "../../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import React from "react";
-import { Input } from "../ui/input";
+import { Input } from "../../ui/input";
 import { useBook } from "@//contexts/BookContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
@@ -30,6 +29,7 @@ import {
   BOOK_STATUS_STARTED,
   BOOK_STATUS_SUGGESTED,
 } from "@//utils/constants/books";
+import { useClub } from "@//contexts/ClubContext";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;

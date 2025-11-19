@@ -1,12 +1,12 @@
 import { Book, Calendar, Clock, Edit, MapPin } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { Button } from "../../ui/button";
+import { Card, CardContent } from "../../ui/card";
 import type { IMeeting } from "@//types/IMeetings";
-import EditMeetingDialog from "../dialogs/EditMeetingDialog";
+import EditMeetingDialog from "./EditMeetingDialog";
 import { useState } from "react";
 import { formatDayMonthYear, formatTime } from "@//utils/formatters";
 import { LuCalendarX2 } from "react-icons/lu";
-import CancelMeetingDialog from "../dialogs/CancelMeetingDialog";
+import CancelMeetingDialog from "./CancelMeetingDialog";
 
 interface NextMeetingListProps {
   isLoading: boolean;

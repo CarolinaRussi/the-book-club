@@ -7,16 +7,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { useAuth } from "../../contexts/AuthContext";
-import { useClub } from "../../contexts/ClubContext";
-import type { IApiError } from "../../types/IApi";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useClub } from "../../../contexts/ClubContext";
+import type { IApiError } from "../../../types/IApi";
 import { Loader2 } from "lucide-react";
-import { fetchClubByInvitationCode } from "../../api/queries/fetchClubs";
-import type { IClubWithOwner } from "../../types/IClubs";
-import { joinClub } from "../../api/mutations/clubMutate";
-import type { IMembersPayload } from "../../types/IMember";
+import { fetchClubByInvitationCode } from "../../../api/queries/fetchClubs";
+import type { IClubWithOwner } from "../../../types/IClubs";
+import { joinClub } from "../../../api/mutations/clubMutate";
+import type { IMembersPayload } from "../../../types/IMember";
 
 interface JoinClubDialogProps {
   open: boolean;

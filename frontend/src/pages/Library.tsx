@@ -5,11 +5,11 @@ import { LuCalendarDays } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { useState } from "react";
 import { Button } from "../components/ui/button";
-import CreateBookDialog from "../components/dialogs/CreateBookDialog";
+import CreateBookDialog from "../components/pages/library/CreateBookDialog";
 import { useBook } from "../contexts/BookContext";
 import { Badge } from "../components/ui/badge";
 import type { IBook } from "../types/IBooks";
-import AddReviewDialog from "../components/dialogs/AddReviewDialog";
+import AddReviewDialog from "../components/pages/library/AddReviewDialog";
 import { bookStatusLabels } from "../utils/constants/books";
 import {
   READING_STATUS_DROPPED,
@@ -32,7 +32,7 @@ export default function Library() {
             Nossa Biblioteca
           </h1>
           <h2 className="text-md w-full text-warm-brown">
-            Todos os livros que já lemos juntas, com notas e avaliações
+            Todos os livros que já lemos juntos, com notas e avaliações
           </h2>
         </div>
         <div>
@@ -115,7 +115,7 @@ export default function Library() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <LuCalendarDays size={20} />
-                    Lido em {formatMonthYear(book.added_at)}
+                    {formatMonthYear(book.added_at)}
                   </div>
                   <span>
                     {validReviews.length}{" "}

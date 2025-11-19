@@ -1,8 +1,8 @@
 import { type SubmitHandler, useForm } from "react-hook-form";
-import type { IClubPayload } from "../../types/IClubs";
-import type { IApiError } from "../../types/IApi";
+import type { IClubPayload } from "../../../types/IClubs";
+import type { IApiError } from "../../../types/IApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createClub } from "../../api/mutations/clubMutate";
+import { createClub } from "../../../api/mutations/clubMutate";
 import { toast } from "react-toastify";
 import {
   Dialog,
@@ -11,10 +11,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { useAuth } from "../../contexts/AuthContext";
-import { useClub } from "../../contexts/ClubContext";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useClub } from "../../../contexts/ClubContext";
 
 interface CreateClubDialogProps {
   open: boolean;

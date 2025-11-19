@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
 import { toast } from "react-toastify";
-import { useClub } from "../../contexts/ClubContext";
+import { useClub } from "@//contexts/ClubContext";
 import type { IMeeting, IMeetingUpdatePayload } from "@//types/IMeetings";
 import {
   Select,
@@ -17,12 +17,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Calendar } from "../ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+} from "../../ui/select";
+import { Calendar } from "../../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import React from "react";
-import { Input } from "../ui/input";
+import { Input } from "../../ui/input";
 import { useBook } from "@//contexts/BookContext";
 import { formatTime } from "@//utils/formatters";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

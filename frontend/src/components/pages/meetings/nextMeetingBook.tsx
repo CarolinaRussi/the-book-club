@@ -1,5 +1,5 @@
 import type { IBook } from "@//types/IBooks";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "../../ui/card";
 import { Book } from "lucide-react";
 
 interface NextMeetingBookProps {
@@ -25,29 +25,27 @@ const NextMeetingBook = ({ isLoading, nextBook }: NextMeetingBookProps) => {
             />
             <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
           </div>
-          <CardContent className="p-4">
+          <CardContent className="py-10">
             <div className="flex items-start justify-between">
-              <h3 className="text-lg font-semibold line-clamp-2 flex-1">
+              <h3 className="text-3xl font-semibold line-clamp-2 flex-1">
                 {nextBook.title}
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground">{nextBook.author}</p>
+            <p className="text-lg text-muted-foreground">{nextBook.author}</p>
           </CardContent>
         </Card>
       ) : (
         <Card className="overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0">
-          <CardContent className="p-0">
-            <div className="relative aspect-2/3 overflow-hidden bg-muted flex items-center justify-center">
-              <Book className="h-16 w-16 text-muted-foreground/50" />
-            </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold min-h-14">
-                Nenhum livro definido
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Nenhum encontro agendado.
-              </p>
-            </div>
+          <div className="relative aspect-2/3 overflow-hidden bg-muted flex items-center justify-center">
+            <Book className="h-16 w-16 text-muted-foreground/50" />
+          </div>
+          <CardContent className="py-10">
+            <h3 className="text-3xl font-semibold line-clamp-2 flex-1">
+              Nenhum livro definido
+            </h3>
+            <p className="text-lg text-muted-foreground">
+              Nenhum encontro agendado.
+            </p>
           </CardContent>
         </Card>
       )}

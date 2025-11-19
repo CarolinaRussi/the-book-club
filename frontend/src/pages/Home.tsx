@@ -11,9 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import CreateClubDialog from "../components/dialogs/CreateClubDialog";
+import CreateClubDialog from "../components/pages/home/CreateClubDialog";
 import { type ChangeEvent, useState } from "react";
-import ConfirmClubDialog from "../components/dialogs/ConfirmClubDialog";
+import ConfirmClubDialog from "../components/pages/home/ConfirmClubDialog";
 
 export default function Home() {
   const { user } = useAuth();
@@ -25,43 +25,6 @@ export default function Home() {
   const handleCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setClubCode(e.target.value.toUpperCase());
   };
-
-  // const actualBook: IBook = {
-  //   id: "1",
-  //   title: "O nome do vento (A Crônica do Matador do Rei - Livro 1)",
-  //   author: "Patrick Rothfuss",
-  //   created_at: "2025-11-02T02:42:39.623Z",
-  //   status: "started",
-  //   cover_url: "https://m.media-amazon.com/images/I/81CGmkRG9GL._SL1500_.jpg",
-  //   review: [
-  //     {
-  //       id: "1",
-  //       reading_status: "completed",
-  //       rating: 2.5,
-  //       review: "não fede nem cheira",
-  //       member: {
-  //         user: {
-  //           id: "1",
-  //           name: "Carolina Russi Ferla",
-  //           nickname: "Carol",
-  //         },
-  //       },
-  //     },
-  //     {
-  //       id: "2",
-  //       reading_status: "completed",
-  //       rating: 4,
-  //       review: "gostei muito!",
-  //       member: {
-  //         user: {
-  //           id: "2",
-  //           name: "Alex José Pires de Souza",
-  //           nickname: "Alex",
-  //         },
-  //       },
-  //     },
-  //   ],
-  // };
 
   return (
     <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
@@ -126,8 +89,6 @@ export default function Home() {
           </CardFooter>
         </Card>
       </div>
-
-      {/* <BookCard actualBook={actualBook} /> */}
 
       <div className="grid grid-cols-1 gap-10 mt-5">
         <Card id="card-meus-clubes" className="w-full mt-3 gap-2">

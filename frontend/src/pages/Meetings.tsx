@@ -9,17 +9,17 @@ import {
 } from "../api/queries/fetchMeetings";
 import type { IMeeting } from "../types/IMeetings";
 import { useState, useEffect } from "react";
-import CreateMeetingDialog from "../components/dialogs/CreateMeetingDialog";
-import MeetingHistoryList from "../components/meetings/meetingHistoryList";
-import NextMeetingList from "../components/meetings/nextMeetingList";
-import NextMeetingBook from "../components/meetings/nextMeetingBook";
+import CreateMeetingDialog from "../components/pages/meetings/CreateMeetingDialog";
+import MeetingHistoryList from "../components/pages/meetings/meetingHistoryList";
+import NextMeetingList from "../components/pages/meetings/nextMeetingList";
+import NextMeetingBook from "../components/pages/meetings/nextMeetingBook";
 import { MEETING_STATUS_SCHEDULED } from "../utils/constants/meeting";
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
   const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
   const [pastMeetingsPage, setPastMeetingsPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 4;
 
   const { data: meetings, isLoading } = useQuery<IMeeting[]>({
     queryKey: ["meetings", selectedClubId],
