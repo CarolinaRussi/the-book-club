@@ -169,15 +169,17 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
       return;
     }
     const { title: manualTitle, author: manualAuthor, coverImg } = data;
+
     const payload: IBookPayload = {
-      openLibraryId: selectedBook?.id?.split("/").pop(),
+      id: selectedBook?.id?.split("/").pop(),
       title: selectedBook ? selectedBook.title : manualTitle,
       author: selectedBook
         ? (selectedBook.author || ["Autor desconhecido"]).join(", ")
         : manualAuthor,
-      coverUrl: selectedBook?.cover
-        ? `https://covers.openlibrary.org/b/id/${selectedBook.cover_i}-L.jpg`
-        : undefined,
+      coverUrlOpenLibrary:
+        selectedBook.source === "openLibrary" && selectedBook?.cover
+          ? `https://covers.openlibrary.org/b/id/${selectedBook.cover_i}-L.jpg`
+          : undefined,
       coverImg: coverImg && coverImg.length > 0 ? coverImg : undefined,
       clubId: selectedClubId,
     };

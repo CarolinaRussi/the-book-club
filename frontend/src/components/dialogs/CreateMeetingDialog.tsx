@@ -26,7 +26,10 @@ import { useBook } from "@//contexts/BookContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { createMeeting } from "@//api/mutations/meetingMutate";
-import { BOOK_STATUS_SUGGESTED } from "@//utils/constants/books";
+import {
+  BOOK_STATUS_STARTED,
+  BOOK_STATUS_SUGGESTED,
+} from "@//utils/constants/books";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;
@@ -75,6 +78,9 @@ const CreateMeetingDialog = ({
     onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["meetings", selectedClubId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pastMeetings", selectedClubId],
       });
       reset();
       onOpenChange(false);
@@ -204,7 +210,11 @@ const CreateMeetingDialog = ({
                     </SelectTrigger>
                     <SelectContent className="border-secondary bg-background rounded-lg">
                       {booksFromSelectedClub
-                        .filter((book) => book.status === BOOK_STATUS_SUGGESTED)
+                        .filter(
+                          (book) =>
+                            book.status === BOOK_STATUS_SUGGESTED ||
+                            book.status === BOOK_STATUS_STARTED
+                        )
                         .map((book) => (
                           <SelectItem
                             key={book.id}

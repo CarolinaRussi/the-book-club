@@ -40,10 +40,10 @@ export interface IOpenLibraryBook {
 }
 
 export interface IBookPayload {
-  openLibraryId?: string;
+  id?: string;
   title: string;
   author: string;
-  coverUrl?: string;
+  coverUrlOpenLibrary?: string;
   coverImg?: FileList;
   clubId: string;
 }

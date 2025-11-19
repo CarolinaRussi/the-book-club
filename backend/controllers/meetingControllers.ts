@@ -42,10 +42,7 @@ export const getMeetingsFromClub = async (req: Request, res: Response) => {
   }
 };
 
-export const getPastMeetingsFromClub = async (
-  req: Request,
-  res: Response
-) => {
+export const getPastMeetingsFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 5;
@@ -106,7 +103,9 @@ export const getPastMeetingsFromClub = async (
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Erro ao buscar reuniões passadas" });
+    return res
+      .status(500)
+      .json({ message: "Erro ao buscar reuniões passadas" });
   }
 };
 
@@ -120,8 +119,8 @@ export const createMeeting = async (req: Request, res: Response) => {
   }
 
   try {
-    const meeting = await db.$transaction(async (prisma) => {
-      const newMeeting = await prisma.meeting.create({
+    const meeting = await db.$transaction(async () => {
+      const newMeeting = await db.meeting.create({
         data: {
           location: location,
           description: description,
@@ -133,7 +132,7 @@ export const createMeeting = async (req: Request, res: Response) => {
         },
       });
 
-      const clubBookEntry = await prisma.clubBook.findFirst({
+      const clubBookEntry = await db.clubBook.findFirst({
         where: {
           book_id: bookId,
           club_id: clubId,
@@ -141,7 +140,7 @@ export const createMeeting = async (req: Request, res: Response) => {
       });
 
       if (clubBookEntry && clubBookEntry.status !== BookStatus.STARTED) {
-        await prisma.clubBook.update({
+        await db.clubBook.update({
           where: {
             id: clubBookEntry.id,
           },
@@ -212,6 +211,26 @@ export const updateMeeting = async (req: Request, res: Response) => {
         status: status,
       },
     });
+
+    if (status === MeetingStatus.COMPLETED) {
+      console.log("Updating book status to FINISHED");
+      const clubBookEntry = await db.clubBook.findFirst({
+        where: {
+          book_id: bookId,
+          club_id: clubId,
+        },
+      });
+      if (clubBookEntry) {
+        await db.clubBook.update({
+          where: {
+            id: clubBookEntry.id,
+          },
+          data: {
+            status: BookStatus.FINISHED,
+          },
+        });
+      }
+    }
 
     res.status(200).json({
       message: "Encontro alterado com sucesso",

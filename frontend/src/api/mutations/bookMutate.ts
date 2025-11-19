@@ -11,11 +11,8 @@ export async function createBook(data: IBookPayload): Promise<any> {
       formData.append("coverImg", file);
     }
 
-    if (data.openLibraryId && data.coverUrl) {
-      formData.append("open_library_id", data.openLibraryId);
-      formData.append("cover_url", data.coverUrl);
-    }
-
+    formData.append("id", data.id || "");
+    formData.append("cover_url_open_library", data.coverUrlOpenLibrary || "");
     formData.append("title", data.title);
     formData.append("author", data.author);
     formData.append("club_id", data.clubId);
@@ -32,7 +29,7 @@ export async function createBook(data: IBookPayload): Promise<any> {
 }
 
 export async function saveReview(data: IBookReviewPayload): Promise<any> {
-   try {
+  try {
     const response = await api.post("/save-review", data);
     return response.data;
   } catch (error: unknown) {

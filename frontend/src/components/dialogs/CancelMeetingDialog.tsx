@@ -35,10 +35,12 @@ const CancelMeetingDialog = ({
     string | undefined
   >({
     mutationFn: cancelMeeting,
-    onSuccess: async (result) => {
-      console.log(result);
+    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["meetings", selectedClubId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pastMeetings", selectedClubId],
       });
       onOpenChange(false);
       toast.success("Encontro cancelado.");

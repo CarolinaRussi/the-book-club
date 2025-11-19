@@ -9,13 +9,13 @@ import { ReadingStatus } from "../enums/readingStatus";
 export const createBook = async (req: Request, res: Response) => {
   try {
     const file = req.file;
-    const { title, author, club_id, open_library_id, cover_url } = req.body;
+    const { title, author, club_id, id, cover_url_open_library } = req.body;
 
     const bookPayload: BookCreateInput = {
       title: title,
       author: author,
-      open_library_id: open_library_id,
-      cover_url: cover_url,
+      open_library_id: id,
+      cover_url: cover_url_open_library,
     };
 
     let uploadResult;
@@ -23,12 +23,14 @@ export const createBook = async (req: Request, res: Response) => {
     if (file) {
       console.log("Enviando arquivo (buffer) para o Cloudinary...");
       uploadResult = await uploadToCloudinary(file.buffer);
-    } else if (cover_url) {
-      console.log(`Enviando URL (${cover_url}) para o Cloudinary...`);
+    } else if (cover_url_open_library) {
+      console.log(
+        `Enviando URL (${cover_url_open_library}) para o Cloudinary...`
+      );
 
-      uploadResult = await cloudinary.uploader.upload(cover_url, {
+      uploadResult = await cloudinary.uploader.upload(cover_url_open_library, {
         folder: "book_covers_project",
-        public_id: open_library_id ? `book_${open_library_id}` : undefined,
+        public_id: id ? `book_${id}` : undefined,
       });
     }
 
@@ -41,9 +43,11 @@ export const createBook = async (req: Request, res: Response) => {
     const newClubBookEntry = await db.$transaction(async (tx) => {
       let book;
 
-      if (open_library_id) {
+      if (id) {
         book = await tx.book.findFirst({
-          where: { open_library_id: open_library_id },
+          where: {
+            OR: [{ open_library_id: id }, { id: id }],
+          },
         });
       }
 
@@ -95,6 +99,9 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
     const booksInClub = await db.clubBook.findMany({
       where: {
         club_id: clubId,
+      },
+      orderBy: {
+        added_at: "desc",
       },
       select: {
         status: true,
@@ -233,7 +240,7 @@ export const saveReview = async (req: Request, res: Response) => {
 export const getBooksByTitleOrAuthor = async (req: Request, res: Response) => {
   const { q } = req.query;
 
-  if (!q || typeof q !== 'string') {
+  if (!q || typeof q !== "string") {
     return res.status(200).json([]);
   }
 
@@ -244,13 +251,13 @@ export const getBooksByTitleOrAuthor = async (req: Request, res: Response) => {
           {
             title: {
               contains: q,
-              mode: 'insensitive',
+              mode: "insensitive",
             },
           },
           {
             author: {
               contains: q,
-              mode: 'insensitive',
+              mode: "insensitive",
             },
           },
         ],
@@ -265,7 +272,6 @@ export const getBooksByTitleOrAuthor = async (req: Request, res: Response) => {
     });
 
     res.status(200).json(books);
-
   } catch (error) {
     console.error("Erro ao buscar livros:", error);
     res.status(500).json({ message: "Erro interno ao buscar livros" });

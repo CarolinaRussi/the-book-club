@@ -10,11 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import { useClub } from "../../contexts/ClubContext";
-import type {
-  IMeeting,
-  IMeetingUpdatePayload,
-  MeetingStatus,
-} from "@//types/IMeetings";
+import type { IMeeting, IMeetingUpdatePayload } from "@//types/IMeetings";
 import {
   Select,
   SelectContent,
@@ -23,7 +19,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Calendar } from "../ui/calendar";
-import { meetingStatusLabels } from "@//utils/meetingStatusHelper";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import React from "react";
@@ -33,6 +28,10 @@ import { formatTime } from "@//utils/formatters";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { updateMeeting } from "@//api/mutations/meetingMutate";
+import {
+  meetingStatusLabels,
+  type MeetingStatus,
+} from "@//utils/constants/meeting";
 
 interface EditMeetingDialogProps {
   openDialog: boolean;
@@ -99,10 +98,15 @@ const EditMeetingDialog = ({
     IMeetingUpdatePayload
   >({
     mutationFn: updateMeeting,
-    onSuccess: async (result) => {
-      console.log(result);
+    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["meetings", selectedClubId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pastMeetings", selectedClubId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["booksFromSelectedClub", selectedClubId],
       });
       reset();
       onOpenChange(false);
@@ -118,8 +122,6 @@ const EditMeetingDialog = ({
       toast.error("Você não pode adicionar um livro sem estar em um clube");
       return;
     }
-    console.log(data);
-    console.log(meeting);
     const { bookId, description, location, meetingDate, meetingTime, status } =
       data;
 
