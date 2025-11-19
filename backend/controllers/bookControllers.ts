@@ -21,13 +21,8 @@ export const createBook = async (req: Request, res: Response) => {
     let uploadResult;
 
     if (file) {
-      console.log("Enviando arquivo (buffer) para o Cloudinary...");
       uploadResult = await uploadToCloudinary(file.buffer);
     } else if (cover_url_open_library) {
-      console.log(
-        `Enviando URL (${cover_url_open_library}) para o Cloudinary...`
-      );
-
       uploadResult = await cloudinary.uploader.upload(cover_url_open_library, {
         folder: "book_covers_project",
         public_id: id ? `book_${id}` : undefined,
@@ -35,7 +30,6 @@ export const createBook = async (req: Request, res: Response) => {
     }
 
     if (uploadResult) {
-      console.log("Upload bem-sucedido:", uploadResult.secure_url);
       bookPayload.cover_url = uploadResult.secure_url;
       bookPayload.cover_public_id = uploadResult.public_id;
     }
@@ -160,39 +154,29 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
 
 export const saveReview = async (req: Request, res: Response) => {
   try {
-    const { userId, bookId, rating, review, reading_status } = req.body;
+    const { userId, clubId, bookId, rating, review, reading_status } = req.body;
 
-    if (!userId || !bookId || !reading_status) {
+    if (!clubId || !userId || !bookId || !reading_status) {
       return res.status(400).json({
         message: "Dados incompletos. userId, bookId e status são obrigatórios.",
       });
     }
 
-    const clubWithMemberAndBook = await db.club.findFirst({
+    const memberWithBookAndClub = await db.member.findFirst({
       where: {
-        books: {
-          some: { book_id: bookId },
-        },
-        member: {
-          some: { user_id: userId },
-        },
-      },
-      include: {
-        member: {
-          where: { user_id: userId },
-          select: { id: true },
-        },
+        user_id: userId,
+        club_id: clubId,
       },
     });
 
-    if (!clubWithMemberAndBook || !clubWithMemberAndBook.member[0]) {
+    if (!memberWithBookAndClub) {
       return res.status(404).json({
         message:
           "Não foi possível encontrar sua matrícula neste clube para avaliar este livro.",
       });
     }
 
-    const memberId = clubWithMemberAndBook.member[0].id;
+    const memberId = memberWithBookAndClub.id;
 
     const existingReview = await db.review.findFirst({
       where: {

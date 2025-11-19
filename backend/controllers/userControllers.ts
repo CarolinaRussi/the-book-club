@@ -25,7 +25,6 @@ export const updateUser = async (req: Request, res: Response) => {
       updateData.profile_picture = null;
       updateData.profile_picture_public_id = null;
     } else if (file) {
-      console.log("Enviando arquivo para o Cloudinary...");
       const uploadResult = await uploadToCloudinary(file.buffer);
 
       updateData.profile_picture = uploadResult.secure_url;
@@ -35,8 +34,6 @@ export const updateUser = async (req: Request, res: Response) => {
         await cloudinary.uploader.destroy(oldPublicId);
       }
     }
-
-    console.log("Dados a serem salvos no banco:", updateData);
 
     const updatedUser = await db.user.update({
       where: { id: id },

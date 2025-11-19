@@ -213,7 +213,6 @@ export const updateMeeting = async (req: Request, res: Response) => {
     });
 
     if (status === MeetingStatus.COMPLETED) {
-      console.log("Updating book status to FINISHED");
       const clubBookEntry = await db.clubBook.findFirst({
         where: {
           book_id: bookId,
