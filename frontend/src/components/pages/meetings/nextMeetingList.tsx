@@ -9,14 +9,10 @@ import { LuCalendarX2 } from "react-icons/lu";
 import CancelMeetingDialog from "./CancelMeetingDialog";
 
 interface NextMeetingListProps {
-  isLoading: boolean;
   scheduledMeetings: IMeeting[] | undefined;
 }
 
-const NextMeetingList = ({
-  isLoading,
-  scheduledMeetings,
-}: NextMeetingListProps) => {
+const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
   const [editMeetingOpen, setEditMeetingOpen] = useState(false);
   const [meetingToUpdate, setMeetingToUpdate] = useState<IMeeting | undefined>(
     undefined
@@ -24,14 +20,8 @@ const NextMeetingList = ({
   const [cancelMeetingOpen, setCancelMeetingOpen] = useState(false);
 
   return (
-    <div className="">
-      {isLoading ? (
-        <Card>
-          <CardContent className="p-4">
-            <p>Carregando encontros...</p>
-          </CardContent>
-        </Card>
-      ) : scheduledMeetings && scheduledMeetings.length > 0 ? (
+    <div>
+      {scheduledMeetings && scheduledMeetings.length > 0 ? (
         scheduledMeetings.map((meeting) => (
           <Card key={meeting.id} className="shadow-(--shadow-soft)">
             <CardContent className=" px-8 relative">

@@ -15,6 +15,7 @@ import {
   READING_STATUS_DROPPED,
   READING_STATUS_FINISHED,
 } from "../utils/constants/reading";
+import SkeletonLibrary from "../components/pages/library/skeletons/SkeletonLibrary";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -22,7 +23,7 @@ export default function Library() {
   const [bookToUpdate, setBookToUpdate] = useState<IBook | undefined>(
     undefined
   );
-  const { booksFromSelectedClub } = useBook();
+  const { booksFromSelectedClub, isLoadingBooks } = useBook();
 
   return (
     <div className="flex flex-col w-full max-w-7xl py-5 md:py-15 px-4 mx-auto">
@@ -45,88 +46,91 @@ export default function Library() {
           </Button>
         </div>
       </div>
+      {isLoadingBooks ? (
+        <SkeletonLibrary />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+          {booksFromSelectedClub.map((book) => {
+            const reviews = book.review || [];
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
-        {booksFromSelectedClub.map((book) => {
-          const reviews = book.review || [];
+            const validReviews = reviews.filter(
+              (review) =>
+                review.reading_status === READING_STATUS_FINISHED ||
+                review.reading_status === READING_STATUS_DROPPED
+            );
 
-          const validReviews = reviews.filter(
-            (review) =>
-              review.reading_status === READING_STATUS_FINISHED ||
-              review.reading_status === READING_STATUS_DROPPED
-          );
+            const totalRating = validReviews.reduce(
+              (acc, review) => acc + review.rating,
+              0
+            );
 
-          const totalRating = validReviews.reduce(
-            (acc, review) => acc + review.rating,
-            0
-          );
+            const averageRating =
+              validReviews.length > 0 ? totalRating / validReviews.length : 0;
 
-          const averageRating =
-            validReviews.length > 0 ? totalRating / validReviews.length : 0;
-
-          return (
-            <Card
-              key={book.title}
-              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
-              onClick={() => {
-                setBookToUpdate(book);
-                setUpdateBookOpen(true);
-              }}
-            >
-              <div className="relative aspect-2/3 overflow-hidden bg-muted">
-                <img
-                  src={book.cover_url}
-                  alt={book.title}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
-              </div>
-
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-semibold line-clamp-2 flex-1 min-h-14">
-                    {book.title}
-                  </h3>
-                  <Badge className="ml-2 shrink-0">
-                    {bookStatusLabels[book.status]}
-                  </Badge>
+            return (
+              <Card
+                key={book.title}
+                className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
+                onClick={() => {
+                  setBookToUpdate(book);
+                  setUpdateBookOpen(true);
+                }}
+              >
+                <div className="relative aspect-2/3 overflow-hidden bg-muted">
+                  <img
+                    src={book.cover_url}
+                    alt={book.title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {book.author}
-                </p>
 
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1">
-                    <Rating
-                      initialValue={averageRating}
-                      readonly
-                      allowFraction
-                      SVGstyle={{ display: "inline" }}
-                      size={25}
-                      fillColor="#be2c3f"
-                      emptyColor="#e2cad0"
-                    />
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-semibold line-clamp-2 flex-1 min-h-14">
+                      {book.title}
+                    </h3>
+                    <Badge className="ml-2 shrink-0">
+                      {bookStatusLabels[book.status]}
+                    </Badge>
                   </div>
-                  <span className="text-sm font-semibold">
-                    {averageRating.toFixed(1)}
-                  </span>
-                </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {book.author}
+                  </p>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <LuCalendarDays size={20} />
-                    {formatMonthYear(book.added_at)}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1">
+                      <Rating
+                        initialValue={averageRating}
+                        readonly
+                        allowFraction
+                        SVGstyle={{ display: "inline" }}
+                        size={25}
+                        fillColor="#be2c3f"
+                        emptyColor="#e2cad0"
+                      />
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {averageRating.toFixed(1)}
+                    </span>
                   </div>
-                  <span>
-                    {validReviews.length}{" "}
-                    {validReviews.length === 1 ? "avaliação" : "avaliações"}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <LuCalendarDays size={20} />
+                      {formatMonthYear(book.added_at)}
+                    </div>
+                    <span>
+                      {validReviews.length}{" "}
+                      {validReviews.length === 1 ? "avaliação" : "avaliações"}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
       <CreateBookDialog
         open={createBookOpen}
         onOpenChange={setCreateBookOpen}

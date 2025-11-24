@@ -7,7 +7,6 @@ import Pagination from "../../ui/pagination";
 import { meetingStatusLabels } from "@//utils/constants/meeting";
 
 interface MeetingHistoryListProps {
-  isLoading: boolean;
   pastMeetings: IMeeting[] | undefined;
   currentPage: number;
   totalPages: number;
@@ -15,7 +14,6 @@ interface MeetingHistoryListProps {
 }
 
 const MeetingHistoryList = ({
-  isLoading,
   pastMeetings,
   currentPage,
   totalPages,
@@ -31,9 +29,7 @@ const MeetingHistoryList = ({
       <div className="rounded-2xl p-2">
         <h2 className="text-2xl font-bold mb-4">Histórico de Encontros</h2>
         <div className="space-y-4">
-          {isLoading ? (
-            <p>Carregando histórico...</p>
-          ) : pastMeetings && pastMeetings.length > 0 ? (
+          {pastMeetings && pastMeetings.length > 0 ? (
             pastMeetings.map((meeting) => (
               <Card key={meeting.id} className="shadow-(--shadow-soft) py-3">
                 <CardContent className="flex justify-between px-4">
@@ -82,8 +78,7 @@ const MeetingHistoryList = ({
           )}
         </div>
       </div>
-      {!isLoading &&
-        pastMeetings &&
+      {pastMeetings &&
         pastMeetings.length > 0 &&
         totalPages > 1 && (
           <div className="mt-4 flex justify-center">

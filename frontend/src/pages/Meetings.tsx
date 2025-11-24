@@ -14,6 +14,9 @@ import MeetingHistoryList from "../components/pages/meetings/meetingHistoryList"
 import NextMeetingList from "../components/pages/meetings/nextMeetingList";
 import NextMeetingBook from "../components/pages/meetings/nextMeetingBook";
 import { MEETING_STATUS_SCHEDULED } from "../utils/constants/meeting";
+import SkeletonNextMeetingList from "../components/pages/meetings/skeletons/SkeletonNextMeetingList";
+import SkeletonNextMeetingBook from "../components/pages/meetings/skeletons/SkeletonNextMeetingBook";
+import SkeletonMeetingHistory from "../components/pages/meetings/skeletons/SkeletonMeetingHistory";
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
@@ -21,7 +24,7 @@ export default function Meetings() {
   const [pastMeetingsPage, setPastMeetingsPage] = useState(1);
   const itemsPerPage = 4;
 
-  const { data: meetings, isLoading } = useQuery<IMeeting[]>({
+  const { data: meetings, isPending } = useQuery<IMeeting[]>({
     queryKey: ["meetings", selectedClubId],
     queryFn: () => fetchMeetingsByClubId(selectedClubId),
     staleTime: 1000 * 60 * 5,
@@ -35,7 +38,7 @@ export default function Meetings() {
   const veryNextMeeting = scheduledMeetings?.[0];
   const nextBook = veryNextMeeting?.book;
 
-  const { data: pastMeetingsData, isLoading: isLoadingPastMeetings } = useQuery(
+  const { data: pastMeetingsData, isPending: isPendingPastMeetings } = useQuery(
     {
       queryKey: ["pastMeetings", selectedClubId, pastMeetingsPage],
       queryFn: () =>
@@ -54,7 +57,7 @@ export default function Meetings() {
   }, [selectedClubId]);
 
   return (
-    <div className="min-h-screen bg-background w-full">
+    <div className="min-h-screen bg-cream w-full">
       <section className="relative h-[300px] ">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -89,25 +92,33 @@ export default function Meetings() {
             </div>
 
             {/* Componente que lista os próximos encontros agendados */}
-            <NextMeetingList
-              isLoading={isLoading}
-              scheduledMeetings={scheduledMeetings}
-            />
+            {isPending ? (
+              <SkeletonNextMeetingList />
+            ) : (
+              <NextMeetingList scheduledMeetings={scheduledMeetings} />
+            )}
           </div>
 
           {/* Componente que lista o histórico de encontros concluídos ou cancelados */}
-          <MeetingHistoryList
-            isLoading={isLoadingPastMeetings}
-            pastMeetings={pastMeetingsData?.data}
-            currentPage={pastMeetingsPage}
-            totalPages={pastMeetingsData?.totalPages ?? 1}
-            onPageChange={setPastMeetingsPage}
-          />
+          {isPendingPastMeetings ? (
+            <SkeletonMeetingHistory />
+          ) : (
+            <MeetingHistoryList
+              pastMeetings={pastMeetingsData?.data}
+              currentPage={pastMeetingsPage}
+              totalPages={pastMeetingsData?.totalPages ?? 1}
+              onPageChange={setPastMeetingsPage}
+            />
+          )}
         </div>
 
         {/* Componente que mostra o livro da vez*/}
         <div className="h-full">
-          <NextMeetingBook isLoading={isLoading} nextBook={nextBook} />
+          {isPending ? (
+            <SkeletonNextMeetingBook />
+          ) : (
+            <NextMeetingBook nextBook={nextBook} />
+          )}
         </div>
       </div>
       <CreateMeetingDialog

@@ -1,11 +1,12 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
+import SkeletonHome from "./SkeletonHome";
 
 export const PrivateRoute = () => {
   const { isLoggedIn, isLoadingUser } = useAuth();
 
   if (isLoadingUser) {
-    return <div>Carregando sua sessão...</div>;
+    return <SkeletonHome />;
   }
 
   if (!isLoggedIn) {

@@ -3,16 +3,13 @@ import { Card, CardContent } from "../../ui/card";
 import { Book } from "lucide-react";
 
 interface NextMeetingBookProps {
-  isLoading: boolean;
   nextBook: IBook | undefined;
 }
-const NextMeetingBook = ({ isLoading, nextBook }: NextMeetingBookProps) => {
+const NextMeetingBook = ({ nextBook }: NextMeetingBookProps) => {
   return (
     <div className="hidden md:block max-w-md h-full">
       <h2 className="text-2xl font-bold mb-4">Livro da Vez</h2>
-      {isLoading ? (
-        <p>Carregando livro...</p>
-      ) : nextBook ? (
+      {nextBook ? (
         <Card
           key={nextBook.id}
           className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
