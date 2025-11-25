@@ -103,7 +103,7 @@ export default function Header() {
           <>
             {clubs.length > 0 && (
               <Select
-                value={selectedClubId || undefined}
+                value={selectedClubId || ""}
                 onValueChange={(value) => {
                   setSelectedClubId(value);
                   queryClient.invalidateQueries({

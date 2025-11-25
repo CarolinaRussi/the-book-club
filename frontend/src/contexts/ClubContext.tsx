@@ -12,9 +12,13 @@ interface ClubContextData {
 }
 
 const ClubContext = createContext<ClubContextData | undefined>(undefined);
+const STORAGE_KEY = "@bookclub:selectedClubId";
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(() => {
+    const savedId = localStorage.getItem(STORAGE_KEY);
+    return savedId || null;
+  });
   const { user } = useAuth();
 
   const { data: clubsData, isLoading: isLoadingClubs } = useQuery({
@@ -27,9 +31,17 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const clubs = clubsData || [];
 
   useEffect(() => {
-    if (!user) {
-      setSelectedClubId(null);
-    } else if (clubs && clubs.length > 0) {
+    if (selectedClubId) {
+      localStorage.setItem(STORAGE_KEY, selectedClubId);
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [selectedClubId]);
+
+  useEffect(() => {
+    if (!user || isLoadingClubs) return;
+
+    if (clubs && clubs.length > 0) {
       const currentSelectionIsValid = clubs.some(
         (club) => club.id === selectedClubId
       );
@@ -37,8 +49,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       if (!selectedClubId || !currentSelectionIsValid) {
         setSelectedClubId(clubs[0].id);
       }
+    } else {
+      setSelectedClubId(null);
     }
-  }, [user, clubs, selectedClubId]);
+  }, [user, clubs, selectedClubId, isLoadingClubs]); 
 
   const value = {
     selectedClubId,
