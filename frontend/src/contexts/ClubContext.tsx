@@ -46,13 +46,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         (club) => club.id === selectedClubId
       );
 
-      if (!selectedClubId || !currentSelectionIsValid) {
+      if (!currentSelectionIsValid) {
         setSelectedClubId(clubs[0].id);
       }
     } else {
       setSelectedClubId(null);
     }
-  }, [user, clubs, selectedClubId, isLoadingClubs]); 
+  }, [user, clubs, isLoadingClubs]);
 
   const value = {
     selectedClubId,

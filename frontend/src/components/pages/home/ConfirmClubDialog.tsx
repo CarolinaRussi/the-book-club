@@ -17,6 +17,7 @@ import { fetchClubByInvitationCode } from "../../../api/queries/fetchClubs";
 import type { IClubWithOwner } from "../../../types/IClubs";
 import { joinClub } from "../../../api/mutations/clubMutate";
 import type { IMembersPayload } from "../../../types/IMember";
+import type { AxiosError } from "axios";
 
 interface JoinClubDialogProps {
   open: boolean;
@@ -40,7 +41,7 @@ const JoinClubDialog = ({
     isLoading: isQueryLoading,
     isError: isQueryError,
     error: queryError,
-  } = useQuery<IClubWithOwner, IApiError>({
+  } = useQuery<IClubWithOwner, AxiosError<IApiError>>({
     queryKey: ["clubByCode", invitationCode],
     queryFn: () => fetchClubByInvitationCode(invitationCode),
     enabled: open && !!invitationCode,
@@ -79,17 +80,22 @@ const JoinClubDialog = ({
   const renderContent = () => {
     if (isQueryLoading) {
       return (
-        <div className="flex items-center justify-center gap-2 py-8 text-warm-brown">
+        <DialogDescription className="flex items-center justify-center gap-2 py-8 text-warm-brown">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Buscando clube pelo código...</span>
-        </div>
+        </DialogDescription>
       );
     }
 
     if (isQueryError) {
+      const errorMessage =
+        queryError?.response?.data?.message || "Erro ao buscar clube.";
+
       return (
-        <DialogDescription className="text-1xl text-primary py-4">
-          {queryError?.message || "Código inválido ou clube não encontrado."}
+        <DialogDescription className="py-4 flex items-center">
+          <span className="text-lg text-primary font-semibold text-center">
+            {errorMessage}
+          </span>
         </DialogDescription>
       );
     }
@@ -129,7 +135,9 @@ const JoinClubDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-[150px]">{renderContent()}</div>
+        <div className="min-h-[150px] flex items-center justify-center">
+          {renderContent()}
+        </div>
 
         <DialogFooter className="mt-5">
           <Button

@@ -149,7 +149,12 @@ export default function Home() {
       <ConfirmClubDialog
         invitationCode={clubCode}
         open={isConfirmingClub}
-        onOpenChange={setConfirmingClub}
+        onOpenChange={(isOpen) => {
+          setConfirmingClub(isOpen);
+          if (!isOpen) {
+            setClubCode("");
+          }
+        }}
         onSuccess={() => setClubCode("")}
       />
     </div>

@@ -3,6 +3,7 @@ export interface IClub {
   name: string;
   status: string;
   owner_id: string;
+  invitation_code: string;
   created_at: string;
   description?: string;
 }
@@ -15,7 +16,6 @@ export interface IClubWithOwner extends IClub {
 
 export interface IClubPayload {
   name: string;
-  invitationCode: string;
   ownerId?: string;
   description: string;
 }

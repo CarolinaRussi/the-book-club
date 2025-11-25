@@ -75,6 +75,9 @@ export default function Profile() {
       queryClient.invalidateQueries({
         queryKey: ["authenticatedUser"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["readers"],
+      });
       toast.success("Perfil atualizado com sucesso!");
     },
     onError: (error) => {
