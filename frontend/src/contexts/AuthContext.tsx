@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/index";
 import { fetchAuthenticatedUser } from "../api/queries/fetchUser";
@@ -19,12 +19,15 @@ if (token) {
   api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 }
 
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading: isLoadingUser } = useQuery({
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+    isError,
+  } = useQuery({
     queryKey: ["authenticatedUser"],
     queryFn: fetchAuthenticatedUser,
     enabled: isLoggedIn,
@@ -33,28 +36,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refetchOnWindowFocus: false,
   });
 
+  useEffect(() => {
+    if (!isLoadingUser && isLoggedIn && (isError || !user)) {
+      console.warn("Token inválido ou expirado. Realizando logout automático.");
+      logout();
+    }
+  }, [isLoadingUser, isLoggedIn, user, isError]);
+
   const login = (token: string, userPayload: IUser) => {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     localStorage.setItem("token", token);
-
     queryClient.setQueryData(["authenticatedUser"], userPayload);
-
     setIsLoggedIn(true);
   };
 
   const logout = () => {
     delete api.defaults.headers.common["Authorization"];
     localStorage.removeItem("token");
-
     setIsLoggedIn(false);
-
     queryClient.clear();
   };
+
+  const isAuthenticatedPublic = isLoggedIn && !!user;
 
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn,
+        isLoggedIn: isAuthenticatedPublic,
         user: user || null,
         isLoadingUser,
         login,
