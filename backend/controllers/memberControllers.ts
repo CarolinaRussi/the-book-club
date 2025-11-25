@@ -5,39 +5,60 @@ import { Prisma } from "../generated/prisma/client";
 
 export const getMembersFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 8;
 
   if (!id) {
     return res.status(401).json({ message: "Clube não selecionado" });
   }
 
   try {
-    const members = await db.member.findMany({
-      where: {
-        club_id: id,
-        user: {
-          status: UserStatus.ACTIVE,
-        },
-      },
-      orderBy: {
-        user: {
-          created_at: "desc",
-        },
-      },
-      select: {
-        joined_at: true,
-        user: {
-          select: {
-            name: true,
-            nickname: true,
-            bio: true,
-            favorites_genres: true,
-            profile_picture: true,
-            email: true,
+    const skip = (page - 1) * limit;
+
+    const [members, totalItems] = await Promise.all([
+      db.member.findMany({
+        where: {
+          club_id: id,
+          user: {
+            status: UserStatus.ACTIVE,
           },
         },
-      },
-    });
-    res.status(200).json(members);
+        orderBy: {
+          user: {
+            created_at: "desc",
+          },
+        },
+        skip,
+        take: limit,
+        select: {
+          joined_at: true,
+          user: {
+            select: {
+              name: true,
+              nickname: true,
+              bio: true,
+              favorites_genres: true,
+              profile_picture: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      db.member.count({
+        where: {
+          club_id: id,
+          user: {
+            status: UserStatus.ACTIVE,
+          },
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res
+      .status(200)
+      .json({ data: members, totalPages, currentPage: page, totalItems });
   } catch (error) {
     console.error("Erro ao buscar membros do clube:", error);
     res.status(500).json({ message: "Erro interno ao buscar membros" });

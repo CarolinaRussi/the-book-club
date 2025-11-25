@@ -85,51 +85,42 @@ export const createBook = async (req: Request, res: Response) => {
 export const getBooksByClubId = async (req: Request, res: Response) => {
   const { clubId } = req.params;
 
+  const page = req.query.page ? Number(req.query.page) : undefined;
+  const limit = req.query.limit ? Number(req.query.limit) : undefined;
+
   if (!clubId) {
     return res.status(400).json({ message: "ID do Clube não enviado." });
   }
 
-  try {
-    const booksInClub = await db.clubBook.findMany({
-      where: {
-        club_id: clubId,
-      },
-      orderBy: {
-        added_at: "desc",
-      },
+  const selectQuery = {
+    status: true,
+    added_at: true,
+    book: {
       select: {
-        status: true,
-        added_at: true,
-
-        book: {
+        id: true,
+        title: true,
+        author: true,
+        cover_url: true,
+        created_at: true,
+        review: {
+          where: {
+            member: {
+              club_id: clubId,
+            },
+          },
           select: {
             id: true,
-            title: true,
-            author: true,
-            cover_url: true,
-            created_at: true,
-
-            review: {
-              where: {
-                member: {
-                  club_id: clubId,
-                },
-              },
+            reading_status: true,
+            rating: true,
+            review: true,
+            member: {
               select: {
-                id: true,
-                reading_status: true,
-                rating: true,
-                review: true,
-                member: {
+                user: {
                   select: {
-                    user: {
-                      select: {
-                        id: true,
-                        name: true,
-                        nickname: true,
-                        profile_picture: true,
-                      },
-                    },
+                    id: true,
+                    name: true,
+                    nickname: true,
+                    profile_picture: true,
                   },
                 },
               },
@@ -137,18 +128,60 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
           },
         },
       },
-    });
+    },
+  };
 
-    const formattedResponse = booksInClub.map((cb) => ({
-      ...cb.book,
-      status: cb.status,
-      added_at: cb.added_at,
-    }));
+  try {
+    if (page && limit) {
+      const skip = (page - 1) * limit;
 
-    res.status(200).json(formattedResponse);
+      const [totalItems, booksInClub] = await db.$transaction([
+        db.clubBook.count({
+          where: { club_id: clubId },
+        }),
+        db.clubBook.findMany({
+          where: { club_id: clubId },
+          orderBy: { added_at: "desc" },
+          skip: skip,
+          take: limit,
+          select: selectQuery,
+        }),
+      ]);
+
+      const formattedData = booksInClub.map((cb: any) => ({
+        ...cb.book,
+        status: cb.status,
+        added_at: cb.added_at,
+      }));
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return res.status(200).json({
+        data: formattedData,
+        totalPages,
+        currentPage: page,
+        totalItems,
+      });
+    } else {
+      const booksInClub = await db.clubBook.findMany({
+        where: { club_id: clubId },
+        orderBy: { added_at: "desc" },
+        select: selectQuery,
+      });
+
+      const formattedResponse = booksInClub.map((cb: any) => ({
+        ...cb.book,
+        status: cb.status,
+        added_at: cb.added_at,
+      }));
+
+      return res.status(200).json(formattedResponse);
+    }
   } catch (error) {
     console.error("Erro ao buscar livros do clube:", error);
-    res.status(500).json({ message: "Erro interno ao buscar livros do clube" });
+    return res
+      .status(500)
+      .json({ message: "Erro interno ao buscar livros do clube" });
   }
 };
 

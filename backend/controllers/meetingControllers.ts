@@ -45,7 +45,7 @@ export const getMeetingsFromClub = async (req: Request, res: Response) => {
 export const getPastMeetingsFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 5;
+  const limit = parseInt(req.query.limit as string) || 4;
 
   if (!id) {
     return res.status(401).json({ message: "Clube não selecionado" });
