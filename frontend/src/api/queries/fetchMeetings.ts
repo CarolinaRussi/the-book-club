@@ -1,4 +1,5 @@
-import type { IMeeting, IPaginatedResponse } from "../../types/IMeetings";
+import type { IPaginatedResponse } from "@//types/IApi";
+import type { IMeeting } from "../../types/IMeetings";
 import { api } from "../index";
 
 export const fetchMeetingsByClubId = async (
@@ -11,7 +12,7 @@ export const fetchMeetingsByClubId = async (
 export const fetchPastMeetingsByClubId = async (
   clubId: string | null,
   page: number = 1,
-  itemsPerPage: number = 3
+  itemsPerPage: number = 4
 ): Promise<IPaginatedResponse<IMeeting>> => {
   const { data } = await api.get(`/club/${clubId}/meetings/past`, {
     params: {

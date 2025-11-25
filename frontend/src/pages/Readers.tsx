@@ -10,16 +10,33 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import SkeletonReaders from "../components/pages/readers/Skeleton";
+import { useEffect, useState } from "react";
+import Pagination from "../components/ui/pagination";
 
 export default function Readers() {
   const { selectedClubId } = useClub();
+  const [readersPage, setReadersPage] = useState(1);
+  const itemsPerPage = 8;
 
-  const { data: readers, isFetching } = useQuery({
-    queryKey: ["readers", selectedClubId],
-    queryFn: () => fetchReadersByClubId(selectedClubId),
+  const handlePageChange = (page: number) => {
+    setReadersPage(page);
+    //window.scrollTo({ top: 200, behavior: "smooth" }); //nao sei se eu gosto disso ainda
+  };
+
+  const { data: readersData, isFetching } = useQuery({
+    queryKey: ["readers", selectedClubId, readersPage],
+    queryFn: () =>
+      fetchReadersByClubId(selectedClubId, readersPage, itemsPerPage),
     staleTime: 1000 * 60 * 5,
     enabled: !!selectedClubId,
   });
+
+  useEffect(() => {
+    setReadersPage(1);
+  }, [selectedClubId]);
+
+  const readers = readersData?.data || [];
+  const totalPages = readersData?.totalPages || 1;
 
   return (
     <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
@@ -34,50 +51,61 @@ export default function Readers() {
       {isFetching ? (
         <SkeletonReaders />
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {selectedClubId && readers && readers.length > 0 ? (
-            readers.map((reader) => (
-              <div
-                key={reader.user.id}
-                className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md"
-              >
-                <Avatar className="mb-4 size-30 ">
-                  <AvatarImage
-                    src={reader.user.profile_picture}
-                    alt={`Foto de perfil de ${reader.user.name}`}
-                  />
-                  <AvatarFallback
-                    className="text-4xl text-primary"
-                    delayMs={600}
-                  >
-                    {getInitials(reader.user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <h1 className="text-2xl font-bold text-center text-foreground mb-3">
-                  {reader.user.nickname}
-                </h1>
-                {reader.user.bio && (
-                  <div className="text-sm text-muted-foreground text-center mb-3">
-                    {reader.user.bio}
+        <>
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {selectedClubId && readers && readers.length > 0 ? (
+              readers.map((reader) => (
+                <div
+                  key={reader.user.id}
+                  className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md"
+                >
+                  <Avatar className="mb-4 size-30 ">
+                    <AvatarImage
+                      src={reader.user.profile_picture}
+                      alt={`Foto de perfil de ${reader.user.name}`}
+                    />
+                    <AvatarFallback
+                      className="text-4xl text-primary"
+                      delayMs={600}
+                    >
+                      {getInitials(reader.user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h1 className="text-2xl font-bold text-center text-foreground mb-3">
+                    {reader.user.nickname}
+                  </h1>
+                  {reader.user.bio && (
+                    <div className="text-sm text-muted-foreground text-center mb-3">
+                      {reader.user.bio}
+                    </div>
+                  )}
+                  <div className="text-sm text-muted-foreground text-center mt-auto">
+                    Membro desde: <p>{formatDayMonthYear(reader.joined_at)}</p>
                   </div>
-                )}
-                <div className="text-sm text-muted-foreground text-center">
-                  Membro desde: <p>{formatDayMonthYear(reader.joined_at)}</p>
                 </div>
-              </div>
-            ))
-          ) : (
-            <Card className="md:col-span-4 text-center">
-              <CardHeader>
-                <CardTitle>Nenhum clube por aqui... ainda!</CardTitle>
-                <CardDescription>
-                  Que tal criar seu próprio clube ou entrar em um com um
-                  convite?
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              ))
+            ) : (
+              <Card className="md:col-span-4 text-center">
+                <CardHeader>
+                  <CardTitle>Nenhum clube por aqui... ainda!</CardTitle>
+                  <CardDescription>
+                    Que tal criar seu próprio clube ou entrar em um com um
+                    convite?
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            )}
+          </div>
+          {readers.length > 0 && totalPages > 1 && (
+            <div className="mt-8 flex justify-center w-full">
+              <Pagination
+                currentPage={readersPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

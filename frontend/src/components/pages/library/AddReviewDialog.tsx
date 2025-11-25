@@ -2,6 +2,7 @@ import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
@@ -158,6 +159,7 @@ const AddReviewDialog = ({
             <DialogTitle className="text-3xl text-primary">
               {book?.title}
             </DialogTitle>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-180 w-full pr-4">
             <div className="grid grid-cols-4 mt-3 gap-3">

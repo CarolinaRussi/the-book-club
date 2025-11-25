@@ -4,8 +4,11 @@ import { Skeleton } from "../../../ui/skeleton";
 const SkeletonLibrary = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
-      {Array.from({ length: 4 }).map((_) => (
-        <Card className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Card
+          key={index}
+          className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
+        >
           <div className="relative aspect-2/3 overflow-hidden bg-muted">
             <Skeleton className="w-full h-full object-cover transition-transform group-hover:scale-105" />
             <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
@@ -20,8 +23,8 @@ const SkeletonLibrary = () => {
 
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_) => (
-                  <Skeleton className="h-6 w-6 rounded-2xl" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton key={index} className="h-6 w-6 rounded-2xl" />
                 ))}
               </div>
               <Skeleton className="h-5 w-10" />

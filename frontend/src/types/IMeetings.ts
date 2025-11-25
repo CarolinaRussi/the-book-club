@@ -31,10 +31,3 @@ export interface IMeetingUpdatePayload {
   bookId: string;
   clubId: string;
 }
-
-export interface IPaginatedResponse<T> {
-  data: T[];
-  totalPages: number;
-  currentPage: number;
-  totalItems: number;
-}
