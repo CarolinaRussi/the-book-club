@@ -16,7 +16,7 @@ export interface IReview {
   id: string;
   reading_status: ReadingStatus;
   rating: number;
-  review: string;
+  comment: string;
   member: IMemberReview;
 }
 
@@ -50,7 +50,7 @@ export interface IBookPayload {
 
 export interface IBookReviewPayload {
   rating: number;
-  review: string;
+  comment: string;
   reading_status: ReadingStatus | undefined;
   clubId: string;
   userId: string;

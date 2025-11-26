@@ -31,6 +31,7 @@ import { RiResetLeftFill } from "react-icons/ri";
 import {
   READING_STATUS_NOT_STARTED,
   READING_STATUS_STARTED,
+  READING_STATUS_WANT_TO_READ,
   readingStatusLabels,
   type ReadingStatus,
 } from "@//utils/constants/reading";
@@ -38,7 +39,7 @@ import { useClub } from "@//contexts/ClubContext";
 
 interface IBookReviewForm {
   rating: number;
-  review: string;
+  comment: string;
   reading_status: ReadingStatus | undefined;
 }
 
@@ -67,7 +68,7 @@ const AddReviewDialog = ({
   } = useForm<IBookReviewForm>({
     defaultValues: {
       rating: 0,
-      review: "",
+      comment: "",
       reading_status: undefined,
     },
   });
@@ -80,11 +81,11 @@ const AddReviewDialog = ({
 
       setValue("reading_status", userReview?.reading_status || undefined);
       setValue("rating", userReview?.rating || 0);
-      setValue("review", userReview?.review || "");
+      setValue("comment", userReview?.comment || "");
     } else if (!open) {
       reset({
         rating: 0,
-        review: "",
+        comment: "",
         reading_status: undefined,
       });
     }
@@ -122,9 +123,10 @@ const AddReviewDialog = ({
       return;
     }
 
-    const hasRatingOrReview = data.rating > 0 || data.review.trim() !== "";
+    const hasRatingOrReview = data.rating > 0 || data.comment.trim() !== "";
 
     const isInvalidStatusForRating =
+      data.reading_status === READING_STATUS_WANT_TO_READ ||
       data.reading_status === READING_STATUS_NOT_STARTED ||
       data.reading_status === READING_STATUS_STARTED;
 
@@ -236,7 +238,7 @@ const AddReviewDialog = ({
               <div>
                 <h3 className="text-primary font-semibold">Comentário:</h3>
                 <textarea
-                  {...register("review")}
+                  {...register("comment")}
                   className="rounded-sm border-2 w-full h-25 mt-2 px-3 py-2"
                   placeholder="Escreva sua opinião sobre o livro..."
                 ></textarea>
@@ -305,7 +307,7 @@ const AddReviewDialog = ({
                   <div className="flex-1">
                     <CardTitle>{r.member.user.nickname}</CardTitle>
                     <h3 className="mt-1 text-sm text-muted-foreground">
-                      {r.review}
+                      {r.comment}
                     </h3>
                   </div>
 
