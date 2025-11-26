@@ -1,11 +1,6 @@
 import { getInitials } from "@//utils/formatters";
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
 
 interface ProfilePictureUpdateProps {
   previewUrl?: string;
@@ -17,13 +12,13 @@ interface ProfilePictureUpdateProps {
 }
 
 const ProfilePictureUpdate = ({
-    previewUrl,
-    profilePictureUrl,
-    name,
-    handleFileChange,
-    handleRemoveImage,
-    restRegister,
-}:ProfilePictureUpdateProps) => {
+  previewUrl,
+  profilePictureUrl,
+  name,
+  handleFileChange,
+  handleRemoveImage,
+  restRegister,
+}: ProfilePictureUpdateProps) => {
   return (
     <Card className="md:col-span-1">
       <CardHeader>

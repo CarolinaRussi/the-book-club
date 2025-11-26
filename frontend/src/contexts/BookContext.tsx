@@ -8,6 +8,7 @@ import { useClub } from "./ClubContext";
 import type { IBook } from "../types/IBooks";
 import { fetchClubBooks } from "../api/queries/fetchBooks";
 import { BOOK_STATUS_STARTED } from "../utils/constants/books";
+import { useAuth } from "./AuthContext";
 
 interface BookContextData {
   currentBooks: IBook[];
@@ -22,6 +23,7 @@ const BookContext = createContext<BookContextData | undefined>(undefined);
 
 export function BookProvider({ children }: { children: React.ReactNode }) {
   const { selectedClubId } = useClub();
+  const { user } = useAuth();
 
   const {
     data: books,
@@ -31,7 +33,7 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
     queryKey: ["booksFromSelectedClub", selectedClubId],
     queryFn: () => fetchClubBooks(selectedClubId),
     staleTime: 1000 * 60 * 5,
-    enabled: !!selectedClubId,
+    enabled: !!selectedClubId && !!user,
   });
 
   const booksFromSelectedClub = books || [];

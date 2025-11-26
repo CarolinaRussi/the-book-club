@@ -6,8 +6,8 @@ const SkeletonMeetingHistory = () => {
     <div className="rounded-2xl p-2">
       <h2 className="text-2xl font-bold mb-4">Histórico de Encontros</h2>
       <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_) => (
-          <Card className="shadow-(--shadow-soft) py-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="shadow-(--shadow-soft) py-3">
             <CardContent className="flex justify-between px-4">
               <div>
                 <div className="flex gap-3 mb-2">

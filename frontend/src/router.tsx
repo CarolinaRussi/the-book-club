@@ -10,7 +10,7 @@ import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
 import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
-import Profile from "./pages/Profile.tsx";
+import Me from "./pages/Me.tsx";
 
 const router = createBrowserRouter([
   {
@@ -53,8 +53,8 @@ const router = createBrowserRouter([
             element: <Readers />,
           },
           {
-            path: "/profile",
-            element: <Profile />,
+            path: "/me",
+            element: <Me />,
           },
         ],
       },

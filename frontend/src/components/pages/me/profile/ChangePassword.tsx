@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../ui/card";
+} from "../../../ui/card";
 import type { IUserUpdateForm } from "@//types/IUser";
 
 interface ChangePasswordProps {

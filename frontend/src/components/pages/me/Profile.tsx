@@ -1,15 +1,15 @@
 import { useState, type ChangeEvent, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateUser } from "../api/mutations/userMutate";
-import type { IApiError } from "../types/IApi";
-import type { IUser, IUserUpdateForm } from "../types/IUser";
+import { updateUser } from "../../../api/mutations/userMutate";
+import type { IApiError } from "../../../types/IApi";
+import type { IUser, IUserUpdateForm } from "../../../types/IUser";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAuth } from "../contexts/AuthContext";
-import ProfilePictureUpdate from "../components/pages/profile/ProfilePictureUpdate";
-import PersonalData from "../components/pages/profile/PersonalData";
-import FavoriteGenres from "../components/pages/profile/FavoriteGenres";
-import ChangePassword from "../components/pages/profile/ChangePassword";
+import { useAuth } from "../../../contexts/AuthContext";
+import PersonalData from "./profile/PersonalData";
+import FavoriteGenres from "./profile/FavoriteGenres";
+import ChangePassword from "./profile/ChangePassword";
+import ProfilePictureUpdate from "./profile/ProfilePictureUpdate";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -113,10 +113,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
-      <div className="flex flex-col items-start">
-        <h1 className="text-4xl font-bold text-foreground ">Meu Perfil</h1>
-      </div>
+    <div className="flex flex-col w-full">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6"
