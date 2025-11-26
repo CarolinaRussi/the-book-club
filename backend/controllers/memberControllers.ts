@@ -34,6 +34,7 @@ export const getMembersFromClub = async (req: Request, res: Response) => {
           joined_at: true,
           user: {
             select: {
+              id: true,
               name: true,
               nickname: true,
               bio: true,

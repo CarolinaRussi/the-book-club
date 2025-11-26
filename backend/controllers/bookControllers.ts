@@ -84,7 +84,6 @@ export const createBook = async (req: Request, res: Response) => {
 
 export const getBooksByClubId = async (req: Request, res: Response) => {
   const { clubId } = req.params;
-
   const page = req.query.page ? Number(req.query.page) : undefined;
   const limit = req.query.limit ? Number(req.query.limit) : undefined;
 
@@ -102,27 +101,27 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
         author: true,
         cover_url: true,
         created_at: true,
-        review: {
+        reviews: {
           where: {
-            member: {
-              club_id: clubId,
+            user: {
+              member: {
+                some: {
+                  club_id: clubId,
+                },
+              },
             },
           },
           select: {
             id: true,
-            reading_status: true,
             rating: true,
-            review: true,
-            member: {
+            comment: true,
+            user_id: true,
+            user: {
               select: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    nickname: true,
-                    profile_picture: true,
-                  },
-                },
+                id: true,
+                name: true,
+                nickname: true,
+                profile_picture: true,
               },
             },
           },
@@ -132,30 +131,81 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   };
 
   try {
+    let booksInClubRaw;
+    let totalItems = 0;
+
     if (page && limit) {
       const skip = (page - 1) * limit;
-
-      const [totalItems, booksInClub] = await db.$transaction([
-        db.clubBook.count({
-          where: { club_id: clubId },
-        }),
+      const [count, data] = await db.$transaction([
+        db.clubBook.count({ where: { club_id: clubId } }),
         db.clubBook.findMany({
           where: { club_id: clubId },
           orderBy: { added_at: "desc" },
-          skip: skip,
+          skip,
           take: limit,
           select: selectQuery,
         }),
       ]);
+      totalItems = count;
+      booksInClubRaw = data;
+    } else {
+      booksInClubRaw = await db.clubBook.findMany({
+        where: { club_id: clubId },
+        orderBy: { added_at: "desc" },
+        select: selectQuery,
+      });
+      totalItems = booksInClubRaw.length;
+    }
 
-      const formattedData = booksInClub.map((cb: any) => ({
+    const pairsToFetch: { userId: string; bookId: string }[] = [];
+
+    booksInClubRaw.forEach((cb: any) => {
+      cb.book.reviews.forEach((review: any) => {
+        pairsToFetch.push({ userId: review.user_id, bookId: cb.book.id });
+      });
+    });
+
+    const userBooks = await db.userBook.findMany({
+      where: {
+        OR: pairsToFetch.map((p) => ({
+          user_id: p.userId,
+          book_id: p.bookId,
+        })),
+      },
+      select: {
+        user_id: true,
+        book_id: true,
+        reading_status: true,
+      },
+    });
+
+    const formattedData = booksInClubRaw.map((cb: any) => {
+      const formattedReviews = cb.book.reviews.map((review: any) => {
+        const foundStatus = userBooks.find(
+          (ub) => ub.user_id === review.user_id && ub.book_id === cb.book.id
+        );
+
+        return {
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          reading_status: foundStatus
+            ? foundStatus.reading_status
+            : "not_started",
+          user: review.user,
+        };
+      });
+
+      return {
         ...cb.book,
         status: cb.status,
         added_at: cb.added_at,
-      }));
+        review: formattedReviews,
+      };
+    });
 
+    if (page && limit) {
       const totalPages = Math.ceil(totalItems / limit);
-
       return res.status(200).json({
         data: formattedData,
         totalPages,
@@ -163,19 +213,7 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
         totalItems,
       });
     } else {
-      const booksInClub = await db.clubBook.findMany({
-        where: { club_id: clubId },
-        orderBy: { added_at: "desc" },
-        select: selectQuery,
-      });
-
-      const formattedResponse = booksInClub.map((cb: any) => ({
-        ...cb.book,
-        status: cb.status,
-        added_at: cb.added_at,
-      }));
-
-      return res.status(200).json(formattedResponse);
+      return res.status(200).json(formattedData);
     }
   } catch (error) {
     console.error("Erro ao buscar livros do clube:", error);
@@ -185,9 +223,73 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   }
 };
 
+// export const getBooksByUserId = async (req: Request, res: Response) => {
+//   const { userId } = req.params;
+//   const page = parseInt(req.query.page as string) || 1;
+//   const limit = parseInt(req.query.limit as string) || 8;
+
+//   if (!userId) {
+//     return res.status(401).json({ message: "Usuário não selecionado" });
+//   }
+
+//   try {
+//     const skip = (page - 1) * limit;
+
+//     const [books, totalItems] = await Promise.all([
+//       db.member.findMany({
+//         where: {
+//           club_id: id,
+//           user: {
+//             status: UserStatus.ACTIVE,
+//           },
+//         },
+//         orderBy: {
+//           user: {
+//             created_at: "desc",
+//           },
+//         },
+//         skip,
+//         take: limit,
+//         select: {
+//           joined_at: true,
+//           user: {
+//             select: {
+//               id: true,
+//               name: true,
+//               nickname: true,
+//               bio: true,
+//               favorites_genres: true,
+//               profile_picture: true,
+//               email: true,
+//             },
+//           },
+//         },
+//       }),
+//       db.member.count({
+//         where: {
+//           club_id: id,
+//           user: {
+//             status: UserStatus.ACTIVE,
+//           },
+//         },
+//       }),
+//     ]);
+
+//     const totalPages = Math.ceil(totalItems / limit);
+
+//     return res
+//       .status(200)
+//       .json({ data: members, totalPages, currentPage: page, totalItems });
+//   } catch (error) {
+//     console.error("Erro ao buscar membros do clube:", error);
+//     res.status(500).json({ message: "Erro interno ao buscar membros" });
+//   }
+// };
+
 export const saveReview = async (req: Request, res: Response) => {
   try {
-    const { userId, clubId, bookId, rating, review, reading_status } = req.body;
+    const { userId, clubId, bookId, rating, comment, reading_status } =
+      req.body;
 
     if (!clubId || !userId || !bookId || !reading_status) {
       return res.status(400).json({
@@ -209,42 +311,60 @@ export const saveReview = async (req: Request, res: Response) => {
       });
     }
 
-    const memberId = memberWithBookAndClub.id;
-
-    const existingReview = await db.review.findFirst({
-      where: {
-        member_id: memberId,
-        book_id: bookId,
-      },
-    });
-
-    let savedReview;
-
-    if (existingReview) {
-      savedReview = await db.review.update({
-        where: { id: existingReview.id },
-        data: {
-          rating: Number(rating),
-          review: review,
-          reading_status: reading_status as ReadingStatus,
-          created_at: new Date(),
+    const result = await db.$transaction(async (tx) => {
+      const savedUserBook = await tx.userBook.upsert({
+        where: {
+          user_id_book_id: {
+            user_id: userId,
+            book_id: bookId,
+          },
         },
-      });
-    } else {
-      savedReview = await db.review.create({
-        data: {
-          member_id: memberId,
+        update: {
+          reading_status: reading_status,
+        },
+        create: {
+          user_id: userId,
           book_id: bookId,
-          rating: Number(rating),
-          review: review,
-          reading_status: reading_status as ReadingStatus,
+          reading_status: reading_status,
         },
       });
-    }
+
+      const existingReview = await tx.review.findFirst({
+        where: {
+          user_id: userId,
+          book_id: bookId,
+        },
+      });
+
+      let savedReview;
+
+      if (existingReview) {
+        savedReview = await tx.review.update({
+          where: { id: existingReview.id },
+          data: {
+            rating: rating ? Number(rating) : null,
+            comment: comment,
+            created_at: new Date(),
+          },
+        });
+      } else {
+        savedReview = await tx.review.create({
+          data: {
+            user_id: userId,
+            book_id: bookId,
+            rating: rating ? Number(rating) : null,
+            comment: comment,
+          },
+        });
+      }
+
+      return { savedUserBook, savedReview };
+    });
 
     return res.status(201).json({
       message: "Avaliação salva com sucesso!",
-      review: savedReview,
+      review: result.savedReview,
+      userBookStatus: result.savedUserBook.reading_status,
     });
   } catch (error) {
     console.error("Erro ao salvar avaliação:", error);
