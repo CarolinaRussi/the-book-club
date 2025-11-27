@@ -223,68 +223,69 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   }
 };
 
-// export const getBooksByUserId = async (req: Request, res: Response) => {
-//   const { userId } = req.params;
-//   const page = parseInt(req.query.page as string) || 1;
-//   const limit = parseInt(req.query.limit as string) || 8;
+export const getBooksByUserId = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 8;
 
-//   if (!userId) {
-//     return res.status(401).json({ message: "Usuário não selecionado" });
-//   }
+  if (!userId) {
+    return res.status(401).json({ message: "Usuário não selecionado" });
+  }
 
-//   try {
-//     const skip = (page - 1) * limit;
+  try {
+    const skip = (page - 1) * limit;
 
-//     const [books, totalItems] = await Promise.all([
-//       db.member.findMany({
-//         where: {
-//           club_id: id,
-//           user: {
-//             status: UserStatus.ACTIVE,
-//           },
-//         },
-//         orderBy: {
-//           user: {
-//             created_at: "desc",
-//           },
-//         },
-//         skip,
-//         take: limit,
-//         select: {
-//           joined_at: true,
-//           user: {
-//             select: {
-//               id: true,
-//               name: true,
-//               nickname: true,
-//               bio: true,
-//               favorites_genres: true,
-//               profile_picture: true,
-//               email: true,
-//             },
-//           },
-//         },
-//       }),
-//       db.member.count({
-//         where: {
-//           club_id: id,
-//           user: {
-//             status: UserStatus.ACTIVE,
-//           },
-//         },
-//       }),
-//     ]);
+    const [books, totalItems] = await Promise.all([
+      db.userBook.findMany({
+        where: {
+          user_id: userId,
+        },
+        orderBy: {
+          updated_at: "desc",
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          updated_at: true,
+          reading_status: true,
+          book: {
+            select: {
+              id: true,
+              title: true,
+              author: true,
+              cover_url: true,
+              reviews: {
+                where: {
+                  user_id: userId,
+                },
+                select: {
+                  id: true,
+                  rating: true,
+                  comment: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      db.userBook.count({
+        where: {
+          user_id: userId,
+        },
+      }),
+    ]);
 
-//     const totalPages = Math.ceil(totalItems / limit);
+    const totalPages = Math.ceil(totalItems / limit);
 
-//     return res
-//       .status(200)
-//       .json({ data: members, totalPages, currentPage: page, totalItems });
-//   } catch (error) {
-//     console.error("Erro ao buscar membros do clube:", error);
-//     res.status(500).json({ message: "Erro interno ao buscar membros" });
-//   }
-// };
+    return res
+      .status(200)
+      .json({ data: books, totalPages, currentPage: page, totalItems });
+  } catch (error) {
+    console.error("Erro ao buscar membros do clube:", error);
+    res.status(500).json({ message: "Erro interno ao buscar membros" });
+  }
+};
 
 export const saveReview = async (req: Request, res: Response) => {
   try {

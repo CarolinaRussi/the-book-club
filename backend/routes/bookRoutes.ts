@@ -4,7 +4,7 @@ import {
   createBook,
   getBooksByClubId,
   getBooksByTitleOrAuthor,
-  //getBooksByUserId,
+  getBooksByUserId,
   saveReview,
 } from "../controllers/bookControllers";
 import multer from "multer";
@@ -18,7 +18,7 @@ router.post(
   createBook
 );
 router.get("/club-books/:clubId", authMiddleware, getBooksByClubId);
-//router.get("/user-books/:userId", authMiddleware, getBooksByUserId);
+router.get("/user-books/:userId", authMiddleware, getBooksByUserId);
 router.get("/books/", authMiddleware, getBooksByTitleOrAuthor);
 router.post("/save-review", authMiddleware, saveReview);
 
