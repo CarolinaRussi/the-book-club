@@ -1,5 +1,5 @@
 import { api } from "../index";
-import type { IBook } from "../../types/IBooks";
+import type { IBook, IUserBook } from "../../types/IBooks";
 import type { IPaginatedResponse } from "@//types/IApi";
 
 export const fetchBooksFromOpenLibrary = async (query: string) => {
@@ -35,6 +35,20 @@ export const fetchPaginatedClubBooks = async (
   itemsPerPage: number = 8
 ): Promise<IPaginatedResponse<IBook>> => {
   const { data } = await api.get(`/club-books/${clubId}`, {
+    params: {
+      page,
+      limit: itemsPerPage,
+    },
+  });
+  return data;
+};
+
+export const fetchPaginatedUserBooks = async (
+  userId: string | null,
+  page: number = 1,
+  itemsPerPage: number = 15
+): Promise<IPaginatedResponse<IUserBook>> => {
+  const { data } = await api.get(`/user-books/${userId}`, {
     params: {
       page,
       limit: itemsPerPage,

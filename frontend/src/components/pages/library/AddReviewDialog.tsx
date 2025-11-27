@@ -75,8 +75,8 @@ const AddReviewDialog = ({
 
   useEffect(() => {
     if (open && book) {
-      const userReview = book.review?.find(
-        (r: IReview) => r.member.user.id === user?.id
+      const userReview = book.reviews?.find(
+        (r: IReview) => r.user.id === user?.id
       );
 
       setValue("reading_status", userReview?.reading_status || undefined);
@@ -91,7 +91,7 @@ const AddReviewDialog = ({
     }
   }, [open, book, user, setValue, reset]);
 
-  const reviews = book?.review || [];
+  const reviews = book?.reviews || [];
   const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
   const averageRating =
     reviews && reviews.length > 0 ? totalRating / reviews.length : 0;
@@ -188,8 +188,8 @@ const AddReviewDialog = ({
                     {averageRating.toFixed(1)}
                   </span>
                   <span className="text-sm text-warm-brown/70">
-                    ({book?.review?.length}{" "}
-                    {book?.review?.length === 1 ? "avaliação" : "avaliações"})
+                    ({book?.reviews?.length}{" "}
+                    {book?.reviews?.length === 1 ? "avaliação" : "avaliações"})
                   </span>
                 </div>
                 {book?.created_at && (
@@ -285,7 +285,7 @@ const AddReviewDialog = ({
               <h1 className="text-primary font-semibold text-xl mb-3">
                 Todas as avaliações
               </h1>
-              {book?.review?.map((r) => (
+              {book?.reviews?.map((r) => (
                 <Card
                   key={r.id}
                   className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 h-full bg-cream my-4"
@@ -293,19 +293,19 @@ const AddReviewDialog = ({
                   <Avatar className="size-15 self-center">
                     {" "}
                     <AvatarImage
-                      src={r.member.user.profile_picture || undefined}
+                      src={r.user.profile_picture || undefined}
                       alt="Foto de perfil"
                     />
                     <AvatarFallback
                       className="text-1xl font-semibold text-primary"
                       delayMs={600}
                     >
-                      {getInitials(r.member.user.name || "")}
+                      {getInitials(r.user.name || "")}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1">
-                    <CardTitle>{r.member.user.nickname}</CardTitle>
+                    <CardTitle>{r.user.nickname}</CardTitle>
                     <h3 className="mt-1 text-sm text-muted-foreground">
                       {r.comment}
                     </h3>

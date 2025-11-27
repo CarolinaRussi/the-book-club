@@ -1,5 +1,6 @@
 import type { BookStatus } from "../utils/constants/books";
 import type { ReadingStatus } from "../utils/constants/reading";
+import type { IUser } from "./IUser";
 
 export interface IUserPreview {
   id: string;
@@ -17,7 +18,14 @@ export interface IReview {
   reading_status: ReadingStatus;
   rating: number;
   comment: string;
-  member: IMemberReview;
+  user: IUser;
+}
+
+export interface IUserBook {
+  id: string;
+  reading_status: ReadingStatus;
+  updated_at: string;
+  book: IBook;
 }
 
 export interface IBook {
@@ -29,7 +37,7 @@ export interface IBook {
   status: BookStatus;
   added_at: string;
   created_at: string;
-  review?: IReview[];
+  reviews?: IReview[];
 }
 
 export interface IOpenLibraryBook {
