@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../db/client";
 import { v2 as cloudinary } from "cloudinary";
 import { uploadToCloudinary } from "../utils/cloudinary";
+import { Prisma } from "../generated/prisma/client";
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
@@ -68,5 +69,52 @@ export const getUserAuthenticated = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Erro ao buscar usuário", error);
     res.status(500).json({ message: "Erro interno ao usuário" });
+  }
+};
+
+export const updatePersonalLibrary = async (req: Request, res: Response) => {
+  const { bookId, userId } = req.body;
+
+  if (!bookId || !userId) {
+    res.status(400).json({ message: "Id do livro ou de usuário inválido!" });
+    return;
+  }
+
+  try {
+    const existingUserBook = await db.userBook.findFirst({
+      where: {
+        user_id: userId,
+        book_id: bookId,
+      },
+    });
+
+    if (existingUserBook) {
+      await db.userBook.delete({
+        where: {
+          id: existingUserBook.id,
+        },
+      });
+
+      return res.status(200).json({
+        message: "Livro removido da biblioteca pessoal.",
+        action: "removed",
+      });
+    }
+
+    const newUserBook = await db.userBook.create({
+      data: {
+        book_id: bookId,
+        user_id: userId,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Livro adicionado à biblioteca pessoal com sucesso!",
+      userBook: newUserBook,
+      action: "added",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao atualizar a biblioteca pessoal" });
   }
 };

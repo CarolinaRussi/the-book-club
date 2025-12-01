@@ -4,7 +4,6 @@ import { v2 as cloudinary } from "cloudinary";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { BookStatus } from "../enums/bookStatus";
 import { BookCreateInput } from "../types/IBook";
-import { ReadingStatus } from "../enums/readingStatus";
 
 export const createBook = async (req: Request, res: Response) => {
   try {
@@ -87,6 +86,9 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   const page = req.query.page ? Number(req.query.page) : undefined;
   const limit = req.query.limit ? Number(req.query.limit) : undefined;
 
+  const userId = req.userId;
+  console.log(userId);
+
   if (!clubId) {
     return res.status(400).json({ message: "ID do Clube não enviado." });
   }
@@ -101,6 +103,15 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
         author: true,
         cover_url: true,
         created_at: true,
+        users_books: {
+          where: {
+            user_id: userId,
+          },
+          select: {
+            id: true,
+          },
+          take: 1,
+        },
         reviews: {
           where: {
             user: {
@@ -195,12 +206,14 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
           user: review.user,
         };
       });
+      const isInLibrary = cb.book.users_books && cb.book.users_books.length > 0;
 
       return {
         ...cb.book,
         status: cb.status,
         added_at: cb.added_at,
-        review: formattedReviews,
+        reviews: formattedReviews,
+        isInLibrary: isInLibrary,
       };
     });
 
