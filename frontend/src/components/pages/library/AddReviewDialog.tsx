@@ -107,7 +107,9 @@ const AddReviewDialog = ({
       await queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub"],
       });
-
+      await queryClient.invalidateQueries({
+        queryKey: ["bookUsers"],
+      });
       onOpenChange(false);
     },
     onError: (error) => {

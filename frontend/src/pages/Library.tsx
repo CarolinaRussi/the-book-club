@@ -15,11 +15,16 @@ import {
   READING_STATUS_FINISHED,
 } from "../utils/constants/reading";
 import SkeletonLibrary from "../components/pages/library/skeletons/SkeletonLibrary";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClub } from "../contexts/ClubContext";
-import type { IPaginatedResponse } from "../types/IApi";
+import type { IApiError, IPaginatedResponse } from "../types/IApi";
 import { fetchPaginatedClubBooks } from "../api/queries/fetchBooks";
 import Pagination from "../components/ui/pagination";
+// Mudei o PlusFill para Plus (versão outline/contorno)
+import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
+import { updateUserPersonalList } from "../api/mutations/userMutate";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -27,13 +32,84 @@ export default function Library() {
   const [bookToUpdate, setBookToUpdate] = useState<IBook | undefined>(
     undefined
   );
+
+  const queryClient = useQueryClient();
   const { selectedClubId } = useClub();
+  const { user } = useAuth();
   const [booksPage, setBooksPage] = useState(1);
   const itemsPerPage = 8;
 
   const handlePageChange = (page: number) => {
     setBooksPage(page);
-    //window.scrollTo({ top: 200, behavior: "smooth" }); //nao sei se eu gosto disso ainda
+  };
+
+  const { mutate: updateUserPersonalListMutate } = useMutation<
+    any,
+    IApiError,
+    { bookId: string; userId: string },
+    { previousData: IPaginatedResponse<IBook> | undefined }
+  >({
+    mutationFn: updateUserPersonalList,
+
+    onMutate: async ({ bookId }) => {
+      await queryClient.cancelQueries({
+        queryKey: ["booksFromSelectedClub", selectedClubId, booksPage],
+      });
+
+      const previousData = queryClient.getQueryData<IPaginatedResponse<IBook>>([
+        "booksFromSelectedClub",
+        selectedClubId,
+        booksPage,
+      ]);
+
+      queryClient.setQueryData<IPaginatedResponse<IBook>>(
+        ["booksFromSelectedClub", selectedClubId, booksPage],
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            data: old.data.map((book) => {
+              if (book.id === bookId) {
+                return { ...book, isInLibrary: !book.isInLibrary };
+              }
+              return book;
+            }),
+          };
+        }
+      );
+
+      return { previousData };
+    },
+
+    onError: (_err, _newBook, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          ["booksFromSelectedClub", selectedClubId, booksPage],
+          context.previousData
+        );
+      }
+      toast.error("Erro ao atualizar a biblioteca. Alteração desfeita.");
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
+    },
+
+    onSuccess: (result) => {
+      const message =
+        result.action === "added"
+          ? "Salvo na biblioteca"
+          : "Removido da biblioteca";
+      toast.success(message, { autoClose: 1000 });
+    },
+  });
+
+  const handleAddToPersonalList = (bookId: string) => {
+    if (user?.id) {
+      const userId = user.id;
+      updateUserPersonalListMutate({ bookId, userId });
+    }
   };
 
   const { data: booksClubPaginatedData, isLoading: isLoadingBooks } = useQuery<
@@ -77,7 +153,7 @@ export default function Library() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
             {booksClub &&
               booksClub.map((book) => {
-                const reviews = book.review || [];
+                const reviews = book.reviews || [];
 
                 const validReviews = reviews.filter(
                   (review) =>
@@ -95,16 +171,45 @@ export default function Library() {
                     ? totalRating / validReviews.length
                     : 0;
 
+                const isInLibrary = book.isInLibrary;
+
                 return (
                   <Card
-                    key={book.title}
-                    className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
+                    key={book.id}
+                    className="relative isolate cursor-pointer hover:shadow-(--shadow-medium) transition-all group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0 bg-card rounded-xl border"
                     onClick={() => {
                       setBookToUpdate(book);
                       setUpdateBookOpen(true);
                     }}
                   >
-                    <div className="relative aspect-2/3 overflow-hidden bg-muted">
+                    <div className="absolute -top-2 right-4 z-20">
+                      <div className="absolute inset-x-2 top-2 bottom-4 bg-white rounded-xs" />
+
+                      {isInLibrary ? (
+                        <BsBookmarkCheckFill
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToPersonalList(book.id);
+                          }}
+                          size={40}
+                          className="relative text-primary drop-shadow-md hover:scale-110 transition-transform"
+                          title="Remover da biblioteca pessoal"
+                        />
+                      ) : (
+                        <BsBookmarkPlusFill
+                          onClick={(e) => {
+                            e.stopPropagation();
+
+                            handleAddToPersonalList(book.id);
+                          }}
+                          size={40}
+                          className="relative text-primary drop-shadow-md hover:text-primary hover:scale-110 transition-all"
+                          title="Adicionar à biblioteca pessoal"
+                        />
+                      )}
+                    </div>
+
+                    <div className="relative aspect-2/3 overflow-hidden bg-muted rounded-t-xl">
                       <img
                         src={book.cover_url}
                         alt={book.title}

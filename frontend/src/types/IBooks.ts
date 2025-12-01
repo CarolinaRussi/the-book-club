@@ -38,6 +38,7 @@ export interface IBook {
   added_at: string;
   created_at: string;
   reviews?: IReview[];
+  isInLibrary?: boolean;
 }
 
 export interface IOpenLibraryBook {
