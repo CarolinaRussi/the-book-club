@@ -125,3 +125,67 @@ export const createClub = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Erro ao criar clube" });
   }
 };
+
+export const getUserClubs = async (req: Request, res: Response) => {
+  const userId = req.userId;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 5;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Usuário não autenticado" });
+  }
+
+  try {
+    const skip = (page - 1) * limit;
+
+    const [clubs, totalItems] = await Promise.all([
+      db.club.findMany({
+        where: {
+          owner_id: userId,
+        },
+        orderBy: {
+          created_at: "desc",
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          invitation_code: true,
+          owner_id: true,
+          status: true,
+          created_at: true,
+          description: true,
+          member: {
+            select: {
+              user_id: true,
+              joined_at: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  status: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      db.club.count({
+        where: {
+          owner_id: userId,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res
+      .status(200)
+      .json({ data: clubs, totalPages, currentPage: page, totalItems });
+  } catch (error) {
+    console.error("Erro ao buscar membros do clube:", error);
+    res.status(500).json({ message: "Erro interno ao buscar membros" });
+  }
+};
