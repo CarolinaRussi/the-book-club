@@ -21,7 +21,7 @@ import {
 import { Calendar } from "../../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
-import React from "react";
+import { useEffect, useState } from "react";
 import { Input } from "../../ui/input";
 import { useBook } from "@//contexts/BookContext";
 import { formatTime } from "@//utils/formatters";
@@ -54,7 +54,7 @@ const EditMeetingDialog = ({
   meeting,
 }: EditMeetingDialogProps) => {
   const { selectedClubId } = useClub();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const { booksFromSelectedClub } = useBook();
   const queryClient = useQueryClient();
 
@@ -77,7 +77,7 @@ const EditMeetingDialog = ({
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (meeting) {
       reset({
         location: meeting.location || "",
@@ -113,13 +113,16 @@ const EditMeetingDialog = ({
       toast.success("Encontro marcado com sucesso!");
     },
     onError: (error) => {
-      toast.error(error.message || "Email ou senha incorretos");
+      toast.error(
+        error.message ||
+          "Não foi possível marcar seu encontro, tente novamente."
+      );
     },
   });
 
   const onSubmit: SubmitHandler<IEditMeetingForm> = (data) => {
     if (!selectedClubId || !meeting) {
-      toast.error("Você não pode adicionar um livro sem estar em um clube");
+      toast.error("Você não pode criar um encontro sem estar em um clube");
       return;
     }
     const { bookId, description, location, meetingDate, meetingTime, status } =

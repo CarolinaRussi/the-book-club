@@ -6,6 +6,7 @@ import {
 } from "../components/ui/tabs";
 import Profile from "../components/pages/me/Profile";
 import MyReadings from "../components/pages/me/MyReadings";
+import MyClubs from "../components/pages/me/MyClubs";
 
 export default function Me() {
   return (
@@ -25,7 +26,7 @@ export default function Me() {
             <MyReadings />
           </TabsContent>
           <TabsContent value="my-clubs">
-            <div>teste3</div>
+            <MyClubs />
           </TabsContent>
           <TabsContent value="settings">
             <div>teste4</div>

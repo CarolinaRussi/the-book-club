@@ -1,3 +1,5 @@
+import type { UserStatus } from "../utils/constants/user";
+
 export interface IUser {
   id: string;
   bio?: string;
@@ -7,6 +9,7 @@ export interface IUser {
   nickname?: string;
   profile_picture?: string;
   favorites_genres?: string[];
+  status?: UserStatus;
 }
 
 export interface IUserUpdateForm

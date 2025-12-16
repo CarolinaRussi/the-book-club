@@ -1,7 +1,10 @@
+import type { ClubStatus } from "../utils/constants/clubs";
+import type { IUser } from "./IUser";
+
 export interface IClub {
   id: string;
   name: string;
-  status: string;
+  status: ClubStatus;
   owner_id: string;
   invitation_code: string;
   created_at: string;
@@ -18,4 +21,29 @@ export interface IClubPayload {
   name: string;
   ownerId?: string;
   description: string;
+}
+
+export interface IEditClubPayload {
+  id: string;
+  name: string;
+  description: string;
+  invitationCode: string;
+}
+
+export interface IMembersClub {
+  id: string;
+  joined_at: string;
+  user_id: string;
+  user: IUser;
+}
+
+export interface IUserClub {
+  id: string;
+  name: string;
+  description: string;
+  invitation_code: string;
+  created_at: string;
+  owner_id: string;
+  status: ClubStatus;
+  member: IMembersClub[];
 }
