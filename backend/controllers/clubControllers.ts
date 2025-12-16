@@ -158,6 +158,7 @@ export const getUserClubs = async (req: Request, res: Response) => {
           description: true,
           member: {
             select: {
+              id: true,
               user_id: true,
               joined_at: true,
               user: {
@@ -187,5 +188,42 @@ export const getUserClubs = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Erro ao buscar membros do clube:", error);
     res.status(500).json({ message: "Erro interno ao buscar membros" });
+  }
+};
+
+export const updateClub = async (req: Request, res: Response) => {
+  const { name, description, invitationCode } = req.body;
+
+  const { id } = req.params;
+
+  if (!id || !name || !invitationCode) {
+    res.status(400).json({ message: "Preencha todos os campos!" });
+    return;
+  }
+
+  try {
+    const club = await db.club.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: name,
+        description: description,
+        invitation_code: invitationCode,
+      },
+    });
+
+    res.status(200).json({
+      message: "Clube alterado com sucesso",
+      club,
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return res.status(404).json({ message: "Clube não encontrado" });
+      }
+    }
+    console.error(error);
+    res.status(500).json({ message: "Erro ao atualizar clube" });
   }
 };
