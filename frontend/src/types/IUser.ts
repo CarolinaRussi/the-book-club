@@ -7,18 +7,18 @@ export interface IUser {
   lastName?: string;
   email?: string;
   nickname?: string;
-  profile_picture?: string;
-  favorites_genres?: string[];
+  profilePicture?: string;
+  favoritesGenres?: string[];
   status?: UserStatus;
 }
 
 export interface IUserUpdateForm
-  extends Omit<IUser, "favorites_genres" | "profile_picture"> {
+  extends Omit<IUser, "favoritesGenres" | "profilePicture"> {
   password?: string;
   oldPassword?: string;
   confirmPassword?: string;
   tags?: string[];
-  profile_picture?: FileList;
-  profile_picture_url?: string;
-  remove_profile_picture?: boolean;
+  profilePicture?: FileList;
+  profilePictureUrl?: string;
+  removeProfilePicture?: boolean;
 }

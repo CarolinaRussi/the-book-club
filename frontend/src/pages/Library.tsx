@@ -30,7 +30,7 @@ export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
   const [updateBookOpen, setUpdateBookOpen] = useState(false);
   const [bookToUpdate, setBookToUpdate] = useState<IBook | undefined>(
-    undefined
+    undefined,
   );
 
   const queryClient = useQueryClient();
@@ -76,7 +76,7 @@ export default function Library() {
               return book;
             }),
           };
-        }
+        },
       );
 
       return { previousData };
@@ -86,7 +86,7 @@ export default function Library() {
       if (context?.previousData) {
         queryClient.setQueryData(
           ["booksFromSelectedClub", selectedClubId, booksPage],
-          context.previousData
+          context.previousData,
         );
       }
       toast.error("Erro ao atualizar a biblioteca. Alteração desfeita.");
@@ -157,13 +157,13 @@ export default function Library() {
 
                 const validReviews = reviews.filter(
                   (review) =>
-                    review.reading_status === READING_STATUS_FINISHED ||
-                    review.reading_status === READING_STATUS_DROPPED
+                    review.readingStatus === READING_STATUS_FINISHED ||
+                    review.readingStatus === READING_STATUS_DROPPED,
                 );
 
                 const totalRating = validReviews.reduce(
                   (acc, review) => acc + review.rating,
-                  0
+                  0,
                 );
 
                 const averageRating =
@@ -211,7 +211,7 @@ export default function Library() {
 
                     <div className="relative aspect-2/3 overflow-hidden bg-muted rounded-t-xl">
                       <img
-                        src={book.cover_url}
+                        src={book.coverUrl}
                         alt={book.title}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
@@ -251,7 +251,7 @@ export default function Library() {
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <LuCalendarDays size={20} />
-                          {formatMonthYear(book.added_at)}
+                          {formatMonthYear(book.addedAt)}
                         </div>
                         <span>
                           {validReviews.length}{" "}

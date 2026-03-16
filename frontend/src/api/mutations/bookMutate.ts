@@ -4,6 +4,7 @@ import type { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {
+    console.log(data);
     const formData = new FormData();
 
     if (data.coverImg && data.coverImg.length > 0) {

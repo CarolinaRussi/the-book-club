@@ -63,7 +63,7 @@ const CancelMeetingDialog = ({
         <div className="flex flex-col m-10 text-center">
           <h2 className="text-2xl font-medium mb-1">
             Tem certeza que deseja cancelar o encontro do dia{" "}
-            {formatDayMonthYear(meeting?.meeting_date)}?
+            {formatDayMonthYear(meeting?.meetingDate)}?
           </h2>
         </div>
 

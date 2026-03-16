@@ -6,7 +6,7 @@ export interface IUserPreview {
   id: string;
   name: string;
   nickname: string;
-  profile_picture: string;
+  profilePicture: string;
 }
 
 export interface IMemberReview {
@@ -15,7 +15,7 @@ export interface IMemberReview {
 
 export interface IReview {
   id: string;
-  reading_status: ReadingStatus;
+  readingStatus: ReadingStatus;
   rating: number;
   comment: string;
   user: IUser;
@@ -23,8 +23,8 @@ export interface IReview {
 
 export interface IUserBook {
   id: string;
-  reading_status: ReadingStatus;
-  updated_at: string;
+  readingStatus: ReadingStatus;
+  updatedAt: string;
   book: IBook;
 }
 
@@ -32,11 +32,11 @@ export interface IBook {
   id: string;
   title: string;
   author: string;
-  cover_url: string;
-  open_library_id?: string | null;
+  coverUrl: string;
+  openLibraryId?: string | null;
   status: BookStatus;
-  added_at: string;
-  created_at: string;
+  addedAt: string;
+  createdAt: string;
   reviews?: IReview[];
   isInLibrary?: boolean;
 }
@@ -60,7 +60,7 @@ export interface IBookPayload {
 export interface IBookReviewPayload {
   rating: number;
   comment: string;
-  reading_status: ReadingStatus | undefined;
+  readingStatus: ReadingStatus | undefined;
   clubId: string;
   userId: string;
   bookId: string;

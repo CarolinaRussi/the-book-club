@@ -39,8 +39,8 @@ const MeetingHistoryList = ({
                       <div>
                         <p className="font-medium text-sm">Data e Hora</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDayMonthYear(meeting.meeting_date)} às{" "}
-                          {formatTime(meeting.meeting_time)}
+                          {formatDayMonthYear(meeting.meetingDate)} às{" "}
+                          {formatTime(meeting.meetingTime)}
                         </p>
                       </div>
                     </div>
@@ -78,17 +78,15 @@ const MeetingHistoryList = ({
           )}
         </div>
       </div>
-      {pastMeetings &&
-        pastMeetings.length > 0 &&
-        totalPages > 1 && (
-          <div className="mt-4 flex justify-center">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
+      {pastMeetings && pastMeetings.length > 0 && totalPages > 1 && (
+        <div className="mt-4 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
     </>
   );
 };

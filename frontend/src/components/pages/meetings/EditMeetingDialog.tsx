@@ -67,9 +67,9 @@ const EditMeetingDialog = ({
   } = useForm<IEditMeetingForm>({
     defaultValues: {
       location: meeting?.location || "",
-      meetingDate: meeting ? new Date(meeting.meeting_date) : undefined,
-      meetingTime: meeting?.meeting_time
-        ? formatTime(meeting.meeting_time)
+      meetingDate: meeting ? new Date(meeting.meetingDate) : undefined,
+      meetingTime: meeting?.meetingTime
+        ? formatTime(meeting.meetingTime)
         : "",
       description: meeting?.description || "",
       status: meeting?.status,
@@ -81,9 +81,9 @@ const EditMeetingDialog = ({
     if (meeting) {
       reset({
         location: meeting.location || "",
-        meetingDate: new Date(meeting.meeting_date),
-        meetingTime: meeting.meeting_time
-          ? formatTime(meeting.meeting_time)
+        meetingDate: new Date(meeting.meetingDate),
+        meetingTime: meeting.meetingTime
+          ? formatTime(meeting.meetingTime)
           : "",
         description: meeting.description || "",
         status: meeting.status,

@@ -16,6 +16,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "../../ui/command";
 import type {
   IBook,
@@ -82,7 +83,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
         id: book.id,
         title: book.title,
         author: book.author ? [book.author] : ["Autor desconhecido"],
-        cover: book.cover_url,
+        cover: book.coverUrl,
         source: "local",
       }));
 
@@ -94,7 +95,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
           author: book.author_name || ["Autor desconhecido"],
           cover: `https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg?default=false`,
           cover_i: book.cover_i,
-          source: "openlibrary",
+          source: "openLibrary",
         }));
       return [...localBooks, ...externalBooks];
     },
@@ -173,6 +174,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
       return;
     }
     const { title: manualTitle, author: manualAuthor, coverImg } = data;
+    console.log(selectedBook);
 
     const payload: IBookPayload = {
       id: selectedBook?.id?.split("/").pop(),
@@ -190,7 +192,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
 
     if (!payload.title || !payload.author) {
       toast.warn(
-        "Por favor, preencha pelo menos o título e o autor, ou selecione um livro."
+        "Por favor, preencha pelo menos o título e o autor, ou selecione um livro.",
       );
       return;
     }
@@ -233,53 +235,54 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
-                <Command>
+                <Command shouldFilter={false}>
                   <CommandInput
                     placeholder="Digite o nome do livro..."
                     value={inputValue}
                     onValueChange={setInputValue}
                   />
+                  <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
+                    <CommandEmpty>
+                      {isError ? "Erro ao buscar." : "Nenhum livro encontrado."}
+                    </CommandEmpty>
 
-                  <CommandEmpty>
-                    {isError ? "Erro ao buscar." : "Nenhum livro encontrado."}
-                  </CommandEmpty>
+                    {searchResults && searchResults.length > 0 && (
+                      <CommandGroup>
+                        {searchResults.map((book: any) => (
+                          <CommandItem
+                            key={book.id}
+                            value={`${book.title}-${book.id}`.toLowerCase()}
+                            onSelect={() => handleSelect(book)}
+                            className="flex items-center gap-3"
+                          >
+                            {book.cover ? (
+                              <img
+                                src={book.cover}
+                                alt="capa"
+                                className="h-12 w-9 object-cover rounded-sm"
+                              />
+                            ) : (
+                              <div className="h-12 w-9 bg-secondary rounded-sm flex items-center justify-center">
+                                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
 
-                  {searchResults && searchResults.length > 0 && (
-                    <CommandGroup>
-                      {searchResults.map((book: any) => (
-                        <CommandItem
-                          key={book.id}
-                          value={book.title}
-                          onSelect={() => handleSelect(book)}
-                          className="flex items-center gap-3"
-                        >
-                          {book.cover ? (
-                            <img
-                              src={book.cover}
-                              alt="capa"
-                              className="h-12 w-9 object-cover rounded-sm"
-                            />
-                          ) : (
-                            <div className="h-12 w-9 bg-secondary rounded-sm flex items-center justify-center">
-                              <BookOpen className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )}
+                            <div className="flex flex-col overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate font-medium">
+                                  {book.title}
+                                </span>
+                              </div>
 
-                          <div className="flex flex-col overflow-hidden">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate font-medium">
-                                {book.title}
+                              <span className="text-xs text-muted-foreground truncate">
+                                {book.author.join(", ")} ({book.source})
                               </span>
                             </div>
-
-                            <span className="text-xs text-muted-foreground truncate">
-                              {book.author.join(", ")} ({book.source})
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                  </CommandList>
                 </Command>
               </PopoverContent>
             </Popover>

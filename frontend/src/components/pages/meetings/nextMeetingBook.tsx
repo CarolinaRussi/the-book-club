@@ -16,7 +16,7 @@ const NextMeetingBook = ({ nextBook }: NextMeetingBookProps) => {
         >
           <div className="relative aspect-2/3 overflow-hidden bg-muted">
             <img
-              src={nextBook.cover_url}
+              src={nextBook.coverUrl}
               alt={nextBook.title}
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
             />

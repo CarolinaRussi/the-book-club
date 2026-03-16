@@ -61,7 +61,7 @@ export default function Readers() {
                 >
                   <Avatar className="mb-4 size-30 ">
                     <AvatarImage
-                      src={reader.user.profile_picture}
+                      src={reader.user.profilePicture}
                       alt={`Foto de perfil de ${reader.user.name}`}
                     />
                     <AvatarFallback
@@ -80,7 +80,7 @@ export default function Readers() {
                     </div>
                   )}
                   <div className="text-sm text-muted-foreground text-center mt-auto">
-                    Membro desde: <p>{formatDayMonthYear(reader.joined_at)}</p>
+                    Membro desde: <p>{formatDayMonthYear(reader.joinedAt)}</p>
                   </div>
                 </div>
               ))

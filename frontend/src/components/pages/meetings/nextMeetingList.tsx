@@ -30,11 +30,11 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                 <div>
                   <p className="font-medium">Data e Hora</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDayMonthYear(meeting.meeting_date)}
+                    {formatDayMonthYear(meeting.meetingDate)}
                   </p>
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                     <Clock className="h-4 w-4" />
-                    {formatTime(meeting.meeting_time)} hrs
+                    {formatTime(meeting.meetingTime)} hrs
                   </p>
                 </div>
               </div>

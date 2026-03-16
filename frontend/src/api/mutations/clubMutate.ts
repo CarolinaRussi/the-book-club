@@ -16,7 +16,6 @@ export async function createClub(data: IClubPayload): Promise<any> {
 }
 
 export async function updateClub(payload: IEditClubPayload): Promise<any> {
-  console.log(payload);
   const { id, ...data } = payload;
 
   if (!id) {
@@ -33,9 +32,9 @@ export async function updateClub(payload: IEditClubPayload): Promise<any> {
   }
 }
 
-export async function deleteClub(payload: any): Promise<any> {
-  const { id, ...data } = payload;
-  console.log(id, data);
+export async function deleteClub(id: string): Promise<any> {
+  console.log(id);
+  return;
 
   // if (!id) {
   //   throw { message: "ID do encontro é obrigatório para atualizar." };
@@ -51,21 +50,23 @@ export async function deleteClub(payload: any): Promise<any> {
   // }
 }
 
-export async function banMember(clubId: any, memberId: any): Promise<any> {
-  console.log(clubId, memberId);
+export async function banMember(
+  memberId: string
+): Promise<any> {
+  if (!memberId) {
+    throw { message: "ID do membro é obrigatório." };
+  }
 
-  // if (!id) {
-  //   throw { message: "ID do encontro é obrigatório para atualizar." };
-  // }
-  // try {
-  //   const response = await api.put(`/update-meeting/${id}`, data);
-  //   return response.data;
-  // } catch (error: unknown) {
-  //   if (axios.isAxiosError(error) && error.response?.data?.message) {
-  //     throw { message: error.response.data.message };
-  //   }
-  //   throw { message: "Erro desconhecido" };
-  // }
+  try {
+    const response = await api.delete(`/delete-member/${memberId}`);
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido ao banir membro." };
+  }
 }
 
 export async function joinClub(data: IMembersPayload): Promise<any> {

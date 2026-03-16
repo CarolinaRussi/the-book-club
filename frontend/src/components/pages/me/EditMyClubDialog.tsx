@@ -60,7 +60,7 @@ const EditMyClubDialog = ({
     defaultValues: {
       name: club?.name || "",
       description: club?.description || "",
-      invitationCode: club?.invitation_code || "",
+      invitationCode: club?.invitationCode || "",
     },
   });
 
@@ -69,7 +69,7 @@ const EditMyClubDialog = ({
       reset({
         name: club.name || "",
         description: club.description || "",
-        invitationCode: club.invitation_code || "",
+        invitationCode: club.invitationCode || "",
       });
     }
   }, [club, reset, openDialog]);
@@ -91,9 +91,9 @@ const EditMyClubDialog = ({
   });
 
   const { mutate: banMemberMutate } = useMutation<any, IApiError, string>({
-    mutationFn: (memberId) => banMember(club?.id, memberId),
+    mutationFn: (memberId) => banMember(memberId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["club-details", club?.id] });
+      //queryClient.invalidateQueries({ queryKey: ["userClubs"] });
       toast.success("Membro removido com sucesso.");
     },
     onError: (error) => toast.error(error.message || "Erro ao banir membro."),
@@ -118,7 +118,6 @@ const EditMyClubDialog = ({
     if (!club) return;
     updateClubMutate({ id: club.id, ...data });
   };
-  console.log(club);
 
   return (
     <Dialog open={openDialog} onOpenChange={onOpenChange}>
@@ -188,7 +187,7 @@ const EditMyClubDialog = ({
                     <div className="flex flex-col">
                       <span className="font-medium text-sm">
                         {member.user.name}{" "}
-                        {member.user.id == club.owner_id && "(você)"}
+                        {member.user.id == club.ownerId && "(você)"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {member.user.email}
@@ -200,7 +199,7 @@ const EditMyClubDialog = ({
                       )}
                     </div>
 
-                    {member.user.id !== club.owner_id && (
+                    {member.user.id !== club.ownerId && (
                       <AlertDialog>
                         <TooltipProvider>
                           <Tooltip>
@@ -279,7 +278,7 @@ const EditMyClubDialog = ({
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Você tem certeza absoluta?
+                    Você tem certeza absoluta disso?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     Esta ação não pode ser desfeita. Isso excluirá

@@ -5,9 +5,9 @@ export interface IClub {
   id: string;
   name: string;
   status: ClubStatus;
-  owner_id: string;
+  ownerId: string;
   invitation_code: string;
-  created_at: string;
+  createdAt: string;
   description?: string;
 }
 
@@ -41,9 +41,9 @@ export interface IUserClub {
   id: string;
   name: string;
   description: string;
-  invitation_code: string;
-  created_at: string;
-  owner_id: string;
+  invitationCode: string;
+  createdAt: string;
+  ownerId: string;
   status: ClubStatus;
   member: IMembersClub[];
 }

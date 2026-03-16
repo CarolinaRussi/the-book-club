@@ -77,7 +77,7 @@ export default function MyClubs() {
                   <CardFooter className="flex justify-between text-sm text-muted-foreground">
                     <span>
                       Criado em:{" "}
-                      {new Date(club.created_at).toLocaleDateString()}
+                      {new Date(club.createdAt).toLocaleDateString()}
                     </span>
                     <Badge
                       variant={

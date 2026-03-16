@@ -33,36 +33,35 @@ export default function Profile() {
       setValue("nickname", user.nickname);
       setValue("email", user.email);
       setValue("bio", user.bio);
-      setValue("profile_picture_url", user.profile_picture);
-      const userTags = user.favorites_genres ? user.favorites_genres : [];
+      setValue("profilePictureUrl", user.profilePicture);
+      const userTags = user.favoritesGenres ?? [];
       setTags(userTags);
       setValue("tags", userTags);
     }
   }, [user, setValue]);
 
   const name = watch("name");
-  const profilePictureUrl = watch("profile_picture_url");
+  const profilePictureUrl = watch("profilePictureUrl");
   const password = watch("password");
   const isChangingPassword =
     !!watch("oldPassword") || !!watch("password") || !!watch("confirmPassword");
 
-  const { onChange: rhfOnChange, ...restRegister } =
-    register("profile_picture");
+  const { onChange: rhfOnChange, ...restRegister } = register("profilePicture");
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     rhfOnChange(event);
     const file = event.target.files?.[0];
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
-      setValue("remove_profile_picture", false);
+      setValue("removeProfilePicture", false);
     }
   };
 
   const handleRemoveImage = () => {
     setPreviewUrl("");
-    setValue("profile_picture_url", "");
-    resetField("profile_picture");
-    setValue("remove_profile_picture", true);
+    setValue("profilePictureUrl", "");
+    resetField("profilePicture");
+    setValue("removeProfilePicture", true);
   };
 
   const { mutate: updateUserMutate, isPending } = useMutation<
@@ -88,22 +87,26 @@ export default function Profile() {
   const onSubmit: SubmitHandler<IUserUpdateForm> = (data) => {
     const formData = new FormData();
 
-    const file = data.profile_picture?.[0];
+    const file = data.profilePicture?.[0];
     if (file) {
-      formData.append("profile_picture", file);
+      formData.append("profile_picture", file); // multer espera esse nome no backend
     }
 
     if (data.tags && data.tags.length > 0) {
       data.tags.forEach((tag) => {
-        formData.append("favorites_genres", tag);
+        formData.append("favoritesGenres", tag);
       });
     }
 
-    formData.append("id", data.id);
+    formData.append("id", data.id ?? "");
     formData.append("name", data.name ?? "");
     formData.append("nickname", data.nickname ?? "");
     formData.append("email", data.email ?? "");
     formData.append("bio", data.bio ?? "");
+
+    if (data.removeProfilePicture) {
+      formData.append("removeProfilePicture", "true");
+    }
 
     if (isChangingPassword) {
       formData.append("oldPassword", data.oldPassword ?? "");

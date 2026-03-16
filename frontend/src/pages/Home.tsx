@@ -102,7 +102,7 @@ export default function Home() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xl font-semibold text-primary">
                       {club.name}
-                      {club.owner_id === user?.id ? (
+                      {club.ownerId === user?.id ? (
                         <Badge className="ml-2">Admin</Badge>
                       ) : (
                         <Badge variant="secondary" className="ml-2">
@@ -121,7 +121,7 @@ export default function Home() {
                   <CardFooter className="flex justify-between text-sm text-muted-foreground">
                     <span>
                       Criado em:{" "}
-                      {new Date(club.created_at).toLocaleDateString()}
+                      {new Date(club.createdAt).toLocaleDateString()}
                     </span>
                     <Badge
                       variant={

@@ -55,7 +55,7 @@ export default function MyReadings() {
             >
               <div className="relative aspect-2/3 overflow-hidden bg-muted">
                 <img
-                  src={userBook.book.cover_url}
+                  src={userBook.book.coverUrl}
                   alt={userBook.book.title}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                 />
@@ -96,7 +96,7 @@ export default function MyReadings() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <LuCalendarDays size={20} />
-                    {formatDayMonthYear(userBook.updated_at)}
+                    {formatDayMonthYear(userBook.updatedAt)}
                   </div>
                 </div>
               </CardContent>

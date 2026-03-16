@@ -5,10 +5,10 @@ export interface IMeeting {
   id: string;
   location: string;
   description: string;
-  meeting_date: string;
-  meeting_time: string;
+  meetingDate: string;
+  meetingTime: string;
   status: MeetingStatus;
-  created_at: string;
+  createdAt: string;
   book: IBook;
 }
 

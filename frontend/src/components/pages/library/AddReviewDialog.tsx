@@ -40,7 +40,7 @@ import { useClub } from "@//contexts/ClubContext";
 interface IBookReviewForm {
   rating: number;
   comment: string;
-  reading_status: ReadingStatus | undefined;
+  readingStatus: ReadingStatus | undefined;
 }
 
 interface AddReviewDialogProps {
@@ -69,7 +69,7 @@ const AddReviewDialog = ({
     defaultValues: {
       rating: 0,
       comment: "",
-      reading_status: undefined,
+      readingStatus: undefined,
     },
   });
 
@@ -79,14 +79,14 @@ const AddReviewDialog = ({
         (r: IReview) => r.user.id === user?.id
       );
 
-      setValue("reading_status", userReview?.reading_status || undefined);
+      setValue("readingStatus", userReview?.readingStatus || undefined);
       setValue("rating", userReview?.rating || 0);
       setValue("comment", userReview?.comment || "");
     } else if (!open) {
       reset({
         rating: 0,
         comment: "",
-        reading_status: undefined,
+        readingStatus: undefined,
       });
     }
   }, [open, book, user, setValue, reset]);
@@ -128,9 +128,9 @@ const AddReviewDialog = ({
     const hasRatingOrReview = data.rating > 0 || data.comment.trim() !== "";
 
     const isInvalidStatusForRating =
-      data.reading_status === READING_STATUS_WANT_TO_READ ||
-      data.reading_status === READING_STATUS_NOT_STARTED ||
-      data.reading_status === READING_STATUS_STARTED;
+      data.readingStatus === READING_STATUS_WANT_TO_READ ||
+      data.readingStatus === READING_STATUS_NOT_STARTED ||
+      data.readingStatus === READING_STATUS_STARTED;
 
     if (hasRatingOrReview && isInvalidStatusForRating) {
       toast.error(
@@ -169,7 +169,7 @@ const AddReviewDialog = ({
             <div className="grid grid-cols-4 mt-3 gap-3">
               <div>
                 <img
-                  src={book?.cover_url}
+                  src={book?.coverUrl}
                   alt={book?.title}
                   className="w-full h-full rounded-2xl"
                 />
@@ -194,11 +194,11 @@ const AddReviewDialog = ({
                     {book?.reviews?.length === 1 ? "avaliação" : "avaliações"})
                   </span>
                 </div>
-                {book?.created_at && (
+                {book?.createdAt && (
                   <div className="flex items-center justify-between text-xs text-warm-brown/70">
                     <div className="flex items-center gap-1">
                       <LuCalendarDays size={20} />
-                      Lido em {formatMonthYear(book.created_at)}
+                      Lido em {formatMonthYear(book.createdAt)}
                     </div>
                   </div>
                 )}
@@ -250,7 +250,7 @@ const AddReviewDialog = ({
                   Status da Leitura:
                 </h3>
                 <Controller
-                  name="reading_status"
+                  name="readingStatus"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
@@ -295,7 +295,7 @@ const AddReviewDialog = ({
                   <Avatar className="size-15 self-center">
                     {" "}
                     <AvatarImage
-                      src={r.user.profile_picture || undefined}
+                      src={r.user.profilePicture || undefined}
                       alt="Foto de perfil"
                     />
                     <AvatarFallback

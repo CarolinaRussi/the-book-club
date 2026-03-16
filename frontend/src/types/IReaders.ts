@@ -1,12 +1,12 @@
 export interface IReaders {
-  joined_at: string;
+  joinedAt: string;
   user: {
     id: string;
     bio: string;
     email: string;
-    favorites_genres: string;
+    favoritesGenres: string[];
     name: string;
     nickname: string;
-    profile_picture: string;
+    profilePicture: string;
   };
 }

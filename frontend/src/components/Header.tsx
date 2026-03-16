@@ -1,4 +1,3 @@
-import { GiBookshelf } from "react-icons/gi";
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
@@ -98,7 +97,7 @@ export default function Header() {
         className="flex flex-row items-center gap-2 cursor-pointer"
         onClick={() => navigate(isLoggedIn ? "/home" : "/")}
       >
-        <GiBookshelf size={32} className="text-primary" />
+        {/* <GiBookshelf size={32} className="text-primary" /> */}
         {isLoggedIn && (
           <>
             {clubs.length > 0 && (
