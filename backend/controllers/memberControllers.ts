@@ -103,3 +103,26 @@ export const joinClub = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Erro ao criar membro do clube" });
   }
 };
+
+export const deleteMember = async (req: Request, res: Response) => {
+  const { memberId } = req.params;
+
+  if (!memberId) {
+    return res.status(401).json({ message: "Membro não selecionado" });
+  }
+
+  try {
+    const deletedMember = await db.member.delete({
+      where: {
+        id: memberId,
+      },
+    });
+    res.status(201).json({
+      message: "Membro deletado do clube com sucesso",
+      deletedMember,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao deletar membro do clube" });
+  }
+};

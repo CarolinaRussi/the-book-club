@@ -87,7 +87,6 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   const limit = req.query.limit ? Number(req.query.limit) : undefined;
 
   const userId = req.userId;
-  console.log(userId);
 
   if (!clubId) {
     return res.status(400).json({ message: "ID do Clube não enviado." });
