@@ -23,14 +23,38 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { FiMenu } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const privateNavItems = [
-  { to: "/meetings", label: "Próximo Encontro", Icon: TbCoffee, size: 24 },
-  { to: "/library", label: "Biblioteca", Icon: TbBooks, size: 24 },
-  { to: "/readers", label: "Leitores", Icon: MdOutlinePeopleAlt, size: 24 },
-  { to: "/me", label: "Meu Espaço", Icon: MdOutlinePerson, size: 24 },
+  {
+    to: "/meetings",
+    label: "Próximo Encontro",
+    Icon: TbCoffee,
+    size: 24,
+    requiresClub: true,
+  },
+  {
+    to: "/library",
+    label: "Biblioteca",
+    Icon: TbBooks,
+    size: 24,
+    requiresClub: true,
+  },
+  {
+    to: "/readers",
+    label: "Leitores",
+    Icon: MdOutlinePeopleAlt,
+    size: 24,
+    requiresClub: true,
+  },
+  {
+    to: "/me",
+    label: "Meu Espaço",
+    Icon: MdOutlinePerson,
+    size: 24,
+    requiresClub: false,
+  },
 ];
 
 export default function Header() {
@@ -40,8 +64,12 @@ export default function Header() {
     useClub();
 
   const queryClient = useQueryClient();
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const filteredNavItems = useMemo(() => {
+    const hasClubs = clubs && clubs.length > 0;
+    return privateNavItems.filter((item) => !item.requiresClub || hasClubs);
+  }, [clubs]);
 
   const handleLogout = () => {
     logout();
@@ -69,7 +97,7 @@ export default function Header() {
       </NavLink>
 
       {isLoggedIn &&
-        privateNavItems.map((item) => (
+        filteredNavItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -97,16 +125,15 @@ export default function Header() {
         className="flex flex-row items-center gap-2 cursor-pointer"
         onClick={() => navigate(isLoggedIn ? "/home" : "/")}
       >
-        {/* <GiBookshelf size={32} className="text-primary" /> */}
         {isLoggedIn && (
           <>
-            {clubs.length > 0 && (
+            {clubs && clubs.length > 0 && (
               <Select
                 value={selectedClubId || ""}
                 onValueChange={(value) => {
                   setSelectedClubId(value);
                   queryClient.invalidateQueries({
-                    queryKey: ["booksFromSelectedClub", selectedClubId],
+                    queryKey: ["booksFromSelectedClub", value],
                   });
                   setIsMobileMenuOpen(false);
                 }}
@@ -135,15 +162,13 @@ export default function Header() {
       <div className="hidden md:flex flex-row items-center gap-2">
         <NavLinks />
         {isLoggedIn && (
-          <>
-            <button
-              onClick={handleLogout}
-              className="font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background text-muted-foreground cursor-pointer"
-            >
-              <MdOutlineLogout size={24} />
-              Sair
-            </button>
-          </>
+          <button
+            onClick={handleLogout}
+            className="font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background text-muted-foreground cursor-pointer"
+          >
+            <MdOutlineLogout size={24} />
+            Sair
+          </button>
         )}
       </div>
 

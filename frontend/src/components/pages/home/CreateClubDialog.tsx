@@ -52,11 +52,9 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   >({
     mutationFn: createClub,
     onSuccess: async (result) => {
-      queryClient.setQueryData<IClub[]>(["userClubs", user?.id], (oldData) => {
-        return oldData ? [...oldData, result.club] : [result.club];
-      });
+      setCreatedCode(result.club.invitationCode);
       setSelectedClubId(result.club.id);
-      setCreatedCode(result.club.invitation_code);
+
       toast.success("Clube criado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
     },
@@ -130,7 +128,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
             <DialogFooter className="w-full sm:justify-center">
               <Button
                 onClick={handleClose}
-                className="w-full sm:w-1/2 py-6 text-lg"
+                className="w-full sm:w-1/2 py-6 text-base md:text-lg"
               >
                 Fechar e Ir para o Clube
               </Button>

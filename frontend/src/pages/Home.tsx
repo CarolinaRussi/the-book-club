@@ -75,7 +75,7 @@ export default function Home() {
           <CardFooter className="mt-6 grid grid-cols-3">
             <input
               className="col-span-2 border border-secondary p-3 mr-2 shadow-md rounded-xl "
-              placeholder="Ex.: SUPERCLUBE2000"
+              placeholder="Ex.: ENTREASPAS"
               value={clubCode}
               onChange={handleCodeChange}
             />
@@ -120,8 +120,7 @@ export default function Home() {
                   )}
                   <CardFooter className="flex justify-between text-sm text-muted-foreground">
                     <span>
-                      Criado em:{" "}
-                      {new Date(club.createdAt).toLocaleDateString()}
+                      Criado em: {new Date(club.createdAt).toLocaleDateString()}
                     </span>
                     <Badge
                       variant={

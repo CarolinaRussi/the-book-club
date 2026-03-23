@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { PrivateRoute } from "./components/private/PrivateRoute.tsx";
+import { ClubGuard } from "./components/private/ClubGuard.tsx"; // Importe aqui
 import { Layout } from "./components/layout/index.tsx";
 
 import Register from "./pages/Register.tsx";
@@ -19,18 +20,9 @@ const router = createBrowserRouter([
       {
         element: <PublicRoute />,
         children: [
-          {
-            path: "/",
-            element: <Index />,
-          },
-          {
-            path: "/login",
-            element: <Login />,
-          },
-          {
-            path: "/register",
-            element: <Register />,
-          },
+          { path: "/", element: <Index /> },
+          { path: "/login", element: <Login /> },
+          { path: "/register", element: <Register /> },
         ],
       },
       {
@@ -41,20 +33,25 @@ const router = createBrowserRouter([
             element: <Home />,
           },
           {
-            path: "/meetings",
-            element: <Meetings />,
-          },
-          {
-            path: "/library",
-            element: <Library />,
-          },
-          {
-            path: "/readers",
-            element: <Readers />,
-          },
-          {
             path: "/me",
             element: <Me />,
+          },
+          {
+            element: <ClubGuard />,
+            children: [
+              {
+                path: "/meetings",
+                element: <Meetings />,
+              },
+              {
+                path: "/library",
+                element: <Library />,
+              },
+              {
+                path: "/readers",
+                element: <Readers />,
+              },
+            ],
           },
         ],
       },

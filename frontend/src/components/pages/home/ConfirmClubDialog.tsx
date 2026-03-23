@@ -135,7 +135,7 @@ const JoinClubDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-[150px] flex items-center justify-center">
+        <div className="min-h-[150px] flex flex-col justify-center gap-4">
           {renderContent()}
         </div>
 

@@ -32,7 +32,7 @@ export default function Meetings() {
   });
 
   const scheduledMeetings = meetings?.filter(
-    (meeting) => meeting.status === MEETING_STATUS_SCHEDULED
+    (meeting) => meeting.status === MEETING_STATUS_SCHEDULED,
   );
 
   const veryNextMeeting = scheduledMeetings?.[0];
@@ -45,11 +45,11 @@ export default function Meetings() {
         fetchPastMeetingsByClubId(
           selectedClubId,
           pastMeetingsPage,
-          itemsPerPage
+          itemsPerPage,
         ),
       staleTime: 1000 * 60 * 5,
       enabled: !!selectedClubId,
-    }
+    },
   );
 
   useEffect(() => {

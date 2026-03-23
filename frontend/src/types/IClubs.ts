@@ -6,7 +6,7 @@ export interface IClub {
   name: string;
   status: ClubStatus;
   ownerId: string;
-  invitation_code: string;
+  invitationCode: string;
   createdAt: string;
   description?: string;
 }
