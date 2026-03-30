@@ -6,7 +6,7 @@ import {
   getBooksByTitleOrAuthor,
   getBooksByUserId,
   saveReview,
-} from "../controllers/bookControllers";
+} from "../controllers/book";
 import multer from "multer";
 
 const router = Router();

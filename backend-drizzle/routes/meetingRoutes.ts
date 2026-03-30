@@ -6,7 +6,7 @@ import {
   getMeetingsFromClub,
   getPastMeetingsFromClub,
   updateMeeting,
-} from "../controllers/meetingControllers";
+} from "../controllers/meeting";
 
 const router = Router();
 

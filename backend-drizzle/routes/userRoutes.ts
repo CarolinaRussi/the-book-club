@@ -4,7 +4,7 @@ import {
   getUserAuthenticated,
   updatePersonalLibrary,
   updateUser,
-} from "../controllers/userControllers";
+} from "../controllers/user";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
 const upload = multer({ storage: multer.memoryStorage() });

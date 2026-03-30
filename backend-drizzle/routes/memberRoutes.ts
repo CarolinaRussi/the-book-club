@@ -4,7 +4,7 @@ import {
   deleteMember,
   getMembersFromClub,
   joinClub,
-} from "../controllers/memberControllers";
+} from "../controllers/member";
 
 const router = Router();
 

@@ -5,7 +5,7 @@ import {
   getMyClubs,
   getUserClubs,
   updateClub,
-} from "../controllers/clubControllers";
+} from "../controllers/club";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = Router();
