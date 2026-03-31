@@ -1,6 +1,6 @@
-import { eq, count } from "drizzle-orm";
+import { eq, count, and, inArray } from "drizzle-orm";
 import { db } from "../db/client";
-import { user, userBook } from "../db/schema";
+import { user, userBook, review } from "../db/schema";
 
 export async function findUserByEmail(email: string) {
   const [row] = await db
@@ -78,14 +78,25 @@ export async function findUserBooksPaginatedForUser(
           author: true,
           coverUrl: true,
         },
-        with: {
-          reviews: {
-            where: (r, { eq }) => eq(r.userId, userId),
-            columns: { id: true, rating: true, comment: true },
-          },
-        },
       },
     },
     columns: { id: true, updatedAt: true, readingStatus: true },
   });
+}
+
+export async function findMyReviewsForUserBookIds(
+  userId: string,
+  bookIds: string[]
+) {
+  if (bookIds.length === 0) return [];
+  return db
+    .select({
+      bookId: review.bookId,
+      rating: review.rating,
+      comment: review.comment,
+    })
+    .from(review)
+    .where(
+      and(eq(review.userId, userId), inArray(review.bookId, bookIds))
+    );
 }

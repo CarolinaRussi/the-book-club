@@ -58,20 +58,48 @@ export async function getUserReadingsPaginated(
   ]);
 
   const totalPages = Math.ceil(totalItems / limit);
-  const data = userBooksData.map((ub) => ({
-    id: ub.id,
-    updatedAt: ub.updatedAt,
-    readingStatus: ub.readingStatus,
-    book: ub.book
-      ? {
-          id: ub.book.id,
-          title: ub.book.title,
-          author: ub.book.author,
-          coverUrl: ub.book.coverUrl,
-          reviews: (ub.book as any).reviews ?? [],
-        }
-      : null,
-  }));
+
+  const bookIds = userBooksData
+    .map((ub) => ub.book?.id)
+    .filter((id): id is string => Boolean(id));
+
+  const reviewRows = await userRepository.findMyReviewsForUserBookIds(
+    userId,
+    bookIds
+  );
+
+  const reviewByBookId = new Map<
+    string,
+    { rating: number | null; comment: string | null }
+  >();
+  for (const row of reviewRows) {
+    if (!reviewByBookId.has(row.bookId)) {
+      reviewByBookId.set(row.bookId, {
+        rating: row.rating,
+        comment: row.comment,
+      });
+    }
+  }
+
+  const data = userBooksData.map((ub) => {
+    const book = ub.book;
+    const mine = book ? reviewByBookId.get(book.id) : undefined;
+    return {
+      id: ub.id,
+      updatedAt: ub.updatedAt,
+      readingStatus: ub.readingStatus,
+      myRating: mine?.rating ?? null,
+      myComment: mine?.comment ?? null,
+      book: book
+        ? {
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            coverUrl: book.coverUrl,
+          }
+        : null,
+    };
+  });
 
   return { data, totalPages, currentPage: page, totalItems };
 }
