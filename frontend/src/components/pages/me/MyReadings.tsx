@@ -46,9 +46,11 @@ export default function MyReadings() {
         <div className="grid grid-cols-5 gap-4 mb-6">
           {userBooks &&
             userBooks.length > 0 &&
-            userBooks.map((userBook) => (
+            userBooks
+              .filter((ub) => ub.book)
+              .map((userBook) => (
               <Card
-                key={userBook.book.id}
+                key={userBook.id}
                 className="hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
                 // onClick={() => {
                 //   setBookToUpdate(book);
@@ -57,8 +59,8 @@ export default function MyReadings() {
               >
                 <div className="relative aspect-2/3 overflow-hidden bg-muted">
                   <img
-                    src={userBook.book.coverUrl}
-                    alt={userBook.book.title}
+                    src={userBook.book!.coverUrl ?? ""}
+                    alt={userBook.book!.title}
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
@@ -67,23 +69,23 @@ export default function MyReadings() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold line-clamp-2 flex-1">
-                      {userBook.book.title}
+                      {userBook.book!.title}
                     </h3>
                     <Badge className="ml-2 shrink-0">Completo</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    {userBook.book.author}
+                    {userBook.book!.author}
                   </p>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {userBook.book.reviews && userBook.book.reviews.length > 0
-                      ? `"${userBook.book.reviews[0].comment}"`
-                      : "Sem avaliação"}
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-4">
+                    {userBook.myComment?.trim()
+                      ? `"${userBook.myComment.trim()}"`
+                      : "Sem comentário"}
                   </p>
 
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1">
                       <Rating
-                        initialValue={5}
+                        initialValue={userBook.myRating ?? 0}
                         readonly
                         allowFraction
                         SVGstyle={{ display: "inline" }}
@@ -92,7 +94,11 @@ export default function MyReadings() {
                         emptyColor="#e2cad0"
                       />
                     </div>
-                    <span className="text-sm font-semibold">5.0</span>
+                    <span className="text-sm font-semibold">
+                      {userBook.myRating != null
+                        ? userBook.myRating.toFixed(1)
+                        : "—"}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">

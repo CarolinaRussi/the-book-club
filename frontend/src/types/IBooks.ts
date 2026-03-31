@@ -21,11 +21,16 @@ export interface IReview {
   user: IUser;
 }
 
+/** Resposta de GET /user-books/:userId (paginado): dados do livro + sua nota/comentário. */
 export interface IUserBook {
   id: string;
   readingStatus: ReadingStatus;
   updatedAt: string;
-  book: IBook;
+  /** Sua nota neste livro (null se ainda não avaliou). */
+  myRating: number | null;
+  /** Seu comentário (null se não há texto). */
+  myComment: string | null;
+  book: Pick<IBook, "id" | "title" | "author" | "coverUrl"> | null;
 }
 
 export interface IBook {
