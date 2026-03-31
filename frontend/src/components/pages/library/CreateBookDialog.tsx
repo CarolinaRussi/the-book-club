@@ -201,10 +201,13 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] lg:max-w-2xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader className="gap-0">
-            <DialogTitle className="text-3xl text-primary">
+      <DialogContent className="flex max-h-[min(90dvh,100svh)] min-h-0 w-full max-w-[calc(100vw-2rem)] flex-col gap-4 overflow-hidden p-6 sm:max-w-[425px] lg:max-w-2xl">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
+        >
+          <DialogHeader className="shrink-0 gap-0 pr-8">
+            <DialogTitle className="line-clamp-2 text-balance text-left text-2xl text-primary sm:text-3xl">
               Adicionar nova Leitura
             </DialogTitle>
             <DialogDescription className="text-1xl text-warm-brown">
@@ -212,7 +215,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
             </DialogDescription>
           </DialogHeader>
 
-          <div>
+          <div className="min-h-0 max-h-[min(70dvh,calc(100svh-14rem))] flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 [scrollbar-gutter:stable]">
             <h3 className="text-lg font-medium mt-3 mb-3">
               1. Pesquisar na OpenLibrary (biblioteca online)
             </h3>
@@ -286,106 +289,110 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                 </Command>
               </PopoverContent>
             </Popover>
-          </div>
 
-          <div className="flex items-center m-4">
-            <hr className="flex-1 border-t border-muted" />
-            <span className="text-sm font-semibold text-muted-foreground">
-              OU
-            </span>
-            <hr className="flex-1 border-t border-muted" />
-          </div>
+            <div className="flex items-center m-4">
+              <hr className="flex-1 border-t border-muted" />
+              <span className="text-sm font-semibold text-muted-foreground">
+                OU
+              </span>
+              <hr className="flex-1 border-t border-muted" />
+            </div>
 
-          <div>
-            <h3 className="text-lg font-medium mb-3">
-              2. Adicionar Manualmente
-            </h3>
-            <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
-              <div className="md:col-span-1 flex flex-col items-center gap-2">
-                <label
-                  htmlFor="cover-upload"
-                  className="relative flex flex-col items-center justify-center w-50 h-64 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80"
-                >
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Preview da Capa"
-                      className="h-full w-full object-cover rounded-lg"
+            <div>
+              <h3 className="text-lg font-medium mb-3">
+                2. Adicionar Manualmente
+              </h3>
+              <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
+                <div className="md:col-span-1 flex flex-col items-center gap-2">
+                  <label
+                    htmlFor="cover-upload"
+                    className="relative flex max-h-48 min-h-40 w-full max-w-[12.5rem] flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 sm:h-64 sm:max-h-none sm:w-50"
+                  >
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt="Preview da Capa"
+                        className="h-full w-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                        <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">
+                            Clique para enviar a capa
+                          </span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG ou JPG
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      id="cover-upload"
+                      type="file"
+                      className="hidden"
+                      {...restRegister}
+                      onChange={handleFileChange}
+                      accept="image/png, image/jpeg"
                     />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                      <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
-                      <p className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-semibold">
-                          Clique para enviar a capa
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        PNG ou JPG
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    id="cover-upload"
-                    type="file"
-                    className="hidden"
-                    {...restRegister}
-                    onChange={handleFileChange}
-                    accept="image/png, image/jpeg"
-                  />
-                </label>
-              </div>
-              <div className="md:col-span-2 grid grid-cols-1 gap-4 content-start">
-                <div>
-                  <label
-                    htmlFor="title"
-                    className="block text-sm font-medium mb-1.5 "
-                  >
-                    Título
                   </label>
-                  <input
-                    id="title"
-                    type="text"
-                    className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl"
-                    {...register("title", {
-                      required: !selectedBook ? "Título é obrigatório" : false,
-                    })}
-                    placeholder="O Nome do Vento"
-                  />
-                  {errors.title && (
-                    <h3 className="text-xs text-primary">
-                      {errors.title.message}
-                    </h3>
-                  )}
                 </div>
+                <div className="md:col-span-2 grid grid-cols-1 gap-4 content-start">
+                  <div>
+                    <label
+                      htmlFor="title"
+                      className="block text-sm font-medium mb-1.5 "
+                    >
+                      Título
+                    </label>
+                    <input
+                      id="title"
+                      type="text"
+                      className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl"
+                      {...register("title", {
+                        required: !selectedBook
+                          ? "Título é obrigatório"
+                          : false,
+                      })}
+                      placeholder="O Nome do Vento"
+                    />
+                    {errors.title && (
+                      <h3 className="text-xs text-primary">
+                        {errors.title.message}
+                      </h3>
+                    )}
+                  </div>
 
-                <div>
-                  <label
-                    htmlFor="author"
-                    className="block text-sm font-medium mb-1.5"
-                  >
-                    Autor
-                  </label>
-                  <input
-                    id="author"
-                    type="text"
-                    className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl "
-                    {...register("author", {
-                      required: !selectedBook ? "Autor é obrigatório" : false,
-                    })}
-                    placeholder="Patrick Rothfuss"
-                  />
-                  {errors.author && (
-                    <h3 className="text-xs text-primary">
-                      {errors.author.message}
-                    </h3>
-                  )}
+                  <div>
+                    <label
+                      htmlFor="author"
+                      className="block text-sm font-medium mb-1.5"
+                    >
+                      Autor
+                    </label>
+                    <input
+                      id="author"
+                      type="text"
+                      className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl "
+                      {...register("author", {
+                        required: !selectedBook
+                          ? "Autor é obrigatório"
+                          : false,
+                      })}
+                      placeholder="Patrick Rothfuss"
+                    />
+                    {errors.author && (
+                      <h3 className="text-xs text-primary">
+                        {errors.author.message}
+                      </h3>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter className=" mt-5 ">
+          <DialogFooter className="mt-0 shrink-0 border-t border-border/60 pt-4">
             <Button
               type="button"
               variant="outline"
