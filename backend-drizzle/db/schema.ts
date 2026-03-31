@@ -6,6 +6,7 @@ import {
   date,
   time,
   integer,
+  real,
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -130,7 +131,8 @@ export const review = pgTable("Review", {
   bookId: varchar("book_id", { length: 255 })
     .notNull()
     .references(() => book.id, { onDelete: "cascade" }),
-  rating: integer("rating"),
+  /** 0–5 com meias estrelas (ex.: 0.5, 4.5); não usar integer no PG. */
+  rating: real("rating"),
   comment: text("comment"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()

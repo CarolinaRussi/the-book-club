@@ -211,12 +211,17 @@ export async function transactionSaveReview(input: {
       )
       .limit(1);
 
+    const ratingValue =
+      input.rating === null || input.rating === undefined
+        ? null
+        : Number(input.rating);
+
     let savedReview: typeof review.$inferSelect;
     if (existingReview.length > 0) {
       const [updated] = await tx
         .update(review)
         .set({
-          rating: input.rating ? Number(input.rating) : null,
+          rating: ratingValue,
           comment: input.comment ?? null,
         })
         .where(eq(review.id, existingReview[0].id))
@@ -229,7 +234,7 @@ export async function transactionSaveReview(input: {
           id: createId(),
           userId: input.userId,
           bookId: input.bookId,
-          rating: input.rating ? Number(input.rating) : null,
+          rating: ratingValue,
           comment: input.comment ?? null,
         })
         .returning();
