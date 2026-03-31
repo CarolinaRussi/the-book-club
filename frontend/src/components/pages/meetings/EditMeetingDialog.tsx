@@ -24,7 +24,11 @@ import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Input } from "../../ui/input";
 import { useBook } from "@//contexts/BookContext";
-import { formatTime } from "@//utils/formatters";
+import {
+  formatTime,
+  formatMeetingDateForApi,
+  formatMeetingTimeForApi,
+} from "@//utils/formatters";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { updateMeeting } from "@//api/mutations/meetingMutate";
@@ -128,17 +132,13 @@ const EditMeetingDialog = ({
     const { bookId, description, location, meetingDate, meetingTime, status } =
       data;
 
-    const [hours, minutes] = meetingTime.split(":").map(Number);
-    const timeObject = new Date();
-    timeObject.setUTCHours(hours, minutes, 0, 0);
-
     updateMeetingMutate({
       id: meeting.id,
       bookId,
       description,
       location,
-      meetingDate,
-      meetingTime: timeObject,
+      meetingDate: formatMeetingDateForApi(meetingDate),
+      meetingTime: formatMeetingTimeForApi(meetingTime),
       status,
       clubId: selectedClubId,
     });

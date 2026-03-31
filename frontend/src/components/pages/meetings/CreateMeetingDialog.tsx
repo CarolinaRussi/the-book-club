@@ -30,6 +30,10 @@ import {
   BOOK_STATUS_SUGGESTED,
 } from "@//utils/constants/books";
 import { useClub } from "@//contexts/ClubContext";
+import {
+  formatMeetingDateForApi,
+  formatMeetingTimeForApi,
+} from "@//utils/formatters";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;
@@ -103,16 +107,12 @@ const CreateMeetingDialog = ({
 
     const { bookId, description, location, meetingDate, meetingTime } = data;
 
-    const [hours, minutes] = meetingTime.split(":").map(Number);
-    const timeObject = new Date();
-    timeObject.setUTCHours(hours, minutes, 0, 0);
-
     createMeetingMutate({
       bookId,
       description,
       location,
-      meetingDate,
-      meetingTime: timeObject,
+      meetingDate: formatMeetingDateForApi(meetingDate),
+      meetingTime: formatMeetingTimeForApi(meetingTime),
       clubId: selectedClubId,
     });
   };

@@ -15,8 +15,8 @@ export interface IMeeting {
 export interface IMeetingCreatePayload {
   location: string;
   description?: string;
-  meetingDate: Date;
-  meetingTime: Date;
+  meetingDate: string;
+  meetingTime: string;
   bookId: string;
   clubId: string;
 }
@@ -25,8 +25,8 @@ export interface IMeetingUpdatePayload {
   id: string;
   location: string;
   description?: string;
-  meetingDate: Date;
-  meetingTime: Date;
+  meetingDate: string;
+  meetingTime: string;
   status: MeetingStatus;
   bookId: string;
   clubId: string;

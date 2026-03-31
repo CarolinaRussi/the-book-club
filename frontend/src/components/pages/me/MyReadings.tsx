@@ -47,7 +47,7 @@ export default function MyReadings() {
           userBooks.map((userBook) => (
             <Card
               key={userBook.book.id}
-              className="cursor-pointer hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
+              className="hover:shadow-(--shadow-medium) transition-all overflow-hidden group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0"
               // onClick={() => {
               //   setBookToUpdate(book);
               //   setUpdateBookOpen(true);
