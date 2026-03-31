@@ -27,12 +27,13 @@ import {
   fetchBooksFromMyDatabase,
   fetchBooksFromOpenLibrary,
 } from "../../../api/queries/fetchBooks";
-import { BookOpen, ChevronsUpDown, Upload } from "lucide-react";
+import { BookOpen, ChevronsUpDown, Lock, Upload } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "../../../types/IApi";
 import { toast } from "react-toastify";
 import { useClub } from "../../../contexts/ClubContext";
 import { createBook } from "../../../api/mutations/bookMutate";
+import { cn } from "../../../lib/utils";
 
 interface CreateBookDialogProps {
   open: boolean;
@@ -45,8 +46,20 @@ interface ICreateBookForm {
   coverImg?: FileList;
 }
 
+type SearchResultBook = {
+  id: string;
+  title: string;
+  author: string[];
+  cover?: string;
+  coverLargeUrl?: string;
+  cover_i?: number;
+  source: "local" | "openLibrary";
+};
+
 const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
-  const [selectedBook, setSelectedBook] = useState<any | null>(null);
+  const [selectedBook, setSelectedBook] = useState<SearchResultBook | null>(
+    null,
+  );
   const [inputValue, setInputValue] = useState("");
   const [openCombobox, setOpenCombobox] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
@@ -57,7 +70,6 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
   } = useForm<ICreateBookForm>({
     defaultValues: {
@@ -66,9 +78,6 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
       coverImg: undefined,
     },
   });
-
-  const watchedTitle = watch("title");
-  const watchedAuthor = watch("author");
 
   const { data: searchResults, isError } = useQuery({
     queryKey: ["books", inputValue],
@@ -89,15 +98,20 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
 
       const externalBooks = (openLibResponse.docs || [])
         .filter((book: any) => book.cover_i && book.cover_i > 0)
-        .map((book: IOpenLibraryBook) => ({
-          id: book.key,
-          title: book.title,
-          author: book.author_name || ["Autor desconhecido"],
-          cover: `https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg?default=false`,
-          cover_i: book.cover_i,
-          source: "openLibrary",
-        }));
-      return [...localBooks, ...externalBooks];
+        .map((book: IOpenLibraryBook) => {
+          const id = book.cover_i!;
+          const base = `https://covers.openlibrary.org/b/id/${id}`;
+          return {
+            id: book.key,
+            title: book.title,
+            author: book.author_name || ["Autor desconhecido"],
+            cover: `${base}-S.jpg?default=false`,
+            coverLargeUrl: `${base}-L.jpg?default=false`,
+            cover_i: id,
+            source: "openLibrary" as const,
+          };
+        });
+      return [...localBooks, ...externalBooks] as SearchResultBook[];
     },
   });
 
@@ -142,29 +156,30 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     }
   }, [open, clearManualForm, clearOpenLibrarySelection]);
 
-  useEffect(() => {
-    if (watchedTitle || watchedAuthor) {
-      if (selectedBook) {
-        clearOpenLibrarySelection();
-      }
-    }
-  }, [watchedTitle, watchedAuthor, selectedBook]);
+  const isLocalSelection = selectedBook?.source === "local";
+  const isOpenLibrarySelection = selectedBook?.source === "openLibrary";
 
-  const handleSelect = (book: any) => {
+  const handleSelect = (book: SearchResultBook) => {
     setSelectedBook(book);
     setInputValue(book.title);
     setOpenCombobox(false);
-    clearManualForm();
+    const authorStr = (book.author || ["Autor desconhecido"]).join(", ");
+    reset({
+      title: book.title,
+      author: authorStr,
+      coverImg: undefined,
+    });
+    setPreviewUrl(book.coverLargeUrl ?? book.cover ?? undefined);
   };
 
   const { onChange: rhfOnChange, ...restRegister } = register("coverImg");
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (isLocalSelection) return;
     rhfOnChange(event);
     const file = event.target.files?.[0];
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
-      clearOpenLibrarySelection();
     }
   };
 
@@ -173,18 +188,26 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
       toast.error("Você não pode adicionar um livro sem estar em um clube");
       return;
     }
-    const { title: manualTitle, author: manualAuthor, coverImg } = data;
-    console.log(selectedBook);
+    const title = data.title.trim();
+    const author = data.author.trim();
+    const { coverImg } = data;
+
+    const openLibraryKey =
+      selectedBook?.source === "openLibrary"
+        ? selectedBook.id.split("/").pop()
+        : undefined;
+    const existingBookId =
+      selectedBook?.source === "local" ? selectedBook.id : undefined;
 
     const payload: IBookPayload = {
-      id: selectedBook?.id?.split("/").pop(),
-      title: selectedBook ? selectedBook.title : manualTitle,
-      author: selectedBook
-        ? (selectedBook.author || ["Autor desconhecido"]).join(", ")
-        : manualAuthor,
+      id: openLibraryKey ?? existingBookId ?? "",
+      title,
+      author,
       coverUrlOpenLibrary:
-        selectedBook.source === "openLibrary" && selectedBook?.cover
-          ? `https://covers.openlibrary.org/b/id/${selectedBook.cover_i}-L.jpg`
+        selectedBook?.source === "openLibrary" &&
+        selectedBook.coverLargeUrl &&
+        !(coverImg && coverImg.length > 0)
+          ? selectedBook.coverLargeUrl
           : undefined,
       coverImg: coverImg && coverImg.length > 0 ? coverImg : undefined,
       clubId: selectedClubId,
@@ -238,22 +261,25 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
-                <Command shouldFilter={false}>
+                <Command
+                  shouldFilter={false}
+                  className="h-auto max-h-[min(380px,55svh)]"
+                >
                   <CommandInput
                     placeholder="Digite o nome do livro..."
                     value={inputValue}
                     onValueChange={setInputValue}
                   />
-                  <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
+                  <CommandList className="max-h-[min(300px,45svh)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
                     <CommandEmpty>
                       {isError ? "Erro ao buscar." : "Nenhum livro encontrado."}
                     </CommandEmpty>
 
                     {searchResults && searchResults.length > 0 && (
                       <CommandGroup>
-                        {searchResults.map((book: any) => (
+                        {searchResults.map((book: SearchResultBook) => (
                           <CommandItem
-                            key={book.id}
+                            key={`${book.source}-${book.id}`}
                             value={`${book.title}-${book.id}`.toLowerCase()}
                             onSelect={() => handleSelect(book)}
                             className="flex items-center gap-3"
@@ -299,43 +325,84 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3">
-                2. Adicionar Manualmente
+              <h3 className="text-lg font-medium mb-1">
+                2. Dados do livro
               </h3>
+              {isLocalSelection && (
+                <p className="mb-3 flex items-start gap-2 text-sm text-muted-foreground">
+                  <Lock
+                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden
+                  />
+                  <span>
+                    Este livro já está na base do sistema. Os dados abaixo são
+                    só para conferência; ao salvar, ele será vinculado ao clube.
+                  </span>
+                </p>
+              )}
+              {isOpenLibrarySelection && (
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Você pode ajustar título ou autor (por exemplo, traduzir o
+                  nome). Para trocar a capa, envie uma imagem — ela substitui a
+                  da Open Library.
+                </p>
+              )}
+              {!selectedBook && (
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Preencha os campos ou use a busca acima.
+                </p>
+              )}
               <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
                 <div className="md:col-span-1 flex flex-col items-center gap-2">
-                  <label
-                    htmlFor="cover-upload"
-                    className="relative flex max-h-48 min-h-40 w-full max-w-[12.5rem] flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 sm:h-64 sm:max-h-none sm:w-50"
-                  >
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview da Capa"
-                        className="h-full w-full object-cover rounded-lg"
+                  {isLocalSelection ? (
+                    <div className="relative flex max-h-48 min-h-40 w-full max-w-50 flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-muted bg-muted/80 sm:h-64 sm:max-h-none sm:w-50">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Capa do livro"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
+                          <BookOpen className="mb-2 size-8 opacity-60" />
+                          <span className="text-xs">Sem capa</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="cover-upload"
+                      className="relative flex max-h-48 min-h-40 w-full max-w-50 cursor-pointer flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted hover:bg-muted/80 sm:h-64 sm:max-h-none sm:w-50"
+                    >
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Preview da Capa"
+                          className="h-full w-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center px-2 pt-5 pb-6 text-center">
+                          <Upload className="mb-4 size-8 text-muted-foreground" />
+                          <p className="mb-2 text-sm text-muted-foreground">
+                            <span className="font-semibold">
+                              Clique para enviar a capa
+                            </span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            PNG ou JPG
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        id="cover-upload"
+                        type="file"
+                        className="hidden"
+                        {...restRegister}
+                        onChange={handleFileChange}
+                        accept="image/png, image/jpeg"
                       />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                        <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
-                        <p className="mb-2 text-sm text-muted-foreground">
-                          <span className="font-semibold">
-                            Clique para enviar a capa
-                          </span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          PNG ou JPG
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      id="cover-upload"
-                      type="file"
-                      className="hidden"
-                      {...restRegister}
-                      onChange={handleFileChange}
-                      accept="image/png, image/jpeg"
-                    />
-                  </label>
+                    </label>
+                  )}
                 </div>
                 <div className="md:col-span-2 grid grid-cols-1 gap-4 content-start">
                   <div>
@@ -348,7 +415,12 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                     <input
                       id="title"
                       type="text"
-                      className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl"
+                      readOnly={isLocalSelection}
+                      className={cn(
+                        "w-full rounded-xl border border-secondary p-3 shadow-md",
+                        isLocalSelection &&
+                          "cursor-default bg-muted/60 text-foreground",
+                      )}
                       {...register("title", {
                         required: !selectedBook
                           ? "Título é obrigatório"
@@ -373,7 +445,12 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                     <input
                       id="author"
                       type="text"
-                      className="w-full border border-secondary p-3 mr-2 shadow-md rounded-xl "
+                      readOnly={isLocalSelection}
+                      className={cn(
+                        "w-full rounded-xl border border-secondary p-3 shadow-md",
+                        isLocalSelection &&
+                          "cursor-default bg-muted/60 text-foreground",
+                      )}
                       {...register("author", {
                         required: !selectedBook
                           ? "Autor é obrigatório"

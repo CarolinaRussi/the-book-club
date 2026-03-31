@@ -5,7 +5,7 @@ import type { IPaginatedResponse } from "@//types/IApi";
 export const fetchBooksFromOpenLibrary = async (query: string) => {
   if (!query) return { docs: [] };
   const searchTerm = encodeURIComponent(query);
-  const url = `https://openlibrary.org/search.json?title=${searchTerm}&fields=key,title,author_name,cover_i&limit=20`;
+  const url = `https://openlibrary.org/search.json?q=${searchTerm}&fields=key,title,author_name,cover_i&limit=50`;
 
   const response = await fetch(url);
   if (!response.ok) throw new Error("Erro na OpenLibrary");
