@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import * as meetingService from "../../services/meetingService";
+import * as meetingRepository from "../../repositories/meetingRepository";
+import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const updateMeeting = async (req: Request, res: Response) => {
   const {
@@ -27,6 +29,17 @@ export const updateMeeting = async (req: Request, res: Response) => {
     return;
   }
 
+  const existing = await meetingRepository.findMeetingById(id);
+  if (!existing) {
+    return res.status(404).json({ message: "Encontro não encontrado" });
+  }
+  if (clubId !== existing.clubId) {
+    return res.status(400).json({ message: "Dados do encontro inválidos." });
+  }
+  if (!(await respondIfNotClubMember(req.userId, existing.clubId, res))) {
+    return;
+  }
+
   try {
     const updatedMeeting = await meetingService.updateMeeting(id, {
       bookId,
@@ -35,7 +48,7 @@ export const updateMeeting = async (req: Request, res: Response) => {
       meetingDate,
       meetingTime,
       status,
-      clubId,
+      clubId: existing.clubId,
     });
 
     if (!updatedMeeting) {

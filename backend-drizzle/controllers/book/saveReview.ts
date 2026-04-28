@@ -7,11 +7,13 @@ import {
 export const saveReview = async (req: Request, res: Response) => {
   try {
     const readingStatus = req.body.readingStatus ?? req.body.reading_status;
-    const { userId, clubId, bookId, rating, comment } = req.body;
+    const { clubId, bookId, rating, comment } = req.body;
+    const userId = req.userId;
 
-    if (!clubId || !userId || !bookId || !readingStatus) {
+    if (!clubId || !bookId || !readingStatus || !userId) {
       return res.status(400).json({
-        message: "Dados incompletos. userId, bookId e status são obrigatórios.",
+        message:
+          "Dados incompletos. clubId, bookId e status são obrigatórios.",
       });
     }
 

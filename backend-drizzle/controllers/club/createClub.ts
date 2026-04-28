@@ -5,7 +5,8 @@ import {
 } from "../../services/clubService";
 
 export const createClub = async (req: Request, res: Response) => {
-  const { name, description, ownerId } = req.body;
+  const { name, description } = req.body;
+  const ownerId = req.userId;
 
   if (!name || !description || !ownerId) {
     res.status(400).json({ message: "Preencha todos os campos obrigatórios!" });

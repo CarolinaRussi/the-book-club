@@ -2,15 +2,20 @@ import { Request, Response } from "express";
 import * as userService from "../../services/userService";
 
 export const updatePersonalLibrary = async (req: Request, res: Response) => {
-  const { bookId, userId } = req.body;
+  const { bookId, userId: bodyUserId } = req.body;
+  const authUserId = req.userId;
 
-  if (!bookId || !userId) {
+  if (!bookId || !bodyUserId) {
     res.status(400).json({ message: "Id do livro ou de usuário inválido!" });
+    return;
+  }
+  if (!authUserId || bodyUserId !== authUserId) {
+    res.status(403).json({ message: "Não autorizado." });
     return;
   }
 
   try {
-    const result = await userService.updatePersonalLibrary(userId, bookId);
+    const result = await userService.updatePersonalLibrary(authUserId, bookId);
 
     if (result.action === "removed") {
       return res.status(200).json({

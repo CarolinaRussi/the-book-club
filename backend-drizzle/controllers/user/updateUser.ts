@@ -2,19 +2,24 @@ import { Request, Response } from "express";
 import * as userService from "../../services/userService";
 
 export const updateUser = async (req: Request, res: Response) => {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ message: "Usuário não autenticado" });
+  }
+
   try {
     const file = req.file;
     const removeProfilePicture =
       req.body.removeProfilePicture ?? req.body.remove_profile_picture;
     const {
-      id,
+      id: _ignoredId,
       remove_profile_picture: _rp1,
       removeProfilePicture: _rp2,
       ...otherData
     } = req.body;
 
     const result = await userService.updateUserProfile({
-      id,
+      id: userId,
       file,
       removeProfilePicture,
       otherData,

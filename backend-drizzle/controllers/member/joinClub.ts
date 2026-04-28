@@ -5,9 +5,10 @@ import {
 } from "../../services/memberService";
 
 export const joinClub = async (req: Request, res: Response) => {
-  const { userId, clubId } = req.body;
+  const { clubId } = req.body;
+  const userId = req.userId;
 
-  if (!userId || !clubId) {
+  if (!clubId || !userId) {
     res.status(400).json({ message: "Id do clube ou de usuário inválido!" });
     return;
   }

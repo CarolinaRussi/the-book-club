@@ -80,6 +80,18 @@ export async function countPastMeetingsByClubId(clubId: string) {
   return Number(row?.value ?? 0);
 }
 
+export async function findMeetingById(meetingId: string) {
+  const [row] = await db
+    .select({
+      id: meeting.id,
+      clubId: meeting.clubId,
+    })
+    .from(meeting)
+    .where(eq(meeting.id, meetingId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function insertMeeting(values: typeof meeting.$inferInsert) {
   const [row] = await db.insert(meeting).values(values).returning();
   return row ?? null;

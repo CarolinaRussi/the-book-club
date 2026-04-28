@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as clubService from "../../services/clubService";
+import { respondIfNotClubOwner } from "../../utils/clubAccess";
 
 export const updateClub = async (req: Request, res: Response) => {
   const { name, description, invitationCode } = req.body;
@@ -7,6 +8,10 @@ export const updateClub = async (req: Request, res: Response) => {
 
   if (!id || !name || !invitationCode) {
     res.status(400).json({ message: "Preencha todos os campos!" });
+    return;
+  }
+
+  if (!(await respondIfNotClubOwner(req.userId, id, res))) {
     return;
   }
 

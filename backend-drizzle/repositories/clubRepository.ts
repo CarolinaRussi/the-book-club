@@ -27,6 +27,15 @@ export async function findClubByInvitationCode(code: string) {
   return row ?? null;
 }
 
+export async function findClubOwnerId(clubId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ ownerId: club.ownerId })
+    .from(club)
+    .where(eq(club.id, clubId))
+    .limit(1);
+  return row?.ownerId ?? null;
+}
+
 export async function findUserNameById(userId: string) {
   const [row] = await db
     .select({ name: user.name })

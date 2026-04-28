@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as meetingService from "../../services/meetingService";
+import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const createMeeting = async (req: Request, res: Response) => {
   const { bookId, description, location, meetingDate, meetingTime, clubId } =
@@ -7,6 +8,10 @@ export const createMeeting = async (req: Request, res: Response) => {
 
   if (!bookId || !location || !meetingDate || !meetingTime || !clubId) {
     res.status(400).json({ message: "Preencha todos os campos!" });
+    return;
+  }
+
+  if (!(await respondIfNotClubMember(req.userId, clubId, res))) {
     return;
   }
 

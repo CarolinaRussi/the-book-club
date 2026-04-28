@@ -3,6 +3,7 @@ import {
   createBookForClub,
   BookAlreadyInClubSuggestedError,
 } from "../../services/bookService";
+import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const createBook = async (req: Request, res: Response) => {
   try {
@@ -10,6 +11,9 @@ export const createBook = async (req: Request, res: Response) => {
     const clubId = req.body.clubId ?? req.body.club_id;
     if (!clubId) {
       return res.status(400).json({ message: "clubId é obrigatório." });
+    }
+    if (!(await respondIfNotClubMember(req.userId, clubId, res))) {
+      return;
     }
     const openLibraryId = req.body.id;
     const coverUrlOpenLibrary =

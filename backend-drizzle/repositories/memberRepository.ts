@@ -74,6 +74,17 @@ export async function findClubNameById(
   return row?.name ?? null;
 }
 
+export async function findMemberById(
+  memberId: string
+): Promise<typeof member.$inferSelect | null> {
+  const [row] = await db
+    .select()
+    .from(member)
+    .where(eq(member.id, memberId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function deleteMemberById(
   memberId: string
 ): Promise<typeof member.$inferSelect | null> {

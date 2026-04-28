@@ -12,7 +12,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
 
 router.get("/me/user", authMiddleware, getUserAuthenticated);
-router.put("/update-user", upload.single("profile_picture"), updateUser);
+router.put(
+  "/update-user",
+  authMiddleware,
+  upload.single("profile_picture"),
+  updateUser
+);
 router.post("/update-personal-library", authMiddleware, updatePersonalLibrary);
 
 export default router;

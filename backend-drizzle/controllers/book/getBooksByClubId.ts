@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as bookService from "../../services/bookService";
+import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const getBooksByClubId = async (req: Request, res: Response) => {
   const { clubId } = req.params;
@@ -9,6 +10,10 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
 
   if (!clubId) {
     return res.status(400).json({ message: "ID do Clube não enviado." });
+  }
+
+  if (!(await respondIfNotClubMember(userId, clubId, res))) {
+    return;
   }
 
   try {

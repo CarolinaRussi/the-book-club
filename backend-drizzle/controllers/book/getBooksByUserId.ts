@@ -9,6 +9,9 @@ export const getBooksByUserId = async (req: Request, res: Response) => {
   if (!userId) {
     return res.status(401).json({ message: "Usuário não selecionado" });
   }
+  if (!req.userId || req.userId !== userId) {
+    return res.status(403).json({ message: "Não autorizado." });
+  }
 
   try {
     const payload = await userService.getUserReadingsPaginated(

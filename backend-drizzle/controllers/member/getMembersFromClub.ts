@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as memberService from "../../services/memberService";
+import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const getMembersFromClub = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -8,6 +9,10 @@ export const getMembersFromClub = async (req: Request, res: Response) => {
 
   if (!id) {
     return res.status(401).json({ message: "Clube não selecionado" });
+  }
+
+  if (!(await respondIfNotClubMember(req.userId, id, res))) {
+    return;
   }
 
   try {
