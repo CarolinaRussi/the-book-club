@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import { applyClubTheme, getStoredClubTheme } from "./utils/clubTheme";
 import App from "./App.tsx";
+
+applyClubTheme(getStoredClubTheme());
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer, Zoom } from "react-toastify";
 

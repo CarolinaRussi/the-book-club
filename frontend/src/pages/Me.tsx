@@ -7,6 +7,7 @@ import {
 import Profile from "../components/pages/me/Profile";
 import MyReadings from "../components/pages/me/MyReadings";
 import MyClubs from "../components/pages/me/MyClubs";
+import Settings from "../components/pages/me/Settings";
 
 export default function Me() {
   return (
@@ -29,7 +30,7 @@ export default function Me() {
             <MyClubs />
           </TabsContent>
           <TabsContent value="settings">
-            <div>teste4</div>
+            <Settings />
           </TabsContent>
         </Tabs>
       </div>
