@@ -288,6 +288,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                               <img
                                 src={book.cover}
                                 alt="capa"
+                                referrerPolicy="no-referrer"
                                 className="h-12 w-9 object-cover rounded-sm"
                               />
                             ) : (
@@ -325,9 +326,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-1">
-                2. Dados do livro
-              </h3>
+              <h3 className="text-lg font-medium mb-1">2. Dados do livro</h3>
               {isLocalSelection && (
                 <p className="mb-3 flex items-start gap-2 text-sm text-muted-foreground">
                   <Lock
@@ -360,6 +359,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                         <img
                           src={previewUrl}
                           alt="Capa do livro"
+                          referrerPolicy="no-referrer"
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -378,6 +378,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                         <img
                           src={previewUrl}
                           alt="Preview da Capa"
+                          referrerPolicy="no-referrer"
                           className="h-full w-full object-cover rounded-lg"
                         />
                       ) : (
@@ -452,9 +453,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                           "cursor-default bg-muted/60 text-foreground",
                       )}
                       {...register("author", {
-                        required: !selectedBook
-                          ? "Autor é obrigatório"
-                          : false,
+                        required: !selectedBook ? "Autor é obrigatório" : false,
                       })}
                       placeholder="Patrick Rothfuss"
                     />
