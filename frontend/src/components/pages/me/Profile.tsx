@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser } from "../../../api/mutations/userMutate";
@@ -10,10 +10,12 @@ import PersonalData from "./profile/PersonalData";
 import FavoriteGenres from "./profile/FavoriteGenres";
 import ChangePassword from "./profile/ChangePassword";
 import ProfilePictureUpdate from "./profile/ProfilePictureUpdate";
+import ProfileAvatarCropDialog from "./profile/ProfileAvatarCropDialog";
 
 export default function Profile() {
   const { user } = useAuth();
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
@@ -46,19 +48,39 @@ export default function Profile() {
   const isChangingPassword =
     !!watch("oldPassword") || !!watch("password") || !!watch("confirmPassword");
 
-  const { onChange: rhfOnChange, ...restRegister } = register("profilePicture");
+  const {
+    ref: profilePictureRef,
+    name: profilePictureName,
+    onBlur: profilePictureOnBlur,
+  } = register("profilePicture");
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    rhfOnChange(event);
-    const file = event.target.files?.[0];
-    if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-      setValue("removeProfilePicture", false);
+  const handlePickImageFile = (file: File) => {
+    setCropImageSrc(URL.createObjectURL(file));
+  };
+
+  const handleCropDialogOpenChange = (open: boolean) => {
+    if (!open && cropImageSrc) {
+      URL.revokeObjectURL(cropImageSrc);
+      setCropImageSrc(null);
     }
   };
 
+  const handleCroppedAvatar = (file: File) => {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    setValue("profilePicture", dt.files, { shouldDirty: true });
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setValue("removeProfilePicture", false);
+  };
+
   const handleRemoveImage = () => {
-    setPreviewUrl("");
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return "";
+    });
     setValue("profilePictureUrl", "");
     resetField("profilePicture");
     setValue("removeProfilePicture", true);
@@ -126,9 +148,17 @@ export default function Profile() {
           previewUrl={previewUrl}
           profilePictureUrl={profilePictureUrl}
           name={name}
-          handleFileChange={handleFileChange}
           handleRemoveImage={handleRemoveImage}
-          restRegister={restRegister}
+          fileInputRef={profilePictureRef}
+          fileInputName={profilePictureName}
+          onFileInputBlur={profilePictureOnBlur}
+          onPickImageFile={handlePickImageFile}
+        />
+        <ProfileAvatarCropDialog
+          open={!!cropImageSrc}
+          imageSrc={cropImageSrc}
+          onOpenChange={handleCropDialogOpenChange}
+          onCropComplete={handleCroppedAvatar}
         />
         {/* Editar dados pessoais do usuário */}
         <PersonalData register={register} />

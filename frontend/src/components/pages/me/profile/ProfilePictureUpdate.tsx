@@ -1,3 +1,4 @@
+import type { ChangeEvent, FocusEvent } from "react";
 import { getInitials } from "@//utils/formatters";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
@@ -6,19 +7,31 @@ interface ProfilePictureUpdateProps {
   previewUrl?: string;
   profilePictureUrl?: string;
   name?: string;
-  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemoveImage: () => void;
-  restRegister: any;
+  fileInputRef: React.Ref<HTMLInputElement>;
+  fileInputName: string;
+  onFileInputBlur: (e: FocusEvent<HTMLInputElement>) => void;
+  onPickImageFile: (file: File) => void;
 }
 
 const ProfilePictureUpdate = ({
   previewUrl,
   profilePictureUrl,
   name,
-  handleFileChange,
   handleRemoveImage,
-  restRegister,
+  fileInputRef,
+  fileInputName,
+  onFileInputBlur,
+  onPickImageFile,
 }: ProfilePictureUpdateProps) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) {
+      onPickImageFile(file);
+    }
+  };
+
   return (
     <Card className="md:col-span-1">
       <CardHeader>
@@ -45,10 +58,12 @@ const ProfilePictureUpdate = ({
         </label>
 
         <input
+          ref={fileInputRef}
+          name={fileInputName}
+          onBlur={onFileInputBlur}
           type="file"
           id="avatarInput"
           accept="image/png, image/jpeg, image/webp"
-          {...restRegister}
           onChange={handleFileChange}
           hidden={true}
         />
