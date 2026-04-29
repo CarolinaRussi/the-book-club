@@ -5,62 +5,67 @@ import { Link } from "react-router";
 
 export default function Index() {
   return (
-    <div className="p-5 md:p-20 place-items-center mt-20">
-      <GiBookCover size={100} className="text-primary" />
-      <h1 className="text-5xl mt-5 font-bold text-foreground">
+    <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-12 pt-12 text-center sm:px-6 sm:pb-16 sm:pt-16 md:px-12 md:pb-20 md:pt-20 lg:px-20">
+      <GiBookCover
+        className="h-16 w-16 shrink-0 text-primary sm:h-20 sm:w-20 md:h-[100px] md:w-[100px]"
+        aria-hidden
+      />
+
+      <h1 className="mt-5 max-w-[min(100%,36rem)] text-balance text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl">
         Bem-vindo ao Clube do Livro
       </h1>
 
-      <h3 className="text-2xl w-200 text-warm-brown text-center">
+      <h2 className="mt-4 max-w-2xl text-pretty text-base text-warm-brown sm:text-lg md:text-2xl">
         Conecte-se com outros leitores, compartilhe suas experiências literárias
         e descubra novos mundos através dos livros.
-      </h3>
+      </h2>
 
-      <div className="grid grid-cols-3 gap-10 mt-10">
+      <div className="mt-8 grid w-full grid-cols-1 gap-6 sm:gap-8 md:mt-10 md:grid-cols-3 md:gap-8 lg:gap-10">
         <div
           id="card-comunidade"
-          className="border-2 text-foreground border-secondary rounded-lg p-6 w-80 h-50 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center"
+          className="flex min-h-[11rem] w-full max-w-sm flex-col items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-background p-5 text-center text-foreground shadow-md sm:p-6 md:mx-0 md:mt-5 md:w-80 md:max-w-none md:justify-self-center"
         >
-          <MdOutlinePeopleAlt size={48} />
-          <h1 className="text-3xl font-semibold">Comunidade</h1>
-          <h3 className="text-warm-brown">
+          <MdOutlinePeopleAlt className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
+          <span className="text-2xl font-semibold sm:text-3xl">Comunidade</span>
+          <p className="text-sm text-warm-brown sm:text-base">
             Conheça pessoas apaixonadas por leitura
-          </h3>
+          </p>
         </div>
 
         <div
           id="card-biblioteca"
-          className="border-2 text-foreground border-secondary rounded-lg p-6 w-80 h-50 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center"
+          className="flex min-h-[11rem] w-full max-w-sm flex-col items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-background p-5 text-center text-foreground shadow-md sm:p-6 md:mx-0 md:mt-5 md:w-80 md:max-w-none md:justify-self-center"
         >
-          <TbBooks size={48} />
-          <h1 className="text-3xl font-semibold">Biblioteca</h1>
-          <h3 className="text-warm-brown">
+          <TbBooks className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
+          <span className="text-2xl font-semibold sm:text-3xl">Biblioteca</span>
+          <p className="text-sm text-warm-brown sm:text-base">
             Mantenha registros de todos os livros lidos
-          </h3>
+          </p>
         </div>
 
         <div
           id="card-encontros"
-          className="border-2 text-foreground border-secondary rounded-lg p-6 w-80 h-50 mt-5 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center"
+          className="flex min-h-[11rem] w-full max-w-sm flex-col items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-background p-5 text-center text-foreground shadow-md sm:p-6 md:mx-0 md:mt-5 md:w-80 md:max-w-none md:justify-self-center"
         >
-          <TbCoffee size={48} />
-          <h1 className="text-3xl font-semibold">Encontros</h1>
-          <h3 className="text-warm-brown">
+          <TbCoffee className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
+          <span className="text-2xl font-semibold sm:text-3xl">Encontros</span>
+          <p className="text-sm text-warm-brown sm:text-base">
             Participe de discussões sobre os livros enquanto toma um café
-          </h3>
+          </p>
         </div>
       </div>
-      <div className="flex flex-row gap-6 mt-5">
+
+      <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:mt-10 sm:flex-row sm:justify-center sm:gap-6">
         <Link
           to="/register"
-          className={`font-semibold px-8 py-3 rounded-xl flex items-center gap-2 bg-primary text-primary-foreground  cursor-pointer `}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3 font-semibold text-primary-foreground sm:w-auto"
         >
           Criar conta
         </Link>
 
         <Link
           to="/login"
-          className={`font-semibold px-6 py-3 rounded-xl flex items-center gap-2 text-foreground border border-secondary cursor-pointer `}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary px-6 py-3 font-semibold text-foreground sm:w-auto"
         >
           Entrar
         </Link>
