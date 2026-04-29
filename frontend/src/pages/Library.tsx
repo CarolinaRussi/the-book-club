@@ -251,8 +251,8 @@ export default function Library() {
                         <span>
                           {reviewsForAverage.length}{" "}
                           {reviewsForAverage.length === 1
-                            ? "avaliação na média"
-                            : "avaliações na média"}
+                            ? "avaliação"
+                            : "avaliações"}
                         </span>
                       </div>
                     </CardContent>
