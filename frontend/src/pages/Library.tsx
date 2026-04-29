@@ -10,10 +10,7 @@ import { Badge } from "../components/ui/badge";
 import type { IBook } from "../types/IBooks";
 import AddReviewDialog from "../components/pages/library/AddReviewDialog";
 import { bookStatusLabels } from "../utils/constants/books";
-import {
-  READING_STATUS_DROPPED,
-  READING_STATUS_FINISHED,
-} from "../utils/constants/reading";
+import { READING_STATUS_FINISHED } from "../utils/constants/reading";
 import SkeletonLibrary from "../components/pages/library/skeletons/SkeletonLibrary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClub } from "../contexts/ClubContext";
@@ -155,20 +152,18 @@ export default function Library() {
               booksClub.map((book) => {
                 const reviews = book.reviews || [];
 
-                const validReviews = reviews.filter(
-                  (review) =>
-                    review.readingStatus === READING_STATUS_FINISHED ||
-                    review.readingStatus === READING_STATUS_DROPPED,
+                const reviewsForAverage = reviews.filter(
+                  (review) => review.readingStatus === READING_STATUS_FINISHED,
                 );
 
-                const totalRating = validReviews.reduce(
+                const totalRating = reviewsForAverage.reduce(
                   (acc, review) => acc + review.rating,
                   0,
                 );
 
                 const averageRating =
-                  validReviews.length > 0
-                    ? totalRating / validReviews.length
+                  reviewsForAverage.length > 0
+                    ? totalRating / reviewsForAverage.length
                     : 0;
 
                 const isInLibrary = book.isInLibrary;
@@ -254,10 +249,10 @@ export default function Library() {
                           {formatMonthYear(book.addedAt)}
                         </div>
                         <span>
-                          {validReviews.length}{" "}
-                          {validReviews.length === 1
-                            ? "avaliação"
-                            : "avaliações"}
+                          {reviewsForAverage.length}{" "}
+                          {reviewsForAverage.length === 1
+                            ? "avaliação na média"
+                            : "avaliações na média"}
                         </span>
                       </div>
                     </CardContent>

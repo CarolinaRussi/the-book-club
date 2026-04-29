@@ -29,6 +29,7 @@ import { Card, CardTitle } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { RiResetLeftFill } from "react-icons/ri";
 import {
+  READING_STATUS_FINISHED,
   READING_STATUS_NOT_STARTED,
   READING_STATUS_STARTED,
   READING_STATUS_WANT_TO_READ,
@@ -76,7 +77,7 @@ const AddReviewDialog = ({
   useEffect(() => {
     if (open && book) {
       const userReview = book.reviews?.find(
-        (r: IReview) => r.user.id === user?.id
+        (r: IReview) => r.user.id === user?.id,
       );
 
       setValue("readingStatus", userReview?.readingStatus || undefined);
@@ -92,9 +93,15 @@ const AddReviewDialog = ({
   }, [open, book, user, setValue, reset]);
 
   const reviews = book?.reviews || [];
-  const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+  const reviewsForAverage = reviews.filter(
+    (r) => r.readingStatus === READING_STATUS_FINISHED,
+  );
+  const totalRating = reviewsForAverage.reduce(
+    (acc, review) => acc + review.rating,
+    0,
+  );
   const averageRating =
-    reviews && reviews.length > 0 ? totalRating / reviews.length : 0;
+    reviewsForAverage.length > 0 ? totalRating / reviewsForAverage.length : 0;
 
   const { mutate: saveReviewMutate, isPending } = useMutation<
     any,
@@ -120,7 +127,7 @@ const AddReviewDialog = ({
   const onSubmit: SubmitHandler<IBookReviewForm> = (data) => {
     if (!selectedClubId || !user || !book) {
       toast.error(
-        "Clube, livro ou usuário não encontrado, não é possível salvar."
+        "Clube, livro ou usuário não encontrado, não é possível salvar.",
       );
       return;
     }
@@ -134,7 +141,7 @@ const AddReviewDialog = ({
 
     if (hasRatingOrReview && isInvalidStatusForRating) {
       toast.error(
-        "Para adicionar nota ou comentário, o status deve ser 'Finalizado' ou 'Abandonado'."
+        "Para adicionar nota ou comentário, o status deve ser 'Finalizado' ou 'Abandonado'.",
       );
       return;
     }
@@ -184,8 +191,11 @@ const AddReviewDialog = ({
                     {averageRating.toFixed(1)}
                   </span>
                   <span className="text-sm text-warm-brown/70">
-                    ({book?.reviews?.length}{" "}
-                    {book?.reviews?.length === 1 ? "avaliação" : "avaliações"})
+                    ({reviewsForAverage.length}{" "}
+                    {reviewsForAverage.length === 1
+                      ? "avaliação"
+                      : "avaliações"}
+                    )
                   </span>
                 </div>
                 {book?.createdAt && (
@@ -261,7 +271,7 @@ const AddReviewDialog = ({
                             >
                               {statusLabel}{" "}
                             </SelectItem>
-                          )
+                          ),
                         )}
                       </SelectContent>
                     </Select>
