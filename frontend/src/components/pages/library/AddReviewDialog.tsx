@@ -29,6 +29,7 @@ import { Card, CardTitle } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { RiResetLeftFill } from "react-icons/ri";
 import {
+  READING_STATUS_DROPPED,
   READING_STATUS_FINISHED,
   READING_STATUS_NOT_STARTED,
   READING_STATUS_STARTED,
@@ -291,45 +292,56 @@ const AddReviewDialog = ({
               <h1 className="text-primary font-semibold text-xl mb-3">
                 Todas as avaliações
               </h1>
-              {book?.reviews?.map((r) => (
-                <Card
-                  key={r.id}
-                  className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 h-full bg-cream my-4"
-                >
-                  <Avatar className="size-15 self-center">
-                    {" "}
-                    <AvatarImage
-                      src={r.user.profilePicture || undefined}
-                      alt="Foto de perfil"
-                    />
-                    <AvatarFallback
-                      className="text-1xl font-semibold text-primary"
-                      delayMs={600}
-                    >
-                      {getInitials(r.user.name || "")}
-                    </AvatarFallback>
-                  </Avatar>
+              {book?.reviews?.map((r) => {
+                const isAbandoned = r.readingStatus === READING_STATUS_DROPPED;
+                return (
+                  <Card
+                    key={r.id}
+                    className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 h-full bg-cream my-4"
+                  >
+                    <Avatar className="size-15 self-center">
+                      {" "}
+                      <AvatarImage
+                        src={r.user.profilePicture || undefined}
+                        alt="Foto de perfil"
+                      />
+                      <AvatarFallback
+                        className="text-1xl font-semibold text-primary"
+                        delayMs={600}
+                      >
+                        {getInitials(r.user.name || "")}
+                      </AvatarFallback>
+                    </Avatar>
 
-                  <div className="flex-1">
-                    <CardTitle>{r.user.nickname}</CardTitle>
-                    <h3 className="mt-1 text-sm text-muted-foreground">
-                      {r.comment}
-                    </h3>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle>{r.user.nickname}</CardTitle>
+                      {isAbandoned ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Abandonou a leitura deste livro.
+                        </p>
+                      ) : (
+                        <h3 className="mt-1 text-sm text-muted-foreground">
+                          {r.comment}
+                        </h3>
+                      )}
+                    </div>
 
-                  <div className="shrink-0">
-                    <Rating
-                      initialValue={r.rating}
-                      readonly
-                      allowFraction
-                      SVGstyle={{ display: "inline" }}
-                      size={25}
-                      fillColor="#be2c3f"
-                      emptyColor="#e2cad0"
-                    />
-                  </div>
-                </Card>
-              ))}
+                    {!isAbandoned && (
+                      <div className="shrink-0">
+                        <Rating
+                          initialValue={r.rating}
+                          readonly
+                          allowFraction
+                          SVGstyle={{ display: "inline" }}
+                          size={25}
+                          fillColor="#be2c3f"
+                          emptyColor="#e2cad0"
+                        />
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           </ScrollArea>
         </form>
