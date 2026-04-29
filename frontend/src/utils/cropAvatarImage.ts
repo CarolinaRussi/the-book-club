@@ -9,7 +9,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Recorta a região escolhida e exporta JPEG quadrado (ideal para avatar). */
 export async function getCroppedAvatarBlob(
   imageSrc: string,
   pixelCrop: Area,

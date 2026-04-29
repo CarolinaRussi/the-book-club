@@ -1,4 +1,3 @@
-/** Classes em `index.css` que alteram a paleta (`:root`, `.dark`, `.oceanic`, `.greenery`). */
 export const CLUB_THEME_STORAGE_KEY = "@bookclub:clubTheme";
 
 export type ClubThemeId =
@@ -18,7 +17,6 @@ export function isClubThemeId(value: string | null): value is ClubThemeId {
   return value !== null && VALID_THEMES.includes(value as ClubThemeId);
 }
 
-/** Aplica o tema no `<html>` (mesmas classes definidas em `index.css`). */
 export function applyClubTheme(theme: ClubThemeId): void {
   const root = document.documentElement;
   root.classList.remove("oceanic", "greenery", "dark");

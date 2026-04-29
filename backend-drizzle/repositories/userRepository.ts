@@ -1,6 +1,6 @@
 import { eq, ne, count, and, inArray } from "drizzle-orm";
 import { db } from "../db/client";
-import { user, userBook, review } from "../db/schema";
+import { user, userBook, review, clubBook, club, member } from "../db/schema";
 import { ReadingStatus } from "../enums/readingStatus";
 
 export async function findUserByEmail(email: string) {
@@ -24,7 +24,7 @@ export async function insertUser(values: typeof user.$inferInsert) {
 
 export async function updateUserById(
   id: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ) {
   const [row] = await db
     .update(user)
@@ -36,7 +36,7 @@ export async function updateUserById(
 
 export async function findUserBookByUserAndBook(
   userId: string,
-  bookId: string
+  bookId: string,
 ) {
   return db.query.userBook.findFirst({
     where: (ub, { and, eq }) =>
@@ -60,8 +60,8 @@ export async function countUserBooksByUserId(userId: string) {
     .where(
       and(
         eq(userBook.userId, userId),
-        ne(userBook.readingStatus, ReadingStatus.DROPPED)
-      )
+        ne(userBook.readingStatus, ReadingStatus.DROPPED),
+      ),
     );
   return Number(totalItems ?? 0);
 }
@@ -69,14 +69,11 @@ export async function countUserBooksByUserId(userId: string) {
 export async function findUserBooksPaginatedForUser(
   userId: string,
   offset: number,
-  limit: number
+  limit: number,
 ) {
   return db.query.userBook.findMany({
     where: (ub, { eq, and, ne }) =>
-      and(
-        eq(ub.userId, userId),
-        ne(ub.readingStatus, ReadingStatus.DROPPED)
-      ),
+      and(eq(ub.userId, userId), ne(ub.readingStatus, ReadingStatus.DROPPED)),
     orderBy: (ub, { desc }) => [desc(ub.updatedAt)],
     offset,
     limit,
@@ -96,7 +93,7 @@ export async function findUserBooksPaginatedForUser(
 
 export async function findMyReviewsForUserBookIds(
   userId: string,
-  bookIds: string[]
+  bookIds: string[],
 ) {
   if (bookIds.length === 0) return [];
   return db
@@ -106,7 +103,22 @@ export async function findMyReviewsForUserBookIds(
       comment: review.comment,
     })
     .from(review)
-    .where(
-      and(eq(review.userId, userId), inArray(review.bookId, bookIds))
-    );
+    .where(and(eq(review.userId, userId), inArray(review.bookId, bookIds)));
+}
+
+export async function findClubsForUserBooksByBookIds(
+  userId: string,
+  bookIds: string[],
+) {
+  if (bookIds.length === 0) return [];
+  return db
+    .select({
+      bookId: clubBook.bookId,
+      clubId: club.id,
+      clubName: club.name,
+    })
+    .from(clubBook)
+    .innerJoin(club, eq(clubBook.clubId, club.id))
+    .innerJoin(member, eq(member.clubId, club.id))
+    .where(and(eq(member.userId, userId), inArray(clubBook.bookId, bookIds)));
 }

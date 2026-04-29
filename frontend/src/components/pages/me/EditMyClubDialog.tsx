@@ -81,7 +81,8 @@ const EditMyClubDialog = ({
   >({
     mutationFn: updateClub,
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["userClubs"] });
+      await queryClient.invalidateQueries({ queryKey: ["userClubs"] });
+      await queryClient.invalidateQueries({ queryKey: ["bookUsers"] });
       toast.success("Alterações salvas");
       onOpenChange(false);
     },
@@ -105,8 +106,9 @@ const EditMyClubDialog = ({
     string
   >({
     mutationFn: deleteClub,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-clubs"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["my-clubs"] });
+      await queryClient.invalidateQueries({ queryKey: ["bookUsers"] });
       toast.success("Clube excluído permanentemente.");
       onOpenChange(false);
     },

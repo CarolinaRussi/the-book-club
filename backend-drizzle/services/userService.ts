@@ -63,10 +63,22 @@ export async function getUserReadingsPaginated(
     .map((ub) => ub.book?.id)
     .filter((id): id is string => Boolean(id));
 
-  const reviewRows = await userRepository.findMyReviewsForUserBookIds(
-    userId,
-    bookIds
-  );
+  const [reviewRows, clubLinks] = await Promise.all([
+    userRepository.findMyReviewsForUserBookIds(userId, bookIds),
+    userRepository.findClubsForUserBooksByBookIds(userId, bookIds),
+  ]);
+
+  const clubsByBookId = new Map<string, { id: string; name: string }[]>();
+  for (const row of clubLinks) {
+    const list = clubsByBookId.get(row.bookId) ?? [];
+    if (!list.some((c) => c.id === row.clubId)) {
+      list.push({ id: row.clubId, name: row.clubName });
+    }
+    clubsByBookId.set(row.bookId, list);
+  }
+  for (const [, list] of clubsByBookId) {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   const reviewByBookId = new Map<
     string,
@@ -90,6 +102,7 @@ export async function getUserReadingsPaginated(
       readingStatus: ub.readingStatus,
       myRating: mine?.rating ?? null,
       myComment: mine?.comment ?? null,
+      clubs: book ? (clubsByBookId.get(book.id) ?? []) : [],
       book: book
         ? {
             id: book.id,

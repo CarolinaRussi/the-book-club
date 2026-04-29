@@ -3,10 +3,8 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { Rating } from "react-simple-star-rating";
 import { Badge } from "../../ui/badge";
 import { Card, CardContent } from "../../ui/card";
-import { LuCalendarDays } from "react-icons/lu";
 import { useEffect, useState } from "react";
 import { fetchPaginatedUserBooks } from "@//api/queries/fetchBooks";
-import { formatDayMonthYear } from "@//utils/formatters";
 import Pagination from "../../ui/pagination";
 import SkeletonMyReadings from "./skeletons/SkeletonMyReadings";
 
@@ -66,7 +64,7 @@ export default function MyReadings() {
                   <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
                 </div>
 
-                <CardContent className="p-4">
+                <CardContent className="p-4 pt-3">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold line-clamp-2 flex-1">
                       {userBook.book!.title}
@@ -82,7 +80,7 @@ export default function MyReadings() {
                       : "Sem comentário"}
                   </p>
 
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1">
                       <Rating
                         initialValue={userBook.myRating ?? 0}
@@ -101,12 +99,19 @@ export default function MyReadings() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <LuCalendarDays size={20} />
-                      {formatDayMonthYear(userBook.updatedAt)}
+                  {userBook.clubs && userBook.clubs.length > 0 ? (
+                    <div className="flex w-full min-w-0 flex-row flex-wrap justify-end gap-x-1.5 gap-y-1.5 border-t border-border/60 pt-3">
+                      {userBook.clubs.map((c) => (
+                        <Badge
+                          key={c.id}
+                          variant="outline"
+                          className="inline-flex min-w-0 max-w-full shrink-0 font-normal text-[0.65rem] leading-tight border-secondary text-muted-foreground sm:text-xs"
+                        >
+                          <span className="min-w-0 truncate">{c.name}</span>
+                        </Badge>
+                      ))}
                     </div>
-                  </div>
+                  ) : null}
                 </CardContent>
               </Card>
             ))}
