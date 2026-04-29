@@ -79,17 +79,15 @@ export async function getBooksByClubId(
     return { kind: "list" as const, data: [] };
   }
 
-  const [booksList, allReviews, userBooksForUser] = await Promise.all([
+  const [booksList, allReviews, userBooksForBooks] = await Promise.all([
     bookRepository.findBooksByIds(bookIds),
     bookRepository.findReviewsWithUsersForClub(clubId, bookIds),
-    userId
-      ? bookRepository.findUserBooksForUserAndBookIds(userId, bookIds)
-      : Promise.resolve([]),
+    bookRepository.findUserBooksByBookIds(bookIds),
   ]);
 
   const booksMap = new Map(booksList.map((b) => [b.id, b]));
   const userBooksMap = new Map(
-    userBooksForUser.map((ub) => [`${ub.userId}-${ub.bookId}`, ub])
+    userBooksForBooks.map((ub) => [`${ub.userId}-${ub.bookId}`, ub])
   );
 
   const formattedData = clubBooksPaginated
@@ -113,7 +111,9 @@ export async function getBooksByClubId(
         };
       });
       const isInLibrary = userId
-        ? userBooksForUser.some((ub) => ub.bookId === b.id)
+        ? userBooksForBooks.some(
+            (ub) => ub.userId === userId && ub.bookId === b.id
+          )
         : false;
       return {
         ...b,

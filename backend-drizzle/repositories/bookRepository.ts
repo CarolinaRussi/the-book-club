@@ -47,17 +47,12 @@ export async function findReviewsWithUsersForClub(
     .where(and(eq(member.clubId, clubId), inArray(review.bookId, bookIds)));
 }
 
-export async function findUserBooksForUserAndBookIds(
-  userId: string,
-  bookIds: string[]
-) {
+export async function findUserBooksByBookIds(bookIds: string[]) {
   if (bookIds.length === 0) return [];
   return db
     .select()
     .from(userBook)
-    .where(
-      and(eq(userBook.userId, userId), inArray(userBook.bookId, bookIds))
-    );
+    .where(inArray(userBook.bookId, bookIds));
 }
 
 export async function searchBooksByTitleOrAuthor(pattern: string) {
