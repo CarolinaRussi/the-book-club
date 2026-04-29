@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState, useEffect, useCallback } from "react";
+import { type ChangeEvent, useState, useLayoutEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import {
   Dialog,
@@ -63,6 +63,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
   const [inputValue, setInputValue] = useState("");
   const [openCombobox, setOpenCombobox] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>("");
+  const [fileInputKey, setFileInputKey] = useState(0);
   const { selectedClubId } = useClub();
   const queryClient = useQueryClient();
 
@@ -127,34 +128,27 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
         queryKey: ["booksFromSelectedClub", selectedClubId],
       });
       toast.success("Livro adicionado à biblioteca com sucesso!");
-      clearManualForm();
-      clearOpenLibrarySelection();
     },
     onError: (error) => {
       toast.error(error.message || "Dados do livro incorretos");
     },
   });
 
-  const clearManualForm = useCallback(() => {
-    reset();
-    setPreviewUrl(undefined);
-  }, [reset]);
+  useLayoutEffect(() => {
+    if (!open) return;
 
-  const clearOpenLibrarySelection = useCallback(() => {
+    reset({
+      title: "",
+      author: "",
+      coverImg: undefined,
+    });
     setSelectedBook(null);
     setInputValue("");
-  }, []);
-
-  useEffect(() => {
-    if (!open) {
-      const timer = setTimeout(() => {
-        clearManualForm();
-        clearOpenLibrarySelection();
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [open, clearManualForm, clearOpenLibrarySelection]);
+    setPreviewUrl(undefined);
+    setOpenCombobox(false);
+    setFileInputKey((k) => k + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when dialog opens/closes, not when `reset` identity changes
+  }, [open]);
 
   const isLocalSelection = selectedBook?.source === "local";
   const isOpenLibrarySelection = selectedBook?.source === "openLibrary";
@@ -395,6 +389,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                         </div>
                       )}
                       <input
+                        key={fileInputKey}
                         id="cover-upload"
                         type="file"
                         className="hidden"
