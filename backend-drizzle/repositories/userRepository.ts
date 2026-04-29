@@ -1,6 +1,7 @@
-import { eq, count, and, inArray } from "drizzle-orm";
+import { eq, ne, count, and, inArray } from "drizzle-orm";
 import { db } from "../db/client";
 import { user, userBook, review } from "../db/schema";
+import { ReadingStatus } from "../enums/readingStatus";
 
 export async function findUserByEmail(email: string) {
   const [row] = await db
@@ -56,7 +57,12 @@ export async function countUserBooksByUserId(userId: string) {
   const [{ value: totalItems }] = await db
     .select({ value: count() })
     .from(userBook)
-    .where(eq(userBook.userId, userId));
+    .where(
+      and(
+        eq(userBook.userId, userId),
+        ne(userBook.readingStatus, ReadingStatus.DROPPED)
+      )
+    );
   return Number(totalItems ?? 0);
 }
 
@@ -66,7 +72,11 @@ export async function findUserBooksPaginatedForUser(
   limit: number
 ) {
   return db.query.userBook.findMany({
-    where: (ub, { eq }) => eq(ub.userId, userId),
+    where: (ub, { eq, and, ne }) =>
+      and(
+        eq(ub.userId, userId),
+        ne(ub.readingStatus, ReadingStatus.DROPPED)
+      ),
     orderBy: (ub, { desc }) => [desc(ub.updatedAt)],
     offset,
     limit,
