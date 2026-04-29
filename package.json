@@ -1,4 +1,10 @@
 {
+	"name": "the-book-club",
+	"private": true,
+	"packageManager": "pnpm@10.19.0",
+	"engines": {
+		"node": "^20.18.0 || ^22.12.0"
+	},
 	"devDependencies": {
 		"@types/node": "^24.9.2"
 	}
