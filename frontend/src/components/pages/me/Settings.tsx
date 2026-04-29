@@ -23,19 +23,25 @@ const THEMES: {
     id: "classic",
     title: "Clássico",
     description: "Vinho, terracota e tons quentes do clube.",
-    swatches: ["#be2c3f", "#d16a47"],
+    swatches: ["#be2c3f", "#3a2d23", "#f6f3ed"],
+  },
+  {
+    id: "classic-dark",
+    title: "Clássico escuro",
+    description: "Mesma identidade do clássico, em modo noturno.",
+    swatches: ["#dd3c49", "#f5f1f0", "#2f2621"],
   },
   {
     id: "oceanic",
     title: "Oceânico",
     description: "Azuis profundos e contraste frio.",
-    swatches: ["#28278b", "#4777d1"],
+    swatches: ["#28278b", "#23243a", "#edf1f6"],
   },
   {
     id: "greenery",
     title: "Natureza",
     description: "Verdes e palette fresca.",
-    swatches: ["#198a42", "#47d165"],
+    swatches: ["#198a42", "#233a27", "#edf6f1"],
   },
 ];
 
@@ -55,13 +61,13 @@ export default function Settings() {
         <CardHeader>
           <CardTitle>Tema do clube</CardTitle>
           <CardDescription>
-            Escolha a paleta de cores da interface. A preferência é salva neste
-            navegador e aplicada sempre que você acessar o app.
+            Escolha a paleta da interface (o escuro é uma variante só do tema
+            clássico). A preferência fica salva neste navegador.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
             role="radiogroup"
             aria-label="Tema do clube"
           >

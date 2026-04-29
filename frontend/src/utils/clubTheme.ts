@@ -1,9 +1,18 @@
-/** Classes em `index.css` que alteram a paleta (`:root`, `.oceanic`, `.greenery`). */
+/** Classes em `index.css` que alteram a paleta (`:root`, `.dark`, `.oceanic`, `.greenery`). */
 export const CLUB_THEME_STORAGE_KEY = "@bookclub:clubTheme";
 
-export type ClubThemeId = "classic" | "oceanic" | "greenery";
+export type ClubThemeId =
+  | "classic"
+  | "classic-dark"
+  | "oceanic"
+  | "greenery";
 
-const VALID_THEMES: ClubThemeId[] = ["classic", "oceanic", "greenery"];
+const VALID_THEMES: ClubThemeId[] = [
+  "classic",
+  "classic-dark",
+  "oceanic",
+  "greenery",
+];
 
 export function isClubThemeId(value: string | null): value is ClubThemeId {
   return value !== null && VALID_THEMES.includes(value as ClubThemeId);
@@ -12,9 +21,10 @@ export function isClubThemeId(value: string | null): value is ClubThemeId {
 /** Aplica o tema no `<html>` (mesmas classes definidas em `index.css`). */
 export function applyClubTheme(theme: ClubThemeId): void {
   const root = document.documentElement;
-  root.classList.remove("oceanic", "greenery");
+  root.classList.remove("oceanic", "greenery", "dark");
   if (theme === "oceanic") root.classList.add("oceanic");
   if (theme === "greenery") root.classList.add("greenery");
+  if (theme === "classic-dark") root.classList.add("dark");
 }
 
 export function getStoredClubTheme(): ClubThemeId {
