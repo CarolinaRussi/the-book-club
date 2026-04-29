@@ -139,12 +139,6 @@ const AddReviewDialog = ({
       return;
     }
 
-    if (!hasRatingOrReview && !isInvalidStatusForRating) {
-      toast.error(
-        "Ao finalizar ou abandonar um livro, dê uma nota e/ou deixe um comentário."
-      );
-    }
-
     const payload = {
       ...data,
       clubId: selectedClubId,
