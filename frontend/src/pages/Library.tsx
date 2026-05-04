@@ -17,7 +17,6 @@ import { useClub } from "../contexts/ClubContext";
 import type { IApiError, IPaginatedResponse } from "../types/IApi";
 import { fetchPaginatedClubBooks } from "../api/queries/fetchBooks";
 import Pagination from "../components/ui/pagination";
-// Mudei o PlusFill para Plus (versão outline/contorno)
 import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";

@@ -47,7 +47,6 @@ export interface IBook {
   createdAt: string;
   reviews?: IReview[];
   isInLibrary?: boolean;
-  /** Preenchido na listagem do clube quando o vínculo ClubBook tem sugeridor */
   suggestedBy?: { id: string; name: string; nickname: string } | null;
 }
 

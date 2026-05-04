@@ -19,7 +19,6 @@ export const bookStatusLabels: Record<BookStatus, string> = {
   [BOOK_STATUS_FINISHED]: "Finalizado",
 };
 
-/** Texto da badge no clube; para sugestões mostra quem sugeriu quando disponível */
 export function getBookStatusBadgeLabel(
   status: BookStatus,
   suggestedBy?: { name: string; nickname: string } | null,
