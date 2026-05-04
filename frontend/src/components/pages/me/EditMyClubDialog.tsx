@@ -107,7 +107,9 @@ const EditMyClubDialog = ({
   >({
     mutationFn: deleteClub,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["my-clubs"] });
+      await queryClient.invalidateQueries({ queryKey: ["userClubs"] });
+      await queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
+      await queryClient.invalidateQueries({ queryKey: ["meetings"] });
       await queryClient.invalidateQueries({ queryKey: ["bookUsers"] });
       toast.success("Clube excluído permanentemente.");
       onOpenChange(false);
@@ -283,10 +285,12 @@ const EditMyClubDialog = ({
                     Você tem certeza absoluta disso?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso excluirá
-                    permanentemente o clube{" "}
-                    <span className="font-bold">{club?.name}</span> e removerá
-                    todos os dados associados a ele dos nossos servidores.
+                    Esta ação não pode ser desfeita. O clube{" "}
+                    <span className="font-bold">{club?.name}</span>, seus
+                    membros, encontros e a lista de livros deste clube serão
+                    removidos. Os livros continuam no catálogo geral do sistema
+                    quando também existem em outros clubes ou na sua biblioteca
+                    pessoal.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -295,7 +299,7 @@ const EditMyClubDialog = ({
                     onClick={() => {
                       if (club?.id) deleteClubMutate(club.id);
                     }}
-                    className="bg-primary hover:bg-primary/80"
+                    className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive"
                   >
                     Confirmar Exclusão
                   </AlertDialogAction>

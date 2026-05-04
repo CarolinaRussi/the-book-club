@@ -33,21 +33,18 @@ export async function updateClub(payload: IEditClubPayload): Promise<any> {
 }
 
 export async function deleteClub(id: string): Promise<any> {
-  console.log(id);
-  return;
-
-  // if (!id) {
-  //   throw { message: "ID do encontro é obrigatório para atualizar." };
-  // }
-  // try {
-  //   const response = await api.put(`/update-meeting/${id}`, data);
-  //   return response.data;
-  // } catch (error: unknown) {
-  //   if (axios.isAxiosError(error) && error.response?.data?.message) {
-  //     throw { message: error.response.data.message };
-  //   }
-  //   throw { message: "Erro desconhecido" };
-  // }
+  if (!id) {
+    throw { message: "ID do clube é obrigatório para excluir." };
+  }
+  try {
+    const response = await api.delete(`/delete-club/${id}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido ao excluir o clube." };
+  }
 }
 
 export async function banMember(
