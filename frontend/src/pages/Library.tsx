@@ -171,7 +171,7 @@ export default function Library() {
                 return (
                   <Card
                     key={book.id}
-                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden py-0 gap-0 bg-card rounded-xl border cursor-pointer hover:shadow-(--shadow-medium) transition-all group md:flex-col"
+                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border cursor-pointer hover:shadow-(--shadow-medium) transition-all group md:flex-col"
                     onClick={() => {
                       setBookToUpdate(book);
                       setUpdateBookOpen(true);
