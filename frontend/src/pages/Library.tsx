@@ -147,7 +147,7 @@ export default function Library() {
         <SkeletonLibrary />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-10">
             {booksClub &&
               booksClub.map((book) => {
                 const reviews = book.reviews || [];
@@ -171,13 +171,13 @@ export default function Library() {
                 return (
                   <Card
                     key={book.id}
-                    className="relative isolate cursor-pointer hover:shadow-(--shadow-medium) transition-all group py-0 gap-0 max-w-sm mx-auto md:max-w-none md:mx-0 bg-card rounded-xl border"
+                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden py-0 gap-0 bg-card rounded-xl border cursor-pointer hover:shadow-(--shadow-medium) transition-all group md:flex-col"
                     onClick={() => {
                       setBookToUpdate(book);
                       setUpdateBookOpen(true);
                     }}
                   >
-                    <div className="absolute -top-2 right-4 z-20">
+                    <div className="absolute top-1 right-2 z-20 md:-top-2 md:right-4">
                       <div className="absolute inset-x-2 top-2 bottom-4 bg-white rounded-xs" />
 
                       {isInLibrary ? (
@@ -204,7 +204,7 @@ export default function Library() {
                       )}
                     </div>
 
-                    <div className="relative aspect-2/3 overflow-hidden bg-muted rounded-t-xl">
+                    <div className="relative w-[5.5rem] shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:w-full md:aspect-2/3 md:shrink md:rounded-t-xl">
                       <img
                         src={book.coverUrl}
                         alt={book.title}
@@ -213,47 +213,59 @@ export default function Library() {
                       <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-30 transition-opacity" />
                     </div>
 
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold line-clamp-2 flex-1 min-h-14">
-                          {book.title}
-                        </h3>
-                        <Badge className="ml-2 shrink-0">
+                    <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col justify-between p-3 sm:p-4">
+                      <div>
+                        <div className="mb-2 flex min-w-0 items-start gap-2">
+                          <h3 className="min-h-10 min-w-0 flex-1 line-clamp-2 text-base font-semibold leading-snug sm:min-h-12 md:min-h-14 md:text-lg">
+                            {book.title}
+                          </h3>
+                          <Badge className="mt-0.5 hidden shrink-0 md:inline-flex">
+                            {bookStatusLabels[book.status]}
+                          </Badge>
+                        </div>
+                        <p className="mb-2 line-clamp-2 text-sm text-muted-foreground md:mb-3">
+                          {book.author}
+                        </p>
+                        <Badge className="mb-3 w-fit md:hidden">
                           {bookStatusLabels[book.status]}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {book.author}
-                      </p>
 
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1">
-                          <Rating
-                            initialValue={averageRating}
-                            readonly
-                            allowFraction
-                            SVGstyle={{ display: "inline" }}
-                            size={25}
-                            fillColor="#be2c3f"
-                            emptyColor="#e2cad0"
-                          />
+                      <div>
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 scale-90 items-center gap-1 origin-left md:scale-100">
+                            <Rating
+                              initialValue={averageRating}
+                              readonly
+                              allowFraction
+                              SVGstyle={{ display: "inline" }}
+                              size={25}
+                              fillColor="#be2c3f"
+                              emptyColor="#e2cad0"
+                            />
+                          </div>
+                          <span className="shrink-0 text-sm font-semibold tabular-nums">
+                            {averageRating.toFixed(1)}
+                          </span>
                         </div>
-                        <span className="text-sm font-semibold">
-                          {averageRating.toFixed(1)}
-                        </span>
-                      </div>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <LuCalendarDays size={20} />
-                          {formatMonthYear(book.addedAt)}
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                          <div className="flex min-w-0 items-center gap-1">
+                            <LuCalendarDays
+                              size={20}
+                              className="shrink-0"
+                            />
+                            <span className="truncate">
+                              {formatMonthYear(book.addedAt)}
+                            </span>
+                          </div>
+                          <span className="shrink-0">
+                            {reviewsForAverage.length}{" "}
+                            {reviewsForAverage.length === 1
+                              ? "avaliação"
+                              : "avaliações"}
+                          </span>
                         </div>
-                        <span>
-                          {reviewsForAverage.length}{" "}
-                          {reviewsForAverage.length === 1
-                            ? "avaliação"
-                            : "avaliações"}
-                        </span>
                       </div>
                     </CardContent>
                   </Card>
