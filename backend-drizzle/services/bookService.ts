@@ -2,11 +2,13 @@ import { v2 as cloudinary } from "cloudinary";
 import { BookCreateInput } from "../types/IBook";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import * as bookRepository from "../repositories/bookRepository";
+import * as userRepository from "../repositories/userRepository";
 
 export { BookAlreadyInClubSuggestedError } from "../repositories/bookRepository";
 
 export async function createBookForClub(input: {
   clubId: string;
+  suggestedByUserId: string;
   file?: Express.Multer.File;
   openLibraryId: string | undefined;
   coverUrlOpenLibrary: string | undefined;
@@ -40,6 +42,7 @@ export async function createBookForClub(input: {
 
   return bookRepository.transactionCreateBookForClub({
     clubId: input.clubId,
+    suggestedByUserId: input.suggestedByUserId,
     openLibraryId: input.openLibraryId,
     bookValues: {
       title: bookPayload.title!,
@@ -79,15 +82,31 @@ export async function getBooksByClubId(
     return { kind: "list" as const, data: [] };
   }
 
-  const [booksList, allReviews, userBooksForBooks] = await Promise.all([
-    bookRepository.findBooksByIds(bookIds),
-    bookRepository.findReviewsWithUsersForClub(clubId, bookIds),
-    bookRepository.findUserBooksByBookIds(bookIds),
-  ]);
+  const suggestedByUserIds = [
+    ...new Set(
+      clubBooksPaginated
+        .map((cb) => cb.suggestedByUserId)
+        .filter((id): id is string => Boolean(id))
+    ),
+  ];
+
+  const [booksList, allReviews, userBooksForBooks, suggesterRows] =
+    await Promise.all([
+      bookRepository.findBooksByIds(bookIds),
+      bookRepository.findReviewsWithUsersForClub(clubId, bookIds),
+      bookRepository.findUserBooksByBookIds(bookIds),
+      userRepository.findUsersByIds(suggestedByUserIds),
+    ]);
 
   const booksMap = new Map(booksList.map((b) => [b.id, b]));
   const userBooksMap = new Map(
     userBooksForBooks.map((ub) => [`${ub.userId}-${ub.bookId}`, ub])
+  );
+  const suggesterById = new Map(
+    suggesterRows.map((u) => [
+      u.id,
+      { id: u.id, name: u.name, nickname: u.nickname },
+    ])
   );
 
   const formattedData = clubBooksPaginated
@@ -115,12 +134,16 @@ export async function getBooksByClubId(
             (ub) => ub.userId === userId && ub.bookId === b.id
           )
         : false;
+      const suggestedBy = cb.suggestedByUserId
+        ? suggesterById.get(cb.suggestedByUserId) ?? null
+        : null;
       return {
         ...b,
         status: cb.status,
         addedAt: cb.addedAt,
         reviews: formattedReviews,
         isInLibrary,
+        suggestedBy,
       };
     })
     .filter(Boolean);

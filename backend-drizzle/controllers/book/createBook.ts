@@ -15,6 +15,9 @@ export const createBook = async (req: Request, res: Response) => {
     if (!(await respondIfNotClubMember(req.userId, clubId, res))) {
       return;
     }
+    if (!req.userId) {
+      return res.status(401).json({ message: "Não autenticado." });
+    }
     const openLibraryId = req.body.id;
     const coverUrlOpenLibrary =
       req.body.coverUrlOpenLibrary ?? req.body.cover_url_open_library;
@@ -22,6 +25,7 @@ export const createBook = async (req: Request, res: Response) => {
 
     const newClubBookEntry = await createBookForClub({
       clubId,
+      suggestedByUserId: req.userId,
       file,
       openLibraryId,
       coverUrlOpenLibrary,

@@ -79,6 +79,7 @@ export class BookAlreadyInClubSuggestedError extends Error {
 
 export async function transactionCreateBookForClub(input: {
   clubId: string;
+  suggestedByUserId: string;
   openLibraryId: string | undefined;
   bookValues: {
     title: string;
@@ -138,6 +139,7 @@ export async function transactionCreateBookForClub(input: {
         id: createId(),
         clubId: input.clubId,
         bookId: bookRecord.id,
+        suggestedByUserId: input.suggestedByUserId,
         status: BookStatus.SUGGESTED,
       })
       .returning();

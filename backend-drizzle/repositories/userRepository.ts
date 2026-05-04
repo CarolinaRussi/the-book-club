@@ -17,6 +17,19 @@ export async function findUserById(id: string) {
   return row ?? null;
 }
 
+export async function findUsersByIds(userIds: string[]) {
+  if (userIds.length === 0) return [];
+  const unique = [...new Set(userIds)];
+  return db
+    .select({
+      id: user.id,
+      name: user.name,
+      nickname: user.nickname,
+    })
+    .from(user)
+    .where(inArray(user.id, unique));
+}
+
 export async function insertUser(values: typeof user.$inferInsert) {
   const [row] = await db.insert(user).values(values).returning();
   return row ?? null;

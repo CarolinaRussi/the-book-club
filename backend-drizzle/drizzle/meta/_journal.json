@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777903641874,
+      "tag": "0000_club_book_suggested_by",
+      "breakpoints": true
+    }
+  ]
+}

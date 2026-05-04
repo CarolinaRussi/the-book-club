@@ -180,6 +180,10 @@ export const clubBook = pgTable(
     bookId: varchar("book_id", { length: 255 })
       .notNull()
       .references(() => book.id, { onDelete: "cascade" }),
+    suggestedByUserId: varchar("suggested_by_user_id", { length: 255 }).references(
+      () => user.id,
+      { onDelete: "set null" },
+    ),
     status: bookStatusEnum("status").default("suggested").notNull(),
     addedAt: timestamp("added_at", { withTimezone: true, precision: 3 })
       .defaultNow()
@@ -292,6 +296,10 @@ export const clubBookRelations = relations(clubBook, ({ one }) => ({
   book: one(book, {
     fields: [clubBook.bookId],
     references: [book.id],
+  }),
+  suggestedBy: one(user, {
+    fields: [clubBook.suggestedByUserId],
+    references: [user.id],
   }),
 }));
 
