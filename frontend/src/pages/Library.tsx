@@ -9,7 +9,7 @@ import CreateBookDialog from "../components/pages/library/CreateBookDialog";
 import { Badge } from "../components/ui/badge";
 import type { IBook } from "../types/IBooks";
 import AddReviewDialog from "../components/pages/library/AddReviewDialog";
-import { bookStatusLabels } from "../utils/constants/books";
+import { getBookStatusBadgeLabel } from "../utils/constants/books";
 import { READING_STATUS_FINISHED } from "../utils/constants/reading";
 import SkeletonLibrary from "../components/pages/library/skeletons/SkeletonLibrary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -220,14 +220,14 @@ export default function Library() {
                             {book.title}
                           </h3>
                           <Badge className="mt-0.5 hidden shrink-0 md:inline-flex">
-                            {bookStatusLabels[book.status]}
+                            {getBookStatusBadgeLabel(book.status, book.suggestedBy)}
                           </Badge>
                         </div>
                         <p className="mb-2 line-clamp-2 text-sm text-muted-foreground md:mb-3">
                           {book.author}
                         </p>
                         <Badge className="mb-3 w-fit md:hidden">
-                          {bookStatusLabels[book.status]}
+                          {getBookStatusBadgeLabel(book.status, book.suggestedBy)}
                         </Badge>
                       </div>
 
