@@ -66,6 +66,11 @@ export async function updateClubById(
   return row ?? null;
 }
 
+export async function deleteClubById(id: string) {
+  const [row] = await db.delete(club).where(eq(club.id, id)).returning();
+  return row ?? null;
+}
+
 export async function countClubsOwnedByUserId(ownerId: string) {
   const [row] = await db
     .select({ value: count() })

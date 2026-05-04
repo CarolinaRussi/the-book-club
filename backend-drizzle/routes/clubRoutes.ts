@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createClub,
+  deleteClub,
   getClubByInvitationCode,
   getMyClubs,
   getUserClubs,
@@ -19,5 +20,6 @@ router.get(
 router.post("/create-club", authMiddleware, createClub);
 router.get("/user-clubs/:userId", authMiddleware, getUserClubs);
 router.put("/update-club/:id", authMiddleware, updateClub);
+router.delete("/delete-club/:id", authMiddleware, deleteClub);
 
 export default router;

@@ -100,3 +100,7 @@ export async function updateClub(
     throw error;
   }
 }
+
+export async function deleteClubById(id: string) {
+  return clubRepository.deleteClubById(id);
+}
