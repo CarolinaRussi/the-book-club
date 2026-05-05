@@ -1,14 +1,14 @@
 # Backend The Book Club (Drizzle ORM)
 
-Backend alternativo do The Book Club usando **Drizzle ORM** em vez de Prisma. A estrutura e as rotas foram mantidas equivalentes ao backend original para facilitar a troca.
+API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 
 ## Estrutura
 
-- `db/schema.ts` – Schema das tabelas e relações (equivalente ao `prisma/schema.prisma`)
+- `db/schema.ts` – Definição das tabelas, enums e relações
 - `db/client.ts` – Cliente Drizzle conectado ao PostgreSQL
-- `controllers/` – Lógica de negócio (adaptada de Prisma para Drizzle)
-- `routes/` – Rotas Express (mesmas URLs do backend original)
-- `server/server.ts` – Entrada do servidor (porta **4001** por padrão, para não conflitar com o backend Prisma na 4000)
+- `controllers/` – Handlers das rotas
+- `routes/` – Rotas Express
+- `server/server.ts` – Entrada do servidor (porta **4001** por padrão; configurável via `PORT`)
 
 ## Como usar
 
@@ -18,14 +18,16 @@ Backend alternativo do The Book Club usando **Drizzle ORM** em vez de Prisma. A 
 
 2. **Banco de dados**
 
-   Se você já usa o backend com Prisma, o mesmo banco pode ser usado: as tabelas e enums já existem. Só é necessário rodar migrações do Drizzle se estiver criando o banco do zero:
+   Com o PostgreSQL acessível:
 
    ```bash
-   pnpm db:push    # cria/atualiza tabelas a partir do schema
+   pnpm db:push    # sincroniza o schema com o banco (desenvolvimento)
    # ou
-   pnpm db:generate  # gera arquivos de migração
-   pnpm db:migrate   # aplica migrações
+   pnpm db:generate  # gera novos arquivos de migração após mudar db/schema.ts
+   pnpm db:migrate   # aplica migrações em sequência
    ```
+
+   Banco já existente: rode `pnpm db:migrate` para aplicar migrações incrementais; ou `pnpm db:push` para alinhar o schema ao `schema.ts` sem histórico SQL.
 
 3. **Desenvolvimento**
 
@@ -34,22 +36,22 @@ Backend alternativo do The Book Club usando **Drizzle ORM** em vez de Prisma. A 
    pnpm dev
    ```
 
-   O servidor sobe em `http://localhost:4001`.
+   Servidor em `http://localhost:4001` (ou a porta em `PORT`).
 
 ## Scripts
 
-| Script        | Descrição                          |
-|---------------|------------------------------------|
-| `pnpm dev`    | Sobe o servidor em modo watch      |
-| `pnpm build`  | Compila TypeScript para `dist/`    |
-| `pnpm db:generate` | Gera migrações Drizzle        |
-| `pnpm db:push` | Sincroniza o schema com o banco    |
-| `pnpm db:studio` | Abre o Drizzle Studio no navegador |
+| Script             | Descrição                          |
+|--------------------|------------------------------------|
+| `pnpm dev`         | Servidor em modo watch             |
+| `pnpm build`       | Compila TypeScript para `dist/`    |
+| `pnpm db:generate` | Gera migrações Drizzle             |
+| `pnpm db:migrate`  | Aplica migrações                   |
+| `pnpm db:push`     | Sincroniza schema com o banco      |
+| `pnpm db:studio`   | Abre o Drizzle Studio no navegador |
 
-## Diferenças em relação ao backend Prisma
+## Detalhes úteis
 
-- **IDs**: uso de `nanoid` em vez de `cuid` (compatível em tamanho).
-- **Erros de constraint**: códigos PostgreSQL (ex.: `23505` para unique) em vez dos códigos Prisma (`P2002`, etc.).
-- **Porta padrão**: 4001 (Prisma continua em 4000).
+- **IDs**: `nanoid` para novos registros.
+- **Erros de constraint**: códigos PostgreSQL nativos (ex.: `23505` para violação de unique).
 
-Para usar o frontend com este backend, aponte a URL da API para `http://localhost:4001` (ou a porta configurada em `PORT`).
+Para o frontend, aponte a URL da API para `http://localhost:4001` (ou a porta configurada em `PORT`).

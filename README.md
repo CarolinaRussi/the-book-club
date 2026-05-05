@@ -47,10 +47,10 @@ pnpm install
 
 ### 4. Rodar o projeto em modo de desenvolvimento
 
-Para conectar ao banco de dados, entre na pasta backend pelo terminal
-
+Para subir a API, entre na pasta `backend-drizzle` pelo terminal:
 
 ```bash
+cd backend-drizzle
 pnpm dev
 ```
 
@@ -63,13 +63,16 @@ pnpm dev
 O terminal exibirá um endereço local (geralmente http://localhost:5173).
 Abra esse link no navegador para visualizar o app.
 
-# Atualização de tabelas
+## Atualização do schema do banco
 
-Altere o que precisar em schema.prisma
-Então no terminal rode o comando:
+Altere `backend-drizzle/db/schema.ts`. Em seguida, na pasta `backend-drizzle`:
 
 ```bash
-pnpm prisma migrate dev
+pnpm db:generate   # gera migração SQL a partir das mudanças
+pnpm db:migrate    # aplica migrações
+
+# ou, em desenvolvimento, sincronizar direto sem arquivo de migração:
+pnpm db:push
 ```
 
 # Tecnologias utilizadas
@@ -98,7 +101,7 @@ jsonwebtoken
 cloudinary
 multer
 dotenv
-Prisma
+Drizzle ORM
 pnpm
 pg
 Neon (PostgreSQL em nuvem)
