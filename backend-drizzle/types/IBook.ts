@@ -4,4 +4,5 @@ export interface BookCreateInput {
   openLibraryId: string;
   coverUrl: string;
   coverPublicId?: string;
+  totalChapters?: number | null;
 }

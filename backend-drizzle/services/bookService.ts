@@ -14,12 +14,14 @@ export async function createBookForClub(input: {
   coverUrlOpenLibrary: string | undefined;
   title: string;
   author: string | undefined;
+  totalChapters?: number | null;
 }) {
   const bookPayload: Partial<BookCreateInput> = {
     title: input.title,
     author: input.author,
     openLibraryId: input.openLibraryId ?? "",
     coverUrl: input.coverUrlOpenLibrary ?? "",
+    totalChapters: input.totalChapters ?? null,
   };
 
   let uploadResult: { secure_url: string; public_id: string } | undefined;
@@ -50,6 +52,7 @@ export async function createBookForClub(input: {
       openLibraryId: bookPayload.openLibraryId ?? "",
       coverUrl: bookPayload.coverUrl,
       coverPublicId: bookPayload.coverPublicId,
+        totalChapters: bookPayload.totalChapters ?? null,
     },
   });
 }

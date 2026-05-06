@@ -1,6 +1,7 @@
 import { eq, count } from "drizzle-orm";
 import { db } from "../db/client";
 import { club, member, user } from "../db/schema";
+import { ReadingMode } from "../enums/readingMode";
 
 export async function findClubIdsByUserId(userId: string) {
   const memberships = await db
@@ -52,7 +53,12 @@ export async function insertClub(values: typeof club.$inferInsert) {
 
 export async function updateClubById(
   id: string,
-  data: { name: string; description?: string; invitationCode: string }
+  data: {
+    name: string;
+    description?: string;
+    invitationCode: string;
+    readingMode?: (typeof ReadingMode)[keyof typeof ReadingMode];
+  }
 ) {
   const [row] = await db
     .update(club)
@@ -60,6 +66,7 @@ export async function updateClubById(
       name: data.name,
       description: data.description ?? undefined,
       invitationCode: data.invitationCode,
+      readingMode: data.readingMode,
     })
     .where(eq(club.id, id))
     .returning();
@@ -105,6 +112,7 @@ export async function findOwnedClubsPaginated(
       invitationCode: true,
       ownerId: true,
       status: true,
+      readingMode: true,
       createdAt: true,
       description: true,
     },

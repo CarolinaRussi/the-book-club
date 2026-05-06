@@ -6,6 +6,8 @@ import { respondIfNotClubMember } from "../../utils/clubAccess";
 export const updateMeeting = async (req: Request, res: Response) => {
   const {
     bookId,
+    chapterStart: rawChapterStart,
+    chapterEnd: rawChapterEnd,
     description,
     location,
     meetingDate,
@@ -13,6 +15,11 @@ export const updateMeeting = async (req: Request, res: Response) => {
     status,
     clubId,
   } = req.body;
+
+  const chapterStart = req.body.chapterStart
+    ? Number(req.body.chapterStart)
+    : null;
+  const chapterEnd = req.body.chapterEnd ? Number(req.body.chapterEnd) : null;
 
   const { id } = req.params;
 
@@ -35,6 +42,8 @@ export const updateMeeting = async (req: Request, res: Response) => {
   try {
     const updatedMeeting = await meetingService.updateMeeting(id, {
       bookId,
+      chapterStart,
+      chapterEnd,
       description,
       location,
       meetingDate,
@@ -52,6 +61,9 @@ export const updateMeeting = async (req: Request, res: Response) => {
       meeting: updatedMeeting,
     });
   } catch (error: any) {
+    if (error instanceof meetingService.InvalidMeetingChapterRangeError) {
+      return res.status(400).json({ message: error.message });
+    }
     if (error?.code === "23503") {
       return res.status(404).json({ message: "Encontro não encontrado" });
     }

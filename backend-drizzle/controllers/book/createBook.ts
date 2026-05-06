@@ -21,6 +21,22 @@ export const createBook = async (req: Request, res: Response) => {
     const openLibraryId = req.body.id;
     const coverUrlOpenLibrary =
       req.body.coverUrlOpenLibrary ?? req.body.cover_url_open_library;
+
+    const rawTotalChapters = req.body.totalChapters ?? req.body.total_chapters;
+
+    const totalChapters =
+      rawTotalChapters !== undefined && rawTotalChapters !== ""
+        ? Number(rawTotalChapters)
+        : null;
+
+    if (
+      totalChapters !== null &&
+      (!Number.isInteger(totalChapters) || totalChapters < 1)
+    ) {
+      return res.status(400).json({
+        message: "Total de capítulos deve ser um número inteiro positivo.",
+      });
+    }
     const { title, author } = req.body;
 
     const newClubBookEntry = await createBookForClub({
@@ -31,6 +47,7 @@ export const createBook = async (req: Request, res: Response) => {
       coverUrlOpenLibrary,
       title,
       author,
+      totalChapters,
     });
 
     res

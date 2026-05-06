@@ -1,8 +1,9 @@
 import { eq, and, inArray, count } from "drizzle-orm";
 import { db } from "../db/client";
-import { meeting, clubBook } from "../db/schema";
+import { meeting, clubBook, club, book } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
 import { BookStatus } from "../enums/bookStatus";
+import { ReadingMode } from "../enums/readingMode";
 
 const pastStatuses = [
   MeetingStatus.COMPLETED,
@@ -20,6 +21,8 @@ export async function findMeetingsWithBookByClubId(clubId: string) {
       description: true,
       meetingDate: true,
       meetingTime: true,
+      chapterStart: true,
+      chapterEnd: true,
     },
     with: {
       book: {
@@ -53,6 +56,8 @@ export async function findPastMeetingsWithBookPaginated(
       meetingDate: true,
       meetingTime: true,
       createdAt: true,
+      chapterStart: true,
+      chapterEnd: true,
     },
     with: {
       book: {
@@ -92,6 +97,27 @@ export async function findMeetingById(meetingId: string) {
   return row ?? null;
 }
 
+export async function findClubReadingModeById(clubId: string) {
+  const [row] = await db
+    .select({ readingMode: club.readingMode })
+    .from(club)
+    .where(eq(club.id, clubId))
+    .limit(1);
+  return (row?.readingMode as (typeof ReadingMode)[keyof typeof ReadingMode]) ?? null;
+}
+
+export async function findBookById(bookId: string) {
+  const [row] = await db
+    .select({
+      id: book.id,
+      totalChapters: book.totalChapters,
+    })
+    .from(book)
+    .where(eq(book.id, bookId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function insertMeeting(values: typeof meeting.$inferInsert) {
   const [row] = await db.insert(meeting).values(values).returning();
   return row ?? null;
@@ -123,6 +149,8 @@ export async function updateMeetingById(
     meetingDate: string;
     meetingTime: string;
     bookId: string | null;
+    chapterStart: number | null;
+    chapterEnd: number | null;
     clubId: string;
     status: MeetingStatus;
   }
@@ -135,6 +163,8 @@ export async function updateMeetingById(
       meetingDate: data.meetingDate,
       meetingTime: data.meetingTime,
       bookId: data.bookId,
+      chapterStart: data.chapterStart,
+      chapterEnd: data.chapterEnd,
       clubId: data.clubId,
       status: data.status,
     })

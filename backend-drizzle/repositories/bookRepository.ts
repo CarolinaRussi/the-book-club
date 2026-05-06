@@ -87,6 +87,7 @@ export async function transactionCreateBookForClub(input: {
     openLibraryId: string;
     coverUrl: string | null | undefined;
     coverPublicId: string | null | undefined;
+    totalChapters: number | null | undefined;
   };
 }) {
   return db.transaction(async (tx) => {
@@ -112,6 +113,7 @@ export async function transactionCreateBookForClub(input: {
           openLibraryId: input.bookValues.openLibraryId,
           coverUrl: input.bookValues.coverUrl,
           coverPublicId: input.bookValues.coverPublicId,
+          totalChapters: input.bookValues.totalChapters,
         })
         .returning();
       bookRecord = created!;

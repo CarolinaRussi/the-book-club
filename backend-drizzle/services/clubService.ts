@@ -1,5 +1,6 @@
 import { db } from "../db/client";
 import { ClubStatus } from "../enums/clubStatus";
+import { ReadingMode } from "../enums/readingMode";
 import { generateUniqueInvitationCode } from "../utils/codeGenerator";
 import { createId } from "../utils/id";
 import * as clubRepository from "../repositories/clubRepository";
@@ -19,9 +20,7 @@ export async function getMyClubs(userId: string) {
 }
 
 export async function getClubByInvitationCode(invitationCode: string) {
-  const clubRow = await clubRepository.findClubByInvitationCode(
-    invitationCode
-  );
+  const clubRow = await clubRepository.findClubByInvitationCode(invitationCode);
   if (!clubRow) return null;
 
   const ownerName = await clubRepository.findUserNameById(clubRow.ownerId);
@@ -35,6 +34,7 @@ export async function createClub(input: {
   name: string;
   description: string;
   ownerId: string;
+  readingMode: (typeof ReadingMode)[keyof typeof ReadingMode];
 }) {
   try {
     const generatedCode = await generateUniqueInvitationCode(input.name, db);
@@ -45,6 +45,7 @@ export async function createClub(input: {
       invitationCode: generatedCode,
       ownerId: input.ownerId,
       status: ClubStatus.ACTIVE,
+      readingMode: input.readingMode,
     });
 
     if (!newClub) {
@@ -66,7 +67,11 @@ export async function createClub(input: {
   }
 }
 
-export async function getUserClubs(userId: string, page: number, limit: number) {
+export async function getUserClubs(
+  userId: string,
+  page: number,
+  limit: number,
+) {
   const skip = (page - 1) * limit;
   const [clubsData, totalItems] = await Promise.all([
     clubRepository.findOwnedClubsPaginated(userId, skip, limit),
@@ -89,7 +94,12 @@ export async function getUserClubs(userId: string, page: number, limit: number) 
 
 export async function updateClub(
   id: string,
-  input: { name: string; description?: string; invitationCode: string }
+  input: {
+    name: string;
+    description?: string;
+    invitationCode: string;
+    readingMode?: (typeof ReadingMode)[keyof typeof ReadingMode];
+  },
 ) {
   try {
     return await clubRepository.updateClubById(id, input);

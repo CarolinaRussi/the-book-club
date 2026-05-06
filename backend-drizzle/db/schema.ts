@@ -32,6 +32,7 @@ export const meetingStatusEnum = pgEnum("MeetingStatusEnum", [
   "completed",
   "cancelled",
 ]);
+export const readingModeEnum = pgEnum("ReadingModeEnum", ["book", "chapters"]);
 export const confirmationStatusEnum = pgEnum("ConfirmationStatusEnum", [
   "going",
   "not_going",
@@ -45,6 +46,7 @@ export const book = pgTable("Book", {
   author: varchar("author", { length: 255 }),
   coverUrl: varchar("cover_url", { length: 255 }),
   openLibraryId: varchar("open_library_id", { length: 255 }),
+  totalChapters: integer("total_chapters"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()
     .notNull(),
@@ -79,6 +81,7 @@ export const club = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
     status: statusEnum("status").default("active").notNull(),
+    readingMode: readingModeEnum("reading_mode").default("book").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
       .defaultNow()
       .notNull(),
@@ -103,6 +106,8 @@ export const meeting = pgTable("Meeting", {
   bookId: varchar("book_id", { length: 255 }).references(() => book.id, {
     onDelete: "restrict",
   }),
+  chapterStart: integer("chapter_start"),
+  chapterEnd: integer("chapter_end"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()
     .notNull(),

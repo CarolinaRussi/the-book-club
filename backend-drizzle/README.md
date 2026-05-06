@@ -55,3 +55,38 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 - **Erros de constraint**: códigos PostgreSQL nativos (ex.: `23505` para violação de unique).
 
 Para o frontend, aponte a URL da API para `http://localhost:4001` (ou a porta configurada em `PORT`).
+
+## Regras de leitura por clube
+
+- `Club.readingMode` define a estratégia de leitura do clube:
+  - `book`: comportamento atual (ao concluir um encontro com livro, o livro do clube vai para `finished`).
+  - `chapters`: o encontro pode informar `chapterStart` e `chapterEnd`; o livro só vai para `finished` quando o encontro concluído chegar ao último capítulo do livro.
+- Encontros continuam aceitando `bookId` opcional (`null`/omitido = encontro sem livro).
+
+### Campos novos do domínio
+
+- `Book.totalChapters` (opcional)
+- `Club.readingMode` (`book` por padrão)
+- `Meeting.chapterStart` e `Meeting.chapterEnd` (opcionais)
+
+### Payloads de reunião
+
+- `POST /create-meeting`
+- `PUT /update-meeting/:id`
+
+Campos opcionais adicionais:
+
+```json
+{
+  "bookId": "book_id_or_null",
+  "chapterStart": 1,
+  "chapterEnd": 3
+}
+```
+
+Validações:
+
+- `chapterStart` e `chapterEnd` devem ser inteiros >= 1.
+- Se um for enviado, o outro também deve ser enviado.
+- `chapterEnd` deve ser maior/igual a `chapterStart`.
+- Intervalo de capítulos só é aceito para clube em modo `chapters` e com `bookId` definido.

@@ -6,33 +6,36 @@ export const createMeeting = async (req: Request, res: Response) => {
   const { bookId, description, location, meetingDate, meetingTime, clubId } =
     req.body;
 
+  const chapterStart = req.body.chapterStart
+    ? Number(req.body.chapterStart)
+    : null;
+  const chapterEnd = req.body.chapterEnd ? Number(req.body.chapterEnd) : null;
+
   if (!location || !meetingDate || !meetingTime || !clubId) {
-    res.status(400).json({ message: "Preencha todos os campos!" });
-    return;
+    return res.status(400).json({ message: "Preencha todos os campos!" });
   }
 
-  if (!(await respondIfNotClubMember(req.userId, clubId, res))) {
-    return;
-  }
+  if (!(await respondIfNotClubMember(req.userId, clubId, res))) return;
 
   try {
     const newMeeting = await meetingService.createMeeting({
       bookId,
+      chapterStart,
+      chapterEnd,
       description,
       location,
       meetingDate,
       meetingTime,
       clubId,
     });
+
     res.status(200).json({
       message: "Encontro marcado com sucesso!",
       meeting: newMeeting,
     });
   } catch (error: any) {
-    if (error?.code === "23503") {
-      return res
-        .status(404)
-        .json({ message: "Registro não encontrado para atualizar" });
+    if (error instanceof meetingService.InvalidMeetingChapterRangeError) {
+      return res.status(400).json({ message: error.message });
     }
     console.error(error);
     res.status(500).json({ message: "Erro ao criar encontro" });

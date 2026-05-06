@@ -3,6 +3,7 @@ import {
   createClub as createClubService,
   ClubInvitationCodeConflictError,
 } from "../../services/clubService";
+import { ReadingMode } from "../../enums/readingMode";
 
 export const createClub = async (req: Request, res: Response) => {
   const { name, description } = req.body;
@@ -14,7 +15,12 @@ export const createClub = async (req: Request, res: Response) => {
   }
 
   try {
-    const newClub = await createClubService({ name, description, ownerId });
+    const newClub = await createClubService({
+      name,
+      description,
+      ownerId,
+      readingMode: ReadingMode.BOOK,
+    });
     res.status(201).json({
       message: "Clube criado com sucesso",
       club: newClub,

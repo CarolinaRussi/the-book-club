@@ -75,6 +75,15 @@ pnpm db:migrate    # aplica migrações
 pnpm db:push
 ```
 
+## Modos de leitura do clube
+
+Agora cada clube pode ser configurado para:
+
+- `Por livro`: ao concluir um encontro com livro selecionado, o livro do clube é finalizado.
+- `Por capítulos`: você pode informar `capítulo inicial` e `capítulo final` no encontro; o livro só é finalizado quando o encontro concluído atingir o último capítulo do livro.
+
+Para suporte a esse fluxo, livros aceitam `total de capítulos` opcional no cadastro.
+
 # Tecnologias utilizadas
 
 #Frontend 

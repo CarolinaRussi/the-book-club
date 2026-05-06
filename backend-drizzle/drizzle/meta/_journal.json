@@ -15,6 +15,13 @@
       "when": 1778010860726,
       "tag": "0001_meeting_book_optional",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778069170132,
+      "tag": "0002_calm_black_bolt",
+      "breakpoints": true
     }
   ]
 }

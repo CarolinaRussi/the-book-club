@@ -1,13 +1,23 @@
 import { Request, Response } from "express";
 import * as clubService from "../../services/clubService";
 import { respondIfNotClubOwner } from "../../utils/clubAccess";
+import { ReadingMode } from "../../enums/readingMode";
 
 export const updateClub = async (req: Request, res: Response) => {
-  const { name, description, invitationCode } = req.body;
+  const { name, description, invitationCode, readingMode } = req.body;
   const { id } = req.params;
 
   if (!id || !name || !invitationCode) {
     res.status(400).json({ message: "Preencha todos os campos!" });
+    return;
+  }
+
+  if (
+    readingMode !== undefined &&
+    readingMode !== ReadingMode.BOOK &&
+    readingMode !== ReadingMode.CHAPTERS
+  ) {
+    res.status(400).json({ message: "Modo de leitura inválido." });
     return;
   }
 
@@ -20,6 +30,7 @@ export const updateClub = async (req: Request, res: Response) => {
       name,
       description,
       invitationCode,
+      readingMode,
     });
 
     if (!updatedClub) {
