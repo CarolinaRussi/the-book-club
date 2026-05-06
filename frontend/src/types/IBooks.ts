@@ -42,6 +42,7 @@ export interface IBook {
   author: string;
   coverUrl: string;
   openLibraryId?: string | null;
+  totalChapters?: number | null;
   status: BookStatus;
   addedAt: string;
   createdAt: string;
@@ -63,6 +64,7 @@ export interface IBookPayload {
   author: string;
   coverUrlOpenLibrary?: string;
   coverImg?: FileList;
+  totalChapters?: number | null;
   clubId: string;
 }
 

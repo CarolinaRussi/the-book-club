@@ -43,6 +43,7 @@ interface CreateBookDialogProps {
 interface ICreateBookForm {
   title: string;
   author: string;
+  totalChapters?: number;
   coverImg?: FileList;
 }
 
@@ -76,6 +77,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     defaultValues: {
       title: "",
       author: "",
+      totalChapters: undefined,
       coverImg: undefined,
     },
   });
@@ -140,6 +142,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     reset({
       title: "",
       author: "",
+      totalChapters: undefined,
       coverImg: undefined,
     });
     setSelectedBook(null);
@@ -184,7 +187,7 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     }
     const title = data.title.trim();
     const author = data.author.trim();
-    const { coverImg } = data;
+    const { coverImg, totalChapters } = data;
 
     const openLibraryKey =
       selectedBook?.source === "openLibrary"
@@ -204,6 +207,10 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
           ? selectedBook.coverLargeUrl
           : undefined,
       coverImg: coverImg && coverImg.length > 0 ? coverImg : undefined,
+      totalChapters:
+        totalChapters && Number.isFinite(totalChapters) && totalChapters > 0
+          ? totalChapters
+          : undefined,
       clubId: selectedClubId,
     };
 
@@ -457,6 +464,28 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                         {errors.author.message}
                       </h3>
                     )}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="totalChapters"
+                      className="block text-sm font-medium mb-1.5"
+                    >
+                      Total de capítulos (opcional)
+                    </label>
+                    <input
+                      id="totalChapters"
+                      type="number"
+                      min={1}
+                      className="w-full rounded-xl border border-secondary p-3 shadow-md"
+                      {...register("totalChapters", {
+                        valueAsNumber: true,
+                        validate: (value) =>
+                          value === undefined ||
+                          Number.isNaN(value) ||
+                          Number.isInteger(value),
+                      })}
+                      placeholder="Ex.: 24"
+                    />
                   </div>
                 </div>
               </div>

@@ -4,7 +4,6 @@ import type { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {
-    console.log(data);
     const formData = new FormData();
 
     if (data.coverImg && data.coverImg.length > 0) {
@@ -17,6 +16,9 @@ export async function createBook(data: IBookPayload): Promise<any> {
     formData.append("title", data.title);
     formData.append("author", data.author);
     formData.append("club_id", data.clubId);
+    if (data.totalChapters != null) {
+      formData.append("total_chapters", String(data.totalChapters));
+    }
 
     const response = await api.post("/create-book", formData);
 
