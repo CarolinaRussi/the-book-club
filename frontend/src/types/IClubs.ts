@@ -1,4 +1,4 @@
-import type { ClubStatus } from "../utils/constants/clubs";
+import type { ClubReadingMode, ClubStatus } from "../utils/constants/clubs";
 import type { IUser } from "./IUser";
 
 export interface IClub {
@@ -9,6 +9,7 @@ export interface IClub {
   invitationCode: string;
   createdAt: string;
   description?: string;
+  readingMode: ClubReadingMode;
 }
 
 export interface IClubWithOwner extends IClub {
@@ -28,6 +29,7 @@ export interface IEditClubPayload {
   name: string;
   description: string;
   invitationCode: string;
+  readingMode: ClubReadingMode;
 }
 
 export interface IMembersClub {
@@ -45,5 +47,6 @@ export interface IUserClub {
   createdAt: string;
   ownerId: string;
   status: ClubStatus;
+  readingMode: ClubReadingMode;
   member: IMembersClub[];
 }

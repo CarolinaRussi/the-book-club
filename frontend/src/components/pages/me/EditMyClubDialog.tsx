@@ -29,7 +29,7 @@ import { Button } from "../../ui/button";
 
 import type { IMembersClub, IUserClub } from "@//types/IClubs";
 import type { IApiError } from "@//types/IApi";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -37,11 +37,30 @@ import { updateClub, deleteClub, banMember } from "@//api/mutations/clubMutate";
 import { UserX } from "lucide-react";
 import { userStatusLabels } from "@//utils/constants/user";
 import { Badge } from "../../ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import {
+  CLUB_READING_MODE_VALUES,
+  clubReadingModeLabels,
+  type ClubReadingMode,
+} from "@//utils/constants/clubs";
 
 interface EditMyClubDialogProps {
   openDialog: boolean;
   onOpenChange: (open: boolean) => void;
   club: IUserClub | undefined;
+}
+
+interface EditClubFormValues {
+  name: string;
+  description: string;
+  invitationCode: string;
+  readingMode: ClubReadingMode;
 }
 
 const EditMyClubDialog = ({
@@ -53,14 +72,16 @@ const EditMyClubDialog = ({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<EditClubFormValues>({
     defaultValues: {
       name: club?.name || "",
       description: club?.description || "",
       invitationCode: club?.invitationCode || "",
+      readingMode: club?.readingMode ?? "book",
     },
   });
 
@@ -70,6 +91,7 @@ const EditMyClubDialog = ({
         name: club.name || "",
         description: club.description || "",
         invitationCode: club.invitationCode || "",
+        readingMode: club.readingMode ?? "book",
       });
     }
   }, [club, reset, openDialog]);
@@ -77,7 +99,7 @@ const EditMyClubDialog = ({
   const { mutate: updateClubMutate, isPending: isUpdating } = useMutation<
     any,
     IApiError,
-    any
+    { id: string } & EditClubFormValues
   >({
     mutationFn: updateClub,
     onSuccess: async () => {
@@ -108,7 +130,9 @@ const EditMyClubDialog = ({
     mutationFn: deleteClub,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["userClubs"] });
-      await queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["booksFromSelectedClub"],
+      });
       await queryClient.invalidateQueries({ queryKey: ["meetings"] });
       await queryClient.invalidateQueries({ queryKey: ["bookUsers"] });
       toast.success("Clube excluído permanentemente.");
@@ -118,7 +142,7 @@ const EditMyClubDialog = ({
       toast.error(error.message || "Erro ao excluir o clube."),
   });
 
-  const onSubmit: SubmitHandler<any> = (data) => {
+  const onSubmit: SubmitHandler<EditClubFormValues> = (data) => {
     if (!club) return;
     updateClubMutate({ id: club.id, ...data });
   };
@@ -165,6 +189,29 @@ const EditMyClubDialog = ({
                   Código de Convite
                 </label>
                 <Input {...register("invitationCode")} placeholder="Código" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">
+                  Modo de Leitura
+                </label>
+                <Controller
+                  control={control}
+                  name="readingMode"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione o modo de leitura" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CLUB_READING_MODE_VALUES.map((readingMode) => (
+                          <SelectItem key={readingMode} value={readingMode}>
+                            {clubReadingModeLabels[readingMode]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
             <div className="flex flex-col w-full mt-2">
