@@ -55,6 +55,11 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                   <p className="text-sm text-muted-foreground">
                     {meeting.book?.title ?? "Sem livro"}
                   </p>
+                  {meeting.chapterStart != null && meeting.chapterEnd != null && (
+                    <p className="text-sm text-muted-foreground">
+                      Capítulos {meeting.chapterStart} a {meeting.chapterEnd}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="mt-4 flex flex-col gap-2 md:flex-row md:absolute md:right-6 md:top-0 md:mt-0">

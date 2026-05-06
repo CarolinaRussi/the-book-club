@@ -51,6 +51,8 @@ interface IEditMeetingForm {
   description?: string;
   status: MeetingStatus;
   bookId: string;
+  chapterStart?: number;
+  chapterEnd?: number;
 }
 
 const EditMeetingDialog = ({
@@ -58,7 +60,7 @@ const EditMeetingDialog = ({
   onOpenChange,
   meeting,
 }: EditMeetingDialogProps) => {
-  const { selectedClubId } = useClub();
+  const { selectedClubId, clubs } = useClub();
   const [open, setOpen] = useState(false);
   const { booksFromSelectedClub } = useBook();
   const queryClient = useQueryClient();
@@ -68,6 +70,7 @@ const EditMeetingDialog = ({
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<IEditMeetingForm>({
     defaultValues: {
@@ -77,8 +80,14 @@ const EditMeetingDialog = ({
       description: meeting?.description || "",
       status: meeting?.status,
       bookId: meeting?.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
+      chapterStart: meeting?.chapterStart ?? undefined,
+      chapterEnd: meeting?.chapterEnd ?? undefined,
     },
   });
+
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+  const isChaptersMode = selectedClub?.readingMode === "chapters";
+  const selectedBookId = watch("bookId");
 
   useEffect(() => {
     if (meeting) {
@@ -89,6 +98,8 @@ const EditMeetingDialog = ({
         description: meeting.description || "",
         status: meeting.status,
         bookId: meeting.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
+        chapterStart: meeting.chapterStart ?? undefined,
+        chapterEnd: meeting.chapterEnd ?? undefined,
       });
     }
   }, [meeting, reset, openDialog]);
@@ -126,12 +137,24 @@ const EditMeetingDialog = ({
       toast.error("Você não pode criar um encontro sem estar em um clube");
       return;
     }
-    const { bookId, description, location, meetingDate, meetingTime, status } =
-      data;
+    const {
+      bookId,
+      chapterStart,
+      chapterEnd,
+      description,
+      location,
+      meetingDate,
+      meetingTime,
+      status,
+    } = data;
+    const resolvedBookId = bookId === MEETING_NO_BOOK_SELECT_VALUE ? null : bookId;
+    const shouldSendChapterRange = isChaptersMode && resolvedBookId;
 
     updateMeetingMutate({
       id: meeting.id,
-      bookId: bookId === MEETING_NO_BOOK_SELECT_VALUE ? null : bookId,
+      bookId: resolvedBookId,
+      chapterStart: shouldSendChapterRange ? chapterStart ?? null : null,
+      chapterEnd: shouldSendChapterRange ? chapterEnd ?? null : null,
       description,
       location,
       meetingDate: formatMeetingDateForApi(meetingDate),
@@ -284,6 +307,32 @@ const EditMeetingDialog = ({
                 )}
               />
             </div>
+            {isChaptersMode &&
+              selectedBookId &&
+              selectedBookId !== MEETING_NO_BOOK_SELECT_VALUE && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <h3 className="text-lg font-medium mb-1">Capítulo inicial:</h3>
+                    <Input
+                      type="number"
+                      min={1}
+                      {...register("chapterStart", { valueAsNumber: true })}
+                      className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                      placeholder="Ex.: 1"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1">Capítulo final:</h3>
+                    <Input
+                      type="number"
+                      min={1}
+                      {...register("chapterEnd", { valueAsNumber: true })}
+                      className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                      placeholder="Ex.: 3"
+                    />
+                  </div>
+                </div>
+              )}
           </div>
 
           <DialogFooter className=" mt-5 ">

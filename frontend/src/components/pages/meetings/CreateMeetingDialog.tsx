@@ -47,13 +47,15 @@ interface ICreateMeetingForm {
   meetingTime: string;
   description?: string;
   bookId: string;
+  chapterStart?: number;
+  chapterEnd?: number;
 }
 
 const CreateMeetingDialog = ({
   openDialog,
   onOpenChange,
 }: CreateMeetingDialogProps) => {
-  const { selectedClubId } = useClub();
+  const { selectedClubId, clubs } = useClub();
   const [open, setOpen] = React.useState(false);
   const { booksFromSelectedClub } = useBook();
   const queryClient = useQueryClient();
@@ -63,6 +65,7 @@ const CreateMeetingDialog = ({
     control,
     reset,
     handleSubmit,
+    watch,
     formState: {},
   } = useForm<ICreateMeetingForm>({
     defaultValues: {
@@ -71,8 +74,14 @@ const CreateMeetingDialog = ({
       meetingTime: "",
       description: "",
       bookId: MEETING_NO_BOOK_SELECT_VALUE,
+      chapterStart: undefined,
+      chapterEnd: undefined,
     },
   });
+
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+  const isChaptersMode = selectedClub?.readingMode === "chapters";
+  const selectedBookId = watch("bookId");
 
   const { mutate: createMeetingMutate } = useMutation<
     any,
@@ -106,13 +115,28 @@ const CreateMeetingDialog = ({
       return;
     }
 
-    const { bookId, description, location, meetingDate, meetingTime } = data;
+    const {
+      bookId,
+      description,
+      location,
+      meetingDate,
+      meetingTime,
+      chapterStart,
+      chapterEnd,
+    } = data;
 
     const resolvedBookId =
       bookId && bookId !== MEETING_NO_BOOK_SELECT_VALUE ? bookId : undefined;
+    const shouldSendChapterRange = isChaptersMode && resolvedBookId;
 
     createMeetingMutate({
       ...(resolvedBookId ? { bookId: resolvedBookId } : {}),
+      ...(shouldSendChapterRange
+        ? {
+            chapterStart: chapterStart ?? null,
+            chapterEnd: chapterEnd ?? null,
+          }
+        : {}),
       description,
       location,
       meetingDate: formatMeetingDateForApi(meetingDate),
@@ -239,6 +263,32 @@ const CreateMeetingDialog = ({
                 )}
               />
             </div>
+            {isChaptersMode &&
+              selectedBookId &&
+              selectedBookId !== MEETING_NO_BOOK_SELECT_VALUE && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <h3 className="text-lg font-medium mb-1">Capítulo inicial:</h3>
+                    <Input
+                      type="number"
+                      min={1}
+                      {...register("chapterStart", { valueAsNumber: true })}
+                      className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                      placeholder="Ex.: 1"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1">Capítulo final:</h3>
+                    <Input
+                      type="number"
+                      min={1}
+                      {...register("chapterEnd", { valueAsNumber: true })}
+                      className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                      placeholder="Ex.: 3"
+                    />
+                  </div>
+                </div>
+              )}
           </div>
 
           <DialogFooter className=" mt-5 ">

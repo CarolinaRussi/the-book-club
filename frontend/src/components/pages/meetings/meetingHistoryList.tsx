@@ -62,6 +62,11 @@ const MeetingHistoryList = ({
                       <p className="font-medium text-sm">
                         {meeting.book?.title ?? "Sem livro"}
                       </p>
+                      {meeting.chapterStart != null && meeting.chapterEnd != null && (
+                        <p className="text-sm text-muted-foreground">
+                          Capítulos {meeting.chapterStart} a {meeting.chapterEnd}
+                        </p>
+                      )}
                     </div>
                     <Badge>
                       Encontro{" "}
