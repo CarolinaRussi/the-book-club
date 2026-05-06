@@ -9,7 +9,7 @@ export interface IMeeting {
   meetingTime: string;
   status: MeetingStatus;
   createdAt: string;
-  book: IBook;
+  book: IBook | null;
 }
 
 export interface IMeetingCreatePayload {
@@ -17,7 +17,7 @@ export interface IMeetingCreatePayload {
   description?: string;
   meetingDate: string;
   meetingTime: string;
-  bookId: string;
+  bookId?: string | null;
   clubId: string;
 }
 
@@ -28,6 +28,6 @@ export interface IMeetingUpdatePayload {
   meetingDate: string;
   meetingTime: string;
   status: MeetingStatus;
-  bookId: string;
+  bookId?: string | null;
   clubId: string;
 }

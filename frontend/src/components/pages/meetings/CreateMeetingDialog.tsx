@@ -34,6 +34,7 @@ import {
   formatMeetingDateForApi,
   formatMeetingTimeForApi,
 } from "@//utils/formatters";
+import { MEETING_NO_BOOK_SELECT_VALUE } from "@//utils/constants/meeting";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;
@@ -69,7 +70,7 @@ const CreateMeetingDialog = ({
       meetingDate: undefined,
       meetingTime: "",
       description: "",
-      bookId: undefined,
+      bookId: MEETING_NO_BOOK_SELECT_VALUE,
     },
   });
 
@@ -107,8 +108,11 @@ const CreateMeetingDialog = ({
 
     const { bookId, description, location, meetingDate, meetingTime } = data;
 
+    const resolvedBookId =
+      bookId && bookId !== MEETING_NO_BOOK_SELECT_VALUE ? bookId : undefined;
+
     createMeetingMutate({
-      bookId,
+      ...(resolvedBookId ? { bookId: resolvedBookId } : {}),
       description,
       location,
       meetingDate: formatMeetingDateForApi(meetingDate),
@@ -198,7 +202,7 @@ const CreateMeetingDialog = ({
             </div>
             <div>
               <h3 className="text-lg font-medium mb-1">
-                Livro para discussão:
+                Livro para discussão (opcional):
               </h3>
               <Controller
                 name="bookId"
@@ -209,6 +213,12 @@ const CreateMeetingDialog = ({
                       <SelectValue placeholder="Selecione um livro" />
                     </SelectTrigger>
                     <SelectContent className="border-secondary bg-background rounded-lg">
+                      <SelectItem
+                        value={MEETING_NO_BOOK_SELECT_VALUE}
+                        className="cursor-pointer text-md p-3"
+                      >
+                        Sem livro
+                      </SelectItem>
                       {booksFromSelectedClub
                         .filter(
                           (book) =>

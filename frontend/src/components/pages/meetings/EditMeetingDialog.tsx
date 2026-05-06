@@ -33,6 +33,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@//types/IApi";
 import { updateMeeting } from "@//api/mutations/meetingMutate";
 import {
+  MEETING_NO_BOOK_SELECT_VALUE,
   meetingStatusLabels,
   type MeetingStatus,
 } from "@//utils/constants/meeting";
@@ -72,12 +73,10 @@ const EditMeetingDialog = ({
     defaultValues: {
       location: meeting?.location || "",
       meetingDate: meeting ? new Date(meeting.meetingDate) : undefined,
-      meetingTime: meeting?.meetingTime
-        ? formatTime(meeting.meetingTime)
-        : "",
+      meetingTime: meeting?.meetingTime ? formatTime(meeting.meetingTime) : "",
       description: meeting?.description || "",
       status: meeting?.status,
-      bookId: meeting?.book?.id || undefined,
+      bookId: meeting?.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
     },
   });
 
@@ -86,12 +85,10 @@ const EditMeetingDialog = ({
       reset({
         location: meeting.location || "",
         meetingDate: new Date(meeting.meetingDate),
-        meetingTime: meeting.meetingTime
-          ? formatTime(meeting.meetingTime)
-          : "",
+        meetingTime: meeting.meetingTime ? formatTime(meeting.meetingTime) : "",
         description: meeting.description || "",
         status: meeting.status,
-        bookId: meeting.book?.id || "",
+        bookId: meeting.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
       });
     }
   }, [meeting, reset, openDialog]);
@@ -119,7 +116,7 @@ const EditMeetingDialog = ({
     onError: (error) => {
       toast.error(
         error.message ||
-          "Não foi possível marcar seu encontro, tente novamente."
+          "Não foi possível marcar seu encontro, tente novamente.",
       );
     },
   });
@@ -134,7 +131,7 @@ const EditMeetingDialog = ({
 
     updateMeetingMutate({
       id: meeting.id,
-      bookId,
+      bookId: bookId === MEETING_NO_BOOK_SELECT_VALUE ? null : bookId,
       description,
       location,
       meetingDate: formatMeetingDateForApi(meetingDate),
@@ -239,7 +236,7 @@ const EditMeetingDialog = ({
                           >
                             {statusLabel}{" "}
                           </SelectItem>
-                        )
+                        ),
                       )}
                     </SelectContent>
                   </Select>
@@ -256,7 +253,7 @@ const EditMeetingDialog = ({
             </div>
             <div>
               <h3 className="text-lg font-medium mb-1">
-                Livro para discussão:
+                Livro para discussão (opcional):
               </h3>
               <Controller
                 name="bookId"
@@ -267,6 +264,12 @@ const EditMeetingDialog = ({
                       <SelectValue placeholder="Selecione um livro" />
                     </SelectTrigger>
                     <SelectContent className="border-secondary bg-background rounded-lg">
+                      <SelectItem
+                        value={MEETING_NO_BOOK_SELECT_VALUE}
+                        className="cursor-pointer text-md p-3"
+                      >
+                        Sem livro
+                      </SelectItem>
                       {booksFromSelectedClub.map((book) => (
                         <SelectItem
                           key={book.id}

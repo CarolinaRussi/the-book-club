@@ -53,7 +53,7 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                 <div>
                   <p className="font-medium">Livro</p>
                   <p className="text-sm text-muted-foreground">
-                    {meeting.book?.title ?? "Ainda não definido"}
+                    {meeting.book?.title ?? "Sem livro"}
                   </p>
                 </div>
               </div>

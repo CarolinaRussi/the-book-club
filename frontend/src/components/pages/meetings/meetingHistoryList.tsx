@@ -60,7 +60,7 @@ const MeetingHistoryList = ({
                         Livro discutido:
                       </p>
                       <p className="font-medium text-sm">
-                        {meeting.book?.title ?? "N/A"}
+                        {meeting.book?.title ?? "Sem livro"}
                       </p>
                     </div>
                     <Badge>

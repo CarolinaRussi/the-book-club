@@ -15,3 +15,5 @@ export const meetingStatusLabels: Record<MeetingStatus, string> = {
   [MEETING_STATUS_COMPLETED]: "Realizado",
   [MEETING_STATUS_CANCELLED]: "Cancelado",
 };
+
+export const MEETING_NO_BOOK_SELECT_VALUE = "__no_book__";
