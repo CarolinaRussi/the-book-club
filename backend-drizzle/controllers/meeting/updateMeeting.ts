@@ -16,15 +16,7 @@ export const updateMeeting = async (req: Request, res: Response) => {
 
   const { id } = req.params;
 
-  if (
-    !id ||
-    !bookId ||
-    !location ||
-    !meetingDate ||
-    !meetingTime ||
-    !status ||
-    !clubId
-  ) {
+  if (!id || !location || !meetingDate || !meetingTime || !status || !clubId) {
     res.status(400).json({ message: "Preencha todos os campos!" });
     return;
   }

@@ -67,20 +67,22 @@ export async function getPastMeetingsFromClub(
 }
 
 export async function createMeeting(input: {
-  bookId: string;
+  bookId?: string | null;
   description?: string | null;
   location: string;
   meetingDate: string;
   meetingTime: string;
   clubId: string;
 }) {
+  const bookId = input.bookId ?? null;
+
   const newMeeting = await meetingRepository.insertMeeting({
     id: createId(),
     location: input.location,
     description: input.description ?? null,
     meetingDate: new Date(input.meetingDate).toISOString().slice(0, 10),
     meetingTime: input.meetingTime,
-    bookId: input.bookId,
+    bookId,
     clubId: input.clubId,
     status: MeetingStatus.SCHEDULED,
   });
@@ -89,9 +91,13 @@ export async function createMeeting(input: {
     throw new Error("insert_meeting_failed");
   }
 
+  if (!bookId) {
+    return newMeeting;
+  }
+
   const clubBookEntry = await meetingRepository.findClubBookByClubAndBook(
     input.clubId,
-    input.bookId
+    bookId
   );
 
   if (clubBookEntry && clubBookEntry.status !== BookStatus.STARTED) {
@@ -107,7 +113,7 @@ export async function createMeeting(input: {
 export async function updateMeeting(
   meetingId: string,
   input: {
-    bookId: string;
+    bookId?: string | null;
     description?: string | null;
     location: string;
     meetingDate: string;
@@ -116,6 +122,8 @@ export async function updateMeeting(
     clubId: string;
   }
 ) {
+  const bookId = input.bookId ?? null;
+
   const updatedMeeting = await meetingRepository.updateMeetingById(
     meetingId,
     {
@@ -123,7 +131,7 @@ export async function updateMeeting(
       description: input.description ?? null,
       meetingDate: new Date(input.meetingDate).toISOString().slice(0, 10),
       meetingTime: input.meetingTime,
-      bookId: input.bookId,
+      bookId,
       clubId: input.clubId,
       status: input.status,
     }
@@ -133,10 +141,10 @@ export async function updateMeeting(
     return null;
   }
 
-  if (input.status === MeetingStatus.COMPLETED) {
+  if (input.status === MeetingStatus.COMPLETED && bookId) {
     const clubBookEntry = await meetingRepository.findClubBookByClubAndBook(
       input.clubId,
-      input.bookId
+      bookId
     );
     if (clubBookEntry) {
       await meetingRepository.updateClubBookStatusById(

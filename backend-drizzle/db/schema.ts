@@ -100,9 +100,9 @@ export const meeting = pgTable("Meeting", {
   meetingTime: time("meeting_time").notNull(),
   description: text("description"),
   status: meetingStatusEnum("status").default("scheduled").notNull(),
-  bookId: varchar("book_id", { length: 255 })
-    .notNull()
-    .references(() => book.id, { onDelete: "restrict" }),
+  bookId: varchar("book_id", { length: 255 }).references(() => book.id, {
+    onDelete: "restrict",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()
     .notNull(),

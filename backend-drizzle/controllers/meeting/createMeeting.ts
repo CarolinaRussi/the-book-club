@@ -6,7 +6,7 @@ export const createMeeting = async (req: Request, res: Response) => {
   const { bookId, description, location, meetingDate, meetingTime, clubId } =
     req.body;
 
-  if (!bookId || !location || !meetingDate || !meetingTime || !clubId) {
+  if (!location || !meetingDate || !meetingTime || !clubId) {
     res.status(400).json({ message: "Preencha todos os campos!" });
     return;
   }

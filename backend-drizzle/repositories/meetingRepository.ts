@@ -122,7 +122,7 @@ export async function updateMeetingById(
     description: string | null;
     meetingDate: string;
     meetingTime: string;
-    bookId: string;
+    bookId: string | null;
     clubId: string;
     status: MeetingStatus;
   }
