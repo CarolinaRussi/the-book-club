@@ -96,6 +96,9 @@ const CreateMeetingDialog = ({
       queryClient.invalidateQueries({
         queryKey: ["pastMeetings", selectedClubId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["booksFromSelectedClub", selectedClubId],
+      });
       reset();
       onOpenChange(false);
       toast.success("Encontro marcado com sucesso!");

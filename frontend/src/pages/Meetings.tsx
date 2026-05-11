@@ -37,6 +37,8 @@ export default function Meetings() {
 
   const veryNextMeeting = scheduledMeetings?.[0];
   const nextBook = veryNextMeeting?.book;
+  const chapterStart = veryNextMeeting?.chapterStart;
+  const chapterEnd = veryNextMeeting?.chapterEnd;
 
   const { data: pastMeetingsData, isPending: isPendingPastMeetings } = useQuery(
     {
@@ -117,7 +119,7 @@ export default function Meetings() {
           {isPending ? (
             <SkeletonNextMeetingBook />
           ) : (
-            <NextMeetingBook nextBook={nextBook} />
+            <NextMeetingBook nextBook={nextBook} chapterStart={chapterStart} chapterEnd={chapterEnd} />
           )}
         </div>
       </div>

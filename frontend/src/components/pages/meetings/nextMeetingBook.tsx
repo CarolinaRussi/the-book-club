@@ -3,9 +3,15 @@ import { Card, CardContent } from "../../ui/card";
 import { Book } from "lucide-react";
 
 interface NextMeetingBookProps {
-  nextBook: IBook | undefined;
+  nextBook: IBook | null | undefined;
+  chapterStart?: number | null;
+  chapterEnd?: number | null;
 }
-const NextMeetingBook = ({ nextBook }: NextMeetingBookProps) => {
+const NextMeetingBook = ({
+  nextBook,
+  chapterStart,
+  chapterEnd,
+}: NextMeetingBookProps) => {
   return (
     <div className="hidden md:block max-w-md h-full">
       <h2 className="text-2xl font-bold mb-4">Livro da Vez</h2>
@@ -29,6 +35,11 @@ const NextMeetingBook = ({ nextBook }: NextMeetingBookProps) => {
               </h3>
             </div>
             <p className="text-lg text-muted-foreground">{nextBook.author}</p>
+            {chapterStart != null && chapterEnd != null && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Capítulos {chapterStart} a {chapterEnd}
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : (
