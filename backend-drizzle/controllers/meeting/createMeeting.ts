@@ -17,8 +17,14 @@ export const createMeeting = async (req: Request, res: Response) => {
 
   if (!(await respondIfNotClubMember(req.userId, clubId, res))) return;
 
+  const createdByUserId = req.userId;
+  if (!createdByUserId) {
+    return res.status(401).json({ message: "Não autorizado" });
+  }
+
   try {
     const newMeeting = await meetingService.createMeeting({
+      createdByUserId,
       bookId,
       chapterStart,
       chapterEnd,

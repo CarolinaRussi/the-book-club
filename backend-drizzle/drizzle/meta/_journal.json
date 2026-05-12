@@ -22,6 +22,13 @@
       "when": 1778069170132,
       "tag": "0002_calm_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778584713576,
+      "tag": "0003_silent_lizard",
+      "breakpoints": true
     }
   ]
 }

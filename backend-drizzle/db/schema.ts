@@ -68,6 +68,13 @@ export const user = pgTable("User", {
     .notNull(),
   nickname: varchar("nickname", { length: 255 }).notNull(),
   profilePicturePublicId: varchar("profile_picture_public_id", { length: 255 }),
+  googleRefreshToken: text("google_refresh_token"),
+  googleAccessTokenExpiresAt: timestamp(
+    "google_access_token_expires_at",
+    { withTimezone: true, precision: 6 }
+  ),
+  googleCalendarId: varchar("google_calendar_id", { length: 255 }),
+  googleAccountEmail: varchar("google_account_email", { length: 255 }),
 });
 
 // Club
@@ -98,6 +105,10 @@ export const meeting = pgTable("Meeting", {
   clubId: varchar("club_id", { length: 255 })
     .notNull()
     .references(() => club.id, { onDelete: "cascade" }),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }).references(
+    () => user.id,
+    { onDelete: "set null" }
+  ),
   location: varchar("location", { length: 255 }).notNull(),
   meetingDate: date("meeting_date").notNull(),
   meetingTime: time("meeting_time").notNull(),
@@ -108,6 +119,13 @@ export const meeting = pgTable("Meeting", {
   }),
   chapterStart: integer("chapter_start"),
   chapterEnd: integer("chapter_end"),
+  googleEventId: varchar("google_event_id", { length: 512 }),
+  googleCalendarId: varchar("google_calendar_id", { length: 255 }),
+  googleSyncedAt: timestamp("google_synced_at", {
+    withTimezone: true,
+    precision: 6,
+  }),
+  googleSyncError: text("google_sync_error"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()
     .notNull(),
@@ -235,6 +253,7 @@ export const userRelations = relations(user, ({ many }) => ({
   members: many(member),
   userBooks: many(userBook),
   reviews: many(review),
+  meetingsCreated: many(meeting),
 }));
 
 export const clubRelations = relations(club, ({ one, many }) => ({
@@ -255,6 +274,10 @@ export const meetingRelations = relations(meeting, ({ one, many }) => ({
   club: one(club, {
     fields: [meeting.clubId],
     references: [club.id],
+  }),
+  createdBy: one(user, {
+    fields: [meeting.createdByUserId],
+    references: [user.id],
   }),
   confirmations: many(meetingConfirmation),
 }));

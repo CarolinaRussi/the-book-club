@@ -1,10 +1,27 @@
 import { v2 as cloudinary } from "cloudinary";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { createId } from "../utils/id";
+import { toPublicUser } from "../utils/publicUser";
 import * as userRepository from "../repositories/userRepository";
 
+const USER_UPDATE_BLOCKED_KEYS = new Set([
+  "id",
+  "password",
+  "status",
+  "createdAt",
+  "email",
+  "googleRefreshToken",
+  "googleAccessTokenExpiresAt",
+  "googleCalendarId",
+  "googleAccountEmail",
+]);
+
 export async function getUserAuthenticated(userId: string) {
-  return userRepository.findUserById(userId);
+  const row = await userRepository.findUserById(userId);
+  if (!row) {
+    return null;
+  }
+  return toPublicUser(row);
 }
 
 export async function updateUserProfile(input: {
@@ -19,6 +36,9 @@ export async function updateUserProfile(input: {
   }
 
   const updateData: Record<string, unknown> = { ...input.otherData };
+  for (const key of USER_UPDATE_BLOCKED_KEYS) {
+    delete updateData[key];
+  }
   const oldPublicId = foundUser.profilePicturePublicId;
   const remove = input.removeProfilePicture;
 
@@ -42,8 +62,7 @@ export async function updateUserProfile(input: {
     return { ok: false as const, reason: "update_failed" as const };
   }
 
-  const { password, ...userParaFront } = updatedUser;
-  return { ok: true as const, user: userParaFront };
+  return { ok: true as const, user: toPublicUser(updatedUser) };
 }
 
 export async function getUserReadingsPaginated(

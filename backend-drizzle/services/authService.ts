@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserStatus } from "../enums/userStatus";
 import { createId } from "../utils/id";
+import { toPublicUser } from "../utils/publicUser";
 import * as userRepository from "../repositories/userRepository";
 
 export class DuplicateEmailError extends Error {
@@ -64,8 +65,7 @@ export async function register(input: {
     }
 
     const token = signToken(newUser.id, newUser.email);
-    const { password: _, ...userParaFront } = newUser;
-    return { token, user: userParaFront };
+    return { token, user: toPublicUser(newUser) };
   } catch (error: any) {
     if (error?.code === "23505") {
       throw new DuplicateEmailError();
@@ -87,6 +87,5 @@ export async function login(email: string, password: string) {
   }
 
   const token = signToken(foundUser.id, foundUser.email);
-  const { password: _, ...userParaFront } = foundUser;
-  return { token, user: userParaFront };
+  return { token, user: toPublicUser(foundUser) };
 }

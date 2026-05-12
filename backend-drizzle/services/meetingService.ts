@@ -79,6 +79,7 @@ export async function getPastMeetingsFromClub(
 }
 
 export async function createMeeting(input: {
+  createdByUserId: string;
   bookId?: string | null;
   chapterStart?: number | null;
   chapterEnd?: number | null;
@@ -101,6 +102,7 @@ export async function createMeeting(input: {
 
   const newMeeting = await meetingRepository.insertMeeting({
     id: createId(),
+    createdByUserId: input.createdByUserId,
     location: input.location,
     description: input.description ?? null,
     meetingDate: new Date(input.meetingDate).toISOString().slice(0, 10),
