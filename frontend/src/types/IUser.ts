@@ -10,6 +10,8 @@ export interface IUser {
   profilePicture?: string;
   favoritesGenres?: string[];
   status?: UserStatus;
+  googleConnected?: boolean;
+  googleAccountEmail?: string | null;
 }
 
 export interface IUserUpdateForm

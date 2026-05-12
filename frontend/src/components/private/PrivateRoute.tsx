@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import SkeletonHome from "./SkeletonHome";
+import { GoogleOAuthReturnHandler } from "../GoogleOAuthReturnHandler";
 
 export const PrivateRoute = () => {
   const { isLoggedIn, isLoadingUser } = useAuth();
@@ -13,5 +14,10 @@ export const PrivateRoute = () => {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <GoogleOAuthReturnHandler />
+      <Outlet />
+    </>
+  );
 };

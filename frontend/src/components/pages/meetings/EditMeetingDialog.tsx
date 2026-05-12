@@ -37,6 +37,7 @@ import {
   meetingStatusLabels,
   type MeetingStatus,
 } from "@//utils/constants/meeting";
+import MeetingGoogleCalendarFormNote from "./MeetingGoogleCalendarFormNote";
 
 interface EditMeetingDialogProps {
   openDialog: boolean;
@@ -174,6 +175,8 @@ const EditMeetingDialog = ({
             </DialogTitle>
             <DialogDescription></DialogDescription>
           </DialogHeader>
+
+          <MeetingGoogleCalendarFormNote />
 
           <div className="flex flex-col gap-3">
             <div>

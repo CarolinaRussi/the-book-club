@@ -35,6 +35,7 @@ import {
   formatMeetingTimeForApi,
 } from "@//utils/formatters";
 import { MEETING_NO_BOOK_SELECT_VALUE } from "@//utils/constants/meeting";
+import MeetingGoogleCalendarFormNote from "./MeetingGoogleCalendarFormNote";
 
 interface CreateMeetingDialogProps {
   openDialog: boolean;
@@ -157,6 +158,8 @@ const CreateMeetingDialog = ({
               Marcar encontro
             </DialogTitle>
           </DialogHeader>
+
+          <MeetingGoogleCalendarFormNote />
 
           <div className="flex flex-col gap-3">
             <div>

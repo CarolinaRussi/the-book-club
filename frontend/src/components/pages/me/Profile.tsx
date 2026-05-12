@@ -11,6 +11,7 @@ import FavoriteGenres from "./profile/FavoriteGenres";
 import ChangePassword from "./profile/ChangePassword";
 import ProfilePictureUpdate from "./profile/ProfilePictureUpdate";
 import ProfileAvatarCropDialog from "./profile/ProfileAvatarCropDialog";
+import GoogleCalendarProfileSection from "./profile/GoogleCalendarProfileSection";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -138,7 +139,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full gap-8">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6"
@@ -184,6 +185,7 @@ export default function Profile() {
           </button>
         </div>
       </form>
+      <GoogleCalendarProfileSection />
     </div>
   );
 }
