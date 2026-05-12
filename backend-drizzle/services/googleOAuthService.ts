@@ -68,6 +68,18 @@ function googleClientSecret(): string {
   return v;
 }
 
+export function getGoogleOAuthWebCredentials(): {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+} {
+  return {
+    clientId: googleClientId(),
+    clientSecret: googleClientSecret(),
+    redirectUri: requireEnv("GOOGLE_OAUTH_REDIRECT_URI"),
+  };
+}
+
 export function createGoogleOAuthState(userId: string): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {

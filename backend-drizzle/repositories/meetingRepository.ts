@@ -97,6 +97,50 @@ export async function findMeetingById(meetingId: string) {
   return row ?? null;
 }
 
+export async function findMeetingForGoogleCalendar(meetingId: string) {
+  return db.query.meeting.findFirst({
+    where: (m, { eq }) => eq(m.id, meetingId),
+    columns: {
+      id: true,
+      clubId: true,
+      createdByUserId: true,
+      location: true,
+      meetingDate: true,
+      meetingTime: true,
+      description: true,
+      status: true,
+      bookId: true,
+      chapterStart: true,
+      chapterEnd: true,
+      googleEventId: true,
+      googleCalendarId: true,
+      googleSyncedAt: true,
+      googleSyncError: true,
+    },
+    with: {
+      book: { columns: { title: true } },
+      club: { columns: { name: true } },
+    },
+  });
+}
+
+export async function updateMeetingGoogleCalendarFields(
+  meetingId: string,
+  data: {
+    googleEventId?: string | null;
+    googleCalendarId?: string | null;
+    googleSyncedAt?: Date | null;
+    googleSyncError?: string | null;
+  },
+) {
+  const [row] = await db
+    .update(meeting)
+    .set(data)
+    .where(eq(meeting.id, meetingId))
+    .returning();
+  return row ?? null;
+}
+
 export async function findClubReadingModeById(clubId: string) {
   const [row] = await db
     .select({ readingMode: club.readingMode })

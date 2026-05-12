@@ -53,6 +53,17 @@ export async function countActiveMembersByClub(clubId: string): Promise<number> 
   return Number(totalItems ?? 0);
 }
 
+export async function findActiveMemberEmailsByClubId(
+  clubId: string,
+): Promise<string[]> {
+  const rows = await db
+    .select({ email: user.email })
+    .from(member)
+    .innerJoin(user, eq(member.userId, user.id))
+    .where(activeMemberUserFilter(clubId));
+  return [...new Set(rows.map((r) => r.email))];
+}
+
 export async function insertMember(values: {
   id: string;
   clubId: string;

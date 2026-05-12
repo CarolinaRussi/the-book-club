@@ -1,16 +1,18 @@
 {
   "name": "backend-drizzle",
+  "packageManager": "pnpm@10.19.0",
   "version": "1.0.0",
   "description": "The Book Club API - Drizzle ORM",
   "main": "dist/server/server.js",
   "scripts": {
-    "dev": "npx tsx watch server/server.ts",
+    "dev": "tsx watch server/server.ts",
     "build": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:reset-schema": "npx tsx scripts/reset-public-schema.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:reset-schema": "tsx scripts/reset-public-schema.ts",
+    "db:studio": "drizzle-kit studio",
+    "calendar:create-event": "tsx scripts/googleCalendarCreateMeetingEvent.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.38.0",
     "express": "^5.1.0",
+    "googleapis": "^171.4.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nanoid": "^5.0.9",
@@ -36,6 +39,7 @@
     "@types/node": "^24.6.0",
     "@types/pg": "^8.15.6",
     "drizzle-kit": "^0.30.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3"
   }
 }
