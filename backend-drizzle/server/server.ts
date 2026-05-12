@@ -8,12 +8,15 @@ import clubRoutes from "../routes/clubRoutes";
 import memberRoutes from "../routes/memberRoutes";
 import bookRoutes from "../routes/bookRoutes";
 import meetingRoutes from "../routes/meetingRoutes";
+import googleAuthRoutes from "../routes/googleAuthRoutes";
 
 const app = express();
 const port = process.env.PORT || 4001;
 
 app.use(express.json());
 app.use(cors());
+
+app.use("/api", googleAuthRoutes);
 
 app.use(authRoutes);
 app.use(clubRoutes);

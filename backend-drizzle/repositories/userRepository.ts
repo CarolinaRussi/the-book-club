@@ -47,6 +47,37 @@ export async function updateUserById(
   return row ?? null;
 }
 
+export async function updateUserGoogleOAuth(
+  userId: string,
+  values: {
+    googleRefreshToken: string;
+    googleAccessTokenExpiresAt: Date;
+    googleCalendarId: string;
+    googleAccountEmail: string | null;
+  },
+) {
+  const [row] = await db
+    .update(user)
+    .set(values)
+    .where(eq(user.id, userId))
+    .returning();
+  return row ?? null;
+}
+
+export async function clearUserGoogleOAuth(userId: string) {
+  const [row] = await db
+    .update(user)
+    .set({
+      googleRefreshToken: null,
+      googleAccessTokenExpiresAt: null,
+      googleCalendarId: null,
+      googleAccountEmail: null,
+    })
+    .where(eq(user.id, userId))
+    .returning();
+  return row ?? null;
+}
+
 export async function findUserBookByUserAndBook(
   userId: string,
   bookId: string,
