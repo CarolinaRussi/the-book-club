@@ -70,6 +70,15 @@ export default function Index() {
           Entrar
         </Link>
       </div>
+
+      <p className="mt-10 text-center text-sm text-muted-foreground">
+        <Link
+          to="/privacidade"
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Política de privacidade
+        </Link>
+      </p>
     </div>
   );
 }

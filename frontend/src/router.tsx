@@ -12,11 +12,14 @@ import Library from "./pages/Library.tsx";
 import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
 import Me from "./pages/Me.tsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
+      { path: "/privacidade", element: <PrivacyPolicy /> },
+      { path: "/privacy", element: <PrivacyPolicy /> },
       {
         element: <PublicRoute />,
         children: [
