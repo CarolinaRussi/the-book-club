@@ -134,7 +134,20 @@ type TokenResponse = {
   expires_in: number;
   refresh_token?: string;
   token_type: string;
+  scope?: string;
 };
+
+function tokenResponseHasCalendarScope(scope: string | undefined): boolean {
+  if (!scope?.trim()) {
+    return true;
+  }
+  const parts = scope.split(/\s+/).filter(Boolean);
+  return parts.some(
+    (s) =>
+      s === "https://www.googleapis.com/auth/calendar.events" ||
+      s === "https://www.googleapis.com/auth/calendar",
+  );
+}
 
 async function exchangeCodeForTokens(code: string): Promise<TokenResponse> {
   const body = new URLSearchParams({
@@ -181,6 +194,11 @@ export async function completeGoogleOAuth(code: string, state: string) {
 
   let refreshCiphertext: string;
   if (tokens.refresh_token) {
+    if (!tokenResponseHasCalendarScope(tokens.scope)) {
+      throw new GoogleOAuthExchangeError(
+        "O Google não concedeu acesso ao Calendar. Em myaccount.google.com/permissions remova o acesso desta app e ligue o Google Calendar de novo no perfil.",
+      );
+    }
     refreshCiphertext = encryptGoogleRefreshToken(tokens.refresh_token);
   } else if (existing?.googleRefreshToken) {
     refreshCiphertext = existing.googleRefreshToken;
