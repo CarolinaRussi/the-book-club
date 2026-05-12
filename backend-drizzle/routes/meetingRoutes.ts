@@ -5,6 +5,7 @@ import {
   createMeeting,
   getMeetingsFromClub,
   getPastMeetingsFromClub,
+  resyncMeetingGoogleCalendar,
   updateMeeting,
 } from "../controllers/meeting";
 
@@ -15,5 +16,10 @@ router.get("/club/:id/meetings/past", authMiddleware, getPastMeetingsFromClub);
 router.post("/create-meeting", authMiddleware, createMeeting);
 router.put("/update-meeting/:id", authMiddleware, updateMeeting);
 router.put("/cancel-meeting/:id", authMiddleware, cancelMeeting);
+router.post(
+  "/resync-meeting-google-calendar/:id",
+  authMiddleware,
+  resyncMeetingGoogleCalendar,
+);
 
 export default router;

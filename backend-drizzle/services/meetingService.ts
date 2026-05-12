@@ -3,6 +3,7 @@ import { BookStatus } from "../enums/bookStatus";
 import { ReadingMode } from "../enums/readingMode";
 import { createId } from "../utils/id";
 import * as meetingRepository from "../repositories/meetingRepository";
+import * as googleCalendarSyncService from "./googleCalendarSyncService";
 
 export class InvalidMeetingChapterRangeError extends Error {
   constructor(message: string) {
@@ -118,6 +119,10 @@ export async function createMeeting(input: {
     throw new Error("insert_meeting_failed");
   }
 
+  void googleCalendarSyncService
+    .createGoogleCalendarEventForMeeting(newMeeting.id)
+    .catch((err) => console.error(err));
+
   if (!bookId) {
     return newMeeting;
   }
@@ -181,6 +186,19 @@ export async function updateMeeting(
     return null;
   }
 
+  if (input.status === MeetingStatus.CANCELLED) {
+    void googleCalendarSyncService
+      .deleteGoogleCalendarEventForMeeting(meetingId)
+      .catch((err) => console.error(err));
+  } else if (
+    input.status === MeetingStatus.SCHEDULED &&
+    updatedMeeting.googleEventId
+  ) {
+    void googleCalendarSyncService
+      .updateGoogleCalendarEventForMeeting(meetingId)
+      .catch((err) => console.error(err));
+  }
+
   if (input.status === MeetingStatus.COMPLETED && bookId) {
     const readingMode = await meetingRepository.findClubReadingModeById(input.clubId);
     if (!readingMode) {
@@ -225,7 +243,56 @@ export async function updateMeeting(
 }
 
 export async function cancelMeeting(meetingId: string) {
-  return meetingRepository.setMeetingCancelled(meetingId);
+  const row = await meetingRepository.setMeetingCancelled(meetingId);
+  if (row) {
+    void googleCalendarSyncService
+      .deleteGoogleCalendarEventForMeeting(meetingId)
+      .catch((err) => console.error(err));
+  }
+  return row;
+}
+
+export async function resyncMeetingGoogleCalendar(meetingId: string) {
+  const m = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
+  if (!m) {
+    return { success: false as const, message: "Encontro não encontrado." };
+  }
+  if (m.status === MeetingStatus.CANCELLED) {
+    return {
+      success: false as const,
+      message: "Encontro cancelado; não é possível sincronizar.",
+    };
+  }
+  if (m.googleEventId) {
+    const r =
+      await googleCalendarSyncService.updateGoogleCalendarEventForMeeting(
+        meetingId,
+      );
+    if (!r.ok) {
+      return { success: false as const, message: r.error };
+    }
+    return {
+      success: true as const,
+      message: "Evento atualizado no Google Calendar.",
+    };
+  }
+  const r =
+    await googleCalendarSyncService.createGoogleCalendarEventForMeeting(
+      meetingId,
+    );
+  if (!r.ok) {
+    return { success: false as const, message: r.error };
+  }
+  if (r.skipped) {
+    return {
+      success: true as const,
+      message: "Já existia evento vinculado; nada a alterar.",
+    };
+  }
+  return {
+    success: true as const,
+    message: "Evento criado no Google Calendar.",
+  };
 }
 
 async function validateMeetingChapterInput(input: {
