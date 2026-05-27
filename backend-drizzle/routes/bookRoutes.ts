@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   createBook,
+  deleteBookFromClub,
   getBooksByClubId,
   getBooksByTitleOrAuthor,
   getBooksByUserId,
@@ -22,5 +23,6 @@ router.get("/club-books/:clubId", authMiddleware, getBooksByClubId);
 router.get("/user-books/:userId", authMiddleware, getBooksByUserId);
 router.get("/books/", authMiddleware, getBooksByTitleOrAuthor);
 router.post("/save-review", authMiddleware, saveReview);
+router.delete("/club-books/:clubId/:bookId", authMiddleware, deleteBookFromClub);
 
 export default router;

@@ -211,6 +211,7 @@ export const clubBook = pgTable(
     addedAt: timestamp("added_at", { withTimezone: true, precision: 3 })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true, precision: 3 }),
   },
   (table) => [
     uniqueIndex("ClubBook_club_id_book_id_key").on(table.clubId, table.bookId),

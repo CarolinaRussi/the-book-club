@@ -1,4 +1,4 @@
-import { eq, and, or, inArray, desc, ilike } from "drizzle-orm";
+import { eq, and, or, inArray, desc, ilike, isNull } from "drizzle-orm";
 import { db } from "../db/client";
 import {
   book,
@@ -15,7 +15,7 @@ export async function findClubBooksByClubOrdered(clubId: string) {
   return db
     .select()
     .from(clubBook)
-    .where(eq(clubBook.clubId, clubId))
+    .where(and(eq(clubBook.clubId, clubId), isNull(clubBook.deletedAt)))
     .orderBy(desc(clubBook.addedAt));
 }
 
@@ -126,13 +126,40 @@ export async function transactionCreateBookForClub(input: {
         and(
           eq(clubBook.clubId, input.clubId),
           eq(clubBook.bookId, bookRecord.id),
-          eq(clubBook.status, BookStatus.SUGGESTED)
+          eq(clubBook.status, BookStatus.SUGGESTED),
+          isNull(clubBook.deletedAt)
         )
       )
       .limit(1);
 
     if (existingLink.length > 0) {
       throw new BookAlreadyInClubSuggestedError();
+    }
+
+    const deletedLink = await tx
+      .select()
+      .from(clubBook)
+      .where(
+        and(
+          eq(clubBook.clubId, input.clubId),
+          eq(clubBook.bookId, bookRecord.id)
+        )
+      )
+      .limit(1);
+
+    if (deletedLink[0]?.deletedAt) {
+      const [reactivatedLink] = await tx
+        .update(clubBook)
+        .set({
+          suggestedByUserId: input.suggestedByUserId,
+          status: BookStatus.SUGGESTED,
+          addedAt: new Date(),
+          deletedAt: null,
+        })
+        .where(eq(clubBook.id, deletedLink[0].id))
+        .returning();
+
+      return reactivatedLink!;
     }
 
     const [clubBookLink] = await tx
@@ -148,6 +175,33 @@ export async function transactionCreateBookForClub(input: {
 
     return clubBookLink!;
   });
+}
+
+export async function findActiveClubBookByClubAndBook(
+  clubId: string,
+  bookId: string
+) {
+  const [row] = await db
+    .select()
+    .from(clubBook)
+    .where(
+      and(
+        eq(clubBook.clubId, clubId),
+        eq(clubBook.bookId, bookId),
+        isNull(clubBook.deletedAt)
+      )
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function softDeleteClubBookById(id: string) {
+  const [row] = await db
+    .update(clubBook)
+    .set({ deletedAt: new Date() })
+    .where(eq(clubBook.id, id))
+    .returning();
+  return row ?? null;
 }
 
 export async function findMemberByUserAndClub(userId: string, clubId: string) {

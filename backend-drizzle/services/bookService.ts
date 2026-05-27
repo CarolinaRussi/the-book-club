@@ -2,7 +2,9 @@ import { v2 as cloudinary } from "cloudinary";
 import { BookCreateInput } from "../types/IBook";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import * as bookRepository from "../repositories/bookRepository";
+import * as clubRepository from "../repositories/clubRepository";
 import * as userRepository from "../repositories/userRepository";
+import { BookStatus } from "../enums/bookStatus";
 
 export { BookAlreadyInClubSuggestedError } from "../repositories/bookRepository";
 
@@ -188,6 +190,20 @@ export class NotClubMemberForReviewError extends Error {
   }
 }
 
+export class ClubBookNotFoundError extends Error {
+  constructor() {
+    super("Livro não encontrado neste clube.");
+    this.name = "ClubBookNotFoundError";
+  }
+}
+
+export class DeleteClubBookForbiddenError extends Error {
+  constructor() {
+    super("Você não tem permissão para excluir este livro.");
+    this.name = "DeleteClubBookForbiddenError";
+  }
+}
+
 export async function saveReview(input: {
   userId: string;
   clubId: string;
@@ -211,4 +227,33 @@ export async function saveReview(input: {
     rating: input.rating,
     comment: input.comment,
   });
+}
+
+export async function deleteBookFromClub(input: {
+  clubId: string;
+  bookId: string;
+  userId: string;
+}) {
+  const clubBook = await bookRepository.findActiveClubBookByClubAndBook(
+    input.clubId,
+    input.bookId
+  );
+
+  if (!clubBook) {
+    throw new ClubBookNotFoundError();
+  }
+
+  const ownerId = await clubRepository.findClubOwnerId(input.clubId);
+  const isOwner = ownerId === input.userId;
+  const isSuggestedByUser = clubBook.suggestedByUserId === input.userId;
+
+  if (clubBook.status === BookStatus.SUGGESTED) {
+    if (!isOwner && !isSuggestedByUser) {
+      throw new DeleteClubBookForbiddenError();
+    }
+  } else if (!isOwner) {
+    throw new DeleteClubBookForbiddenError();
+  }
+
+  return bookRepository.softDeleteClubBookById(clubBook.id);
 }

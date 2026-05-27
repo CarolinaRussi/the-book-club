@@ -29,6 +29,13 @@
       "when": 1778584713576,
       "tag": "0003_silent_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779922359597,
+      "tag": "0004_deep_the_santerians",
+      "breakpoints": true
     }
   ]
 }
