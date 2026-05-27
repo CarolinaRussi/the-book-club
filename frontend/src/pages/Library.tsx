@@ -230,7 +230,7 @@ export default function Library() {
                     key={book.id}
                     className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border hover:shadow-(--shadow-medium) transition-all group md:flex-col"
                   >
-                    <div className="absolute top-1 right-2 z-20 md:-top-2 md:right-4">
+                    <div className="absolute top-1 right-2 z-40 md:-top-2 md:right-4">
                       <div className="absolute inset-x-2 top-2 bottom-4 bg-white rounded-xs" />
 
                       {isInLibrary ? (
@@ -257,10 +257,10 @@ export default function Library() {
                       )}
                     </div>
 
-                    <div className="invisible absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                    <div className="pointer-events-none invisible absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                       <Button
                         type="button"
-                        className="w-full max-w-45"
+                        className="pointer-events-auto w-full max-w-45"
                         onClick={() => openBookDetails(book)}
                       >
                         Ver detalhes
@@ -271,7 +271,7 @@ export default function Library() {
                             <Button
                               type="button"
                               variant="destructive"
-                              className="w-full max-w-45"
+                              className="pointer-events-auto w-full max-w-45"
                               disabled={isDeletingBook}
                             >
                               {isDeletingBook ? "Excluindo..." : "Excluir"}

@@ -27,7 +27,7 @@ import {
   fetchBooksFromMyDatabase,
   fetchBooksFromOpenLibrary,
 } from "../../../api/queries/fetchBooks";
-import { BookOpen, ChevronsUpDown, Lock, Upload } from "lucide-react";
+import { BookOpen, ChevronsUpDown, LoaderCircle, Lock, Upload } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "../../../types/IApi";
 import { toast } from "react-toastify";
@@ -82,13 +82,21 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
     },
   });
 
-  const { data: searchResults, isError } = useQuery({
-    queryKey: ["books", inputValue],
-    enabled: !!inputValue,
+  const searchQuery = inputValue.trim();
+  const hasSearchQuery = searchQuery.length > 0;
+
+  const {
+    data: searchResults = [],
+    isFetching: isSearching,
+    isError: isSearchError,
+  } = useQuery({
+    queryKey: ["books", searchQuery],
+    enabled: hasSearchQuery,
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       const [localResponse, openLibResponse] = await Promise.all([
-        fetchBooksFromMyDatabase(inputValue),
-        fetchBooksFromOpenLibrary(inputValue),
+        fetchBooksFromMyDatabase(searchQuery),
+        fetchBooksFromOpenLibrary(searchQuery),
       ]);
 
       const localBooks = localResponse.map((book: IBook) => ({
@@ -96,16 +104,18 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
         title: book.title,
         author: book.author ? [book.author] : ["Autor desconhecido"],
         cover: book.coverUrl,
-        source: "local",
+        source: "local" as const,
       }));
 
       const externalBooks = (openLibResponse.docs || [])
-        .filter((book: any) => book.cover_i && book.cover_i > 0)
+        .filter(
+          (book: IOpenLibraryBook) => book.key && book.cover_i && book.cover_i > 0,
+        )
         .map((book: IOpenLibraryBook) => {
           const id = book.cover_i!;
           const base = `https://covers.openlibrary.org/b/id/${id}`;
           return {
-            id: book.key,
+            id: book.key!,
             title: book.title,
             author: book.author_name || ["Autor desconhecido"],
             cover: `${base}-S.jpg?default=false`,
@@ -114,9 +124,18 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
             source: "openLibrary" as const,
           };
         });
+
       return [...localBooks, ...externalBooks] as SearchResultBook[];
     },
   });
+
+  const emptySearchMessage = !hasSearchQuery
+    ? "Digite o nome do livro para buscar."
+    : isSearching
+      ? "Buscando livros..."
+      : isSearchError
+        ? "Erro ao buscar."
+        : "Nenhum livro encontrado.";
 
   const { mutate: createBookMutate, isPending } = useMutation<
     any,
@@ -273,10 +292,17 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                   />
                   <CommandList className="max-h-[min(300px,45svh)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
                     <CommandEmpty>
-                      {isError ? "Erro ao buscar." : "Nenhum livro encontrado."}
+                      {isSearching ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoaderCircle className="size-4 animate-spin" />
+                          Buscando livros...
+                        </span>
+                      ) : (
+                        emptySearchMessage
+                      )}
                     </CommandEmpty>
 
-                    {searchResults && searchResults.length > 0 && (
+                    {searchResults.length > 0 && (
                       <CommandGroup>
                         {searchResults.map((book: SearchResultBook) => (
                           <CommandItem
