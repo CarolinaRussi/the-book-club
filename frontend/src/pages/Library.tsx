@@ -5,11 +5,25 @@ import { LuCalendarDays } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { useState } from "react";
 import { Button } from "../components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../components/ui/alert-dialog";
 import CreateBookDialog from "../components/pages/library/CreateBookDialog";
 import { Badge } from "../components/ui/badge";
 import type { IBook } from "../types/IBooks";
 import AddReviewDialog from "../components/pages/library/AddReviewDialog";
-import { getBookStatusBadgeLabel } from "../utils/constants/books";
+import {
+  BOOK_STATUS_SUGGESTED,
+  getBookStatusBadgeLabel,
+} from "../utils/constants/books";
 import { READING_STATUS_FINISHED } from "../utils/constants/reading";
 import SkeletonLibrary from "../components/pages/library/skeletons/SkeletonLibrary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +35,7 @@ import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import { updateUserPersonalList } from "../api/mutations/userMutate";
+import { deleteClubBook } from "../api/mutations/bookMutate";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -30,7 +45,7 @@ export default function Library() {
   );
 
   const queryClient = useQueryClient();
-  const { selectedClubId } = useClub();
+  const { clubs, selectedClubId } = useClub();
   const { user } = useAuth();
   const [booksPage, setBooksPage] = useState(1);
   const itemsPerPage = 8;
@@ -108,6 +123,48 @@ export default function Library() {
     }
   };
 
+  const { mutate: deleteClubBookMutate, isPending: isDeletingBook } =
+    useMutation<any, IApiError, { clubId: string; bookId: string }>({
+      mutationFn: deleteClubBook,
+      onSuccess: () => {
+        toast.success("Livro excluído com sucesso!");
+        queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
+      },
+      onError: (error) => {
+        toast.error(error.message || "Erro ao excluir o livro.");
+      },
+    });
+
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+
+  const canDeleteBook = (book: IBook) => {
+    if (!user) return false;
+
+    const isClubOwner = selectedClub?.ownerId === user.id;
+    const isBookSuggester = book.suggestedBy?.id === user.id;
+
+    return book.status === BOOK_STATUS_SUGGESTED
+      ? isClubOwner || isBookSuggester
+      : isClubOwner;
+  };
+
+  const openBookDetails = (book: IBook) => {
+    setBookToUpdate(book);
+    setUpdateBookOpen(true);
+  };
+
+  const handleDeleteBook = (book: IBook) => {
+    if (!selectedClubId) {
+      toast.error("Clube não encontrado, não é possível excluir.");
+      return;
+    }
+
+    deleteClubBookMutate({
+      clubId: selectedClubId,
+      bookId: book.id,
+    });
+  };
+
   const { data: booksClubPaginatedData, isLoading: isLoadingBooks } = useQuery<
     IPaginatedResponse<IBook>
   >({
@@ -166,15 +223,12 @@ export default function Library() {
                     : 0;
 
                 const isInLibrary = book.isInLibrary;
+                const userCanDeleteBook = canDeleteBook(book);
 
                 return (
                   <Card
                     key={book.id}
-                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border cursor-pointer hover:shadow-(--shadow-medium) transition-all group md:flex-col"
-                    onClick={() => {
-                      setBookToUpdate(book);
-                      setUpdateBookOpen(true);
-                    }}
+                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border hover:shadow-(--shadow-medium) transition-all group md:flex-col"
                   >
                     <div className="absolute top-1 right-2 z-20 md:-top-2 md:right-4">
                       <div className="absolute inset-x-2 top-2 bottom-4 bg-white rounded-xs" />
@@ -203,6 +257,54 @@ export default function Library() {
                       )}
                     </div>
 
+                    <div className="invisible absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                      <Button
+                        type="button"
+                        className="w-full max-w-45"
+                        onClick={() => openBookDetails(book)}
+                      >
+                        Ver detalhes
+                      </Button>
+                      {userCanDeleteBook && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              className="w-full max-w-45"
+                              disabled={isDeletingBook}
+                            >
+                              {isDeletingBook ? "Excluindo..." : "Excluir"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Excluir livro?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir{" "}
+                                <span className="font-semibold">
+                                  {book.title}
+                                </span>{" "}
+                                da biblioteca do clube?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteBook(book)}
+                                disabled={isDeletingBook}
+                                className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive"
+                              >
+                                Excluir livro
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+
                     <div className="relative w-[5.5rem] shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:w-full md:aspect-2/3 md:shrink md:rounded-t-xl">
                       <img
                         src={book.coverUrl}
@@ -219,14 +321,20 @@ export default function Library() {
                             {book.title}
                           </h3>
                           <Badge className="mt-0.5 hidden shrink-0 md:inline-flex">
-                            {getBookStatusBadgeLabel(book.status, book.suggestedBy)}
+                            {getBookStatusBadgeLabel(
+                              book.status,
+                              book.suggestedBy,
+                            )}
                           </Badge>
                         </div>
                         <p className="mb-2 line-clamp-2 text-sm text-muted-foreground md:mb-3">
                           {book.author}
                         </p>
                         <Badge className="mb-3 w-fit md:hidden">
-                          {getBookStatusBadgeLabel(book.status, book.suggestedBy)}
+                          {getBookStatusBadgeLabel(
+                            book.status,
+                            book.suggestedBy,
+                          )}
                         </Badge>
                       </div>
 
@@ -250,10 +358,7 @@ export default function Library() {
 
                         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground">
                           <div className="flex min-w-0 items-center gap-1">
-                            <LuCalendarDays
-                              size={20}
-                              className="shrink-0"
-                            />
+                            <LuCalendarDays size={20} className="shrink-0" />
                             <span className="truncate">
                               {formatMonthYear(book.addedAt)}
                             </span>

@@ -42,3 +42,20 @@ export async function saveReview(data: IBookReviewPayload): Promise<any> {
     throw { message: "Erro desconhecido" };
   }
 }
+
+export async function deleteClubBook(data: {
+  clubId: string;
+  bookId: string;
+}): Promise<any> {
+  try {
+    const response = await api.delete(
+      `/club-books/${data.clubId}/${data.bookId}`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido ao excluir o livro" };
+  }
+}

@@ -48,7 +48,7 @@
   --muted-foreground: #6e5c51;
   --accent: #e7dcbe;
   --accent-foreground: #463629;
-  --destructive: #d22c2c;
+  --destructive: #a94732;
   --destructive-foreground: #fafafa;
   --border: #e3dbcf;
   --input: #e3dbcf;
@@ -70,7 +70,7 @@
   --toastify-color-info: #0369a1;
   --toastify-color-success: #00796b;
   --toastify-color-warning: #be2c3f;
-  --toastify-color-error: #d22c2c;
+  --toastify-color-error: #a94732;
   --toastify-color-transparent: rgba(255, 255, 255, 0.7);
 
   --toastify-icon-color-info: var(--toastify-color-info);
@@ -101,7 +101,7 @@
   --accent: #ac5039;
   --accent-foreground: #f5f1f0;
 
-  --destructive: #d92626;
+  --destructive: #e96f4c;
   --destructive-foreground: #fafafa;
 
   --border: #3d3329;
@@ -142,7 +142,7 @@
   --accent: #becde7;
   --accent-foreground: #23243a;
 
-  --destructive: #d22c2c;
+  --destructive: #b33f5d;
   --destructive-foreground: #fafafa;
 
   --border: #ccd3e1;
@@ -183,7 +183,7 @@
   --accent: #bee7ca;
   --accent-foreground: #233a27;
 
-  --destructive: #d22c2c;
+  --destructive: #a94732;
   --destructive-foreground: #fafafa;
 
   --border: #cce1d4;
