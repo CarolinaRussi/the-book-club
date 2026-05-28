@@ -6,6 +6,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../ui/alert-dialog";
 import { Button } from "../../ui/button";
 import { ScrollArea } from "../../ui/scroll-area";
 import type { IBook, IBookReviewPayload, IReview } from "../../../types/IBooks";
@@ -28,6 +39,7 @@ import { saveReview } from "../../../api/mutations/bookMutate";
 import { Card, CardTitle } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { RiResetLeftFill } from "react-icons/ri";
+import { Trash2 } from "lucide-react";
 import {
   READING_STATUS_DROPPED,
   READING_STATUS_FINISHED,
@@ -49,12 +61,18 @@ interface AddReviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   book: IBook | undefined;
+  canDeleteBook?: boolean;
+  isDeletingBook?: boolean;
+  onDeleteBook?: () => void;
 }
 
 const AddReviewDialog = ({
   open,
   onOpenChange,
   book,
+  canDeleteBook = false,
+  isDeletingBook = false,
+  onDeleteBook,
 }: AddReviewDialogProps) => {
   const { user } = useAuth();
   const { selectedClubId } = useClub();
@@ -159,26 +177,65 @@ const AddReviewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] lg:max-w-2xl pr-0">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader className="gap-0">
-            <DialogTitle className="text-3xl text-primary">
-              {book?.title}
-            </DialogTitle>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-[calc(100vw-2rem)] flex-col overflow-hidden pr-0 sm:max-w-[425px] lg:max-w-2xl">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          <DialogHeader className="shrink-0 gap-0 pr-8">
+            <div className="flex flex-wrap items-start justify-center gap-2 text-center sm:justify-start sm:text-left">
+              <DialogTitle className="line-clamp-3 min-w-0 max-w-[calc(100%-2rem)] text-2xl text-primary sm:text-3xl">
+                {book?.title}
+              </DialogTitle>
+              {canDeleteBook && onDeleteBook && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="mt-1 shrink-0 text-destructive transition-colors hover:text-destructive/80 md:hidden"
+                      disabled={isDeletingBook}
+                      title="Excluir livro"
+                    >
+                      <Trash2 className="size-5" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir livro?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir{" "}
+                        <span className="font-semibold">{book?.title}</span> da
+                        biblioteca do clube?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={onDeleteBook}
+                        disabled={isDeletingBook}
+                        className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive"
+                      >
+                        Excluir livro
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
             <DialogDescription></DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-180 w-full pr-4">
-            <div className="grid grid-cols-4 mt-3 gap-3">
-              <div>
+          <ScrollArea className="min-h-0 flex-1 overflow-hidden pr-4">
+            <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-4 sm:gap-3">
+              <div className="mx-auto w-28 sm:mx-0 sm:w-auto">
                 <img
                   src={book?.coverUrl}
                   alt={book?.title}
-                  className="w-full h-full rounded-2xl"
+                  className="aspect-2/3 w-full rounded-2xl object-cover"
                 />
               </div>
-              <div className="col-span-3 flex flex-col gap-3 ">
+              <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:col-span-3 sm:items-start sm:text-left">
                 <div className="text-warm-brown/70">{book?.author}</div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                   <Rating
                     initialValue={averageRating}
                     readonly

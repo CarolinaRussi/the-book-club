@@ -128,6 +128,8 @@ export default function Library() {
       mutationFn: deleteClubBook,
       onSuccess: () => {
         toast.success("Livro excluído com sucesso!");
+        setUpdateBookOpen(false);
+        setBookToUpdate(undefined);
         queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
       },
       onError: (error) => {
@@ -151,6 +153,12 @@ export default function Library() {
   const openBookDetails = (book: IBook) => {
     setBookToUpdate(book);
     setUpdateBookOpen(true);
+  };
+
+  const handleCardClick = (book: IBook) => {
+    if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+      openBookDetails(book);
+    }
   };
 
   const handleDeleteBook = (book: IBook) => {
@@ -228,7 +236,8 @@ export default function Library() {
                 return (
                   <Card
                     key={book.id}
-                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border hover:shadow-(--shadow-medium) transition-all group md:flex-col"
+                    className="relative isolate flex w-full flex-row items-stretch overflow-hidden md:overflow-visible py-0 gap-0 bg-card rounded-xl border cursor-pointer hover:shadow-(--shadow-medium) transition-all group md:flex-col"
+                    onClick={() => handleCardClick(book)}
                   >
                     <div className="absolute top-1 right-2 z-40 md:-top-2 md:right-4">
                       <div className="absolute inset-x-2 top-2 bottom-4 bg-white rounded-xs" />
@@ -257,7 +266,7 @@ export default function Library() {
                       )}
                     </div>
 
-                    <div className="pointer-events-none invisible absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                    <div className="pointer-events-none invisible absolute inset-0 z-30 hidden flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity md:flex md:group-hover:visible md:group-hover:opacity-100 md:group-focus-within:visible md:group-focus-within:opacity-100">
                       <Button
                         type="button"
                         className="pointer-events-auto w-full max-w-45"
@@ -401,6 +410,13 @@ export default function Library() {
           }
         }}
         book={bookToUpdate}
+        canDeleteBook={bookToUpdate ? canDeleteBook(bookToUpdate) : false}
+        isDeletingBook={isDeletingBook}
+        onDeleteBook={() => {
+          if (bookToUpdate) {
+            handleDeleteBook(bookToUpdate);
+          }
+        }}
       />
     </div>
   );
