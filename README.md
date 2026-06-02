@@ -1,7 +1,7 @@
 # The BookClub
 
 Plataforma voltada para clubes do livro, criada para facilitar a organização de encontros, o registro de leituras e a troca de experiências entre leitoras.  
-Permite marcar reuniões, salvar livros lidos com notas e reviews, e descobrir outras pessoas com interesses literários em comum.
+Permite marcar reuniões, organizar leituras por livro ou capítulos, salvar livros lidos com notas e reviews, e descobrir outras pessoas com interesses literários em comum.
 
 ---
 
@@ -77,15 +77,6 @@ pnpm db:migrate    # aplica migrações
 pnpm db:push
 ```
 
-## Modos de leitura do clube
-
-Agora cada clube pode ser configurado para:
-
-- `Por livro`: ao concluir um encontro com livro selecionado, o livro do clube é finalizado.
-- `Por capítulos`: você pode informar `capítulo inicial` e `capítulo final` no encontro; o livro só é finalizado quando o encontro concluído atingir o último capítulo do livro.
-
-Para suporte a esse fluxo, livros aceitam `total de capítulos` opcional no cadastro.
-
 # Tecnologias utilizadas
 
 #Frontend 
@@ -119,6 +110,6 @@ Neon (PostgreSQL em nuvem)
 
 # Objetivo do projeto
 
-O BookClub nasceu da ideia de criar um espaço digital para fortalecer clubes de leitura — um ambiente onde leitoras possam se conectar, acompanhar suas leituras e planejar encontros de forma simples e interativa.
+O BookClub nasceu da ideia de criar um espaço digital para fortalecer clubes de leitura, um ambiente onde leitoras possam se conectar, acompanhar suas leituras e planejar encontros de forma simples e interativa.
 
 Desenvolvido por Carolina Russi Ferla

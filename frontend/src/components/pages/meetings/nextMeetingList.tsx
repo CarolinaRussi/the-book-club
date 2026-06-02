@@ -1,4 +1,4 @@
-import { Book, Calendar, Clock, Edit, MapPin } from "lucide-react";
+import { Book, Calendar, CheckCircle2, Clock, Edit, MapPin } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import type { IMeeting } from "@//types/IMeetings";
@@ -7,6 +7,7 @@ import { useState } from "react";
 import { formatDayMonthYear, formatTime } from "@//utils/formatters";
 import { LuCalendarX2 } from "react-icons/lu";
 import CancelMeetingDialog from "./CancelMeetingDialog";
+import CompleteMeetingDialog from "./CompleteMeetingDialog";
 
 interface NextMeetingListProps {
   scheduledMeetings: IMeeting[] | undefined;
@@ -18,6 +19,7 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
     undefined
   );
   const [cancelMeetingOpen, setCancelMeetingOpen] = useState(false);
+  const [completeMeetingOpen, setCompleteMeetingOpen] = useState(false);
 
   return (
     <div>
@@ -62,7 +64,7 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                   )}
                 </div>
               </div>
-              <div className="mt-4 flex flex-col gap-2 md:flex-row md:absolute md:right-6 md:top-0 md:mt-0">
+              <div className="mt-4 flex flex-col gap-2 md:flex-row md:flex-wrap md:justify-end md:absolute md:right-6 md:top-0 md:mt-0">
                 <Button
                   variant="outline"
                   size="sm"
@@ -74,6 +76,19 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Editar
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setMeetingToUpdate(meeting);
+                    setCompleteMeetingOpen(true);
+                  }}
+                  className="w-full md:w-auto"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  Concluir encontro
                 </Button>
 
                 <Button
@@ -105,6 +120,12 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
         key={meetingToUpdate?.id}
         openDialog={editMeetingOpen}
         onOpenChange={setEditMeetingOpen}
+        meeting={meetingToUpdate}
+      />
+      <CompleteMeetingDialog
+        key={meetingToUpdate?.id}
+        openDialog={completeMeetingOpen}
+        onOpenChange={setCompleteMeetingOpen}
         meeting={meetingToUpdate}
       />
       <CancelMeetingDialog
