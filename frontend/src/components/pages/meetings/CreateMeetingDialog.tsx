@@ -50,6 +50,7 @@ interface ICreateMeetingForm {
   bookId: string;
   chapterStart?: number;
   chapterEnd?: number;
+  totalChapters?: number;
 }
 
 const CreateMeetingDialog = ({
@@ -67,7 +68,8 @@ const CreateMeetingDialog = ({
     reset,
     handleSubmit,
     watch,
-    formState: {},
+    setValue,
+    formState: { errors },
   } = useForm<ICreateMeetingForm>({
     defaultValues: {
       location: "",
@@ -77,12 +79,19 @@ const CreateMeetingDialog = ({
       bookId: MEETING_NO_BOOK_SELECT_VALUE,
       chapterStart: undefined,
       chapterEnd: undefined,
+      totalChapters: undefined,
     },
   });
 
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
   const isChaptersMode = selectedClub?.readingMode === "chapters";
   const selectedBookId = watch("bookId");
+  const selectedBook = booksFromSelectedClub.find(
+    (book) => book.id === selectedBookId
+  );
+  const needsTotalChapters = Boolean(
+    isChaptersMode && selectedBook && selectedBook.totalChapters == null
+  );
 
   const { mutate: createMeetingMutate } = useMutation<
     any,
@@ -105,13 +114,17 @@ const CreateMeetingDialog = ({
       toast.success("Encontro marcado com sucesso!");
     },
     onError: (error) => {
-      toast.error(error.message || "Email ou senha incorretos");
+      toast.error(error.message || "Não foi possível marcar seu encontro.");
     },
   });
 
   React.useEffect(() => {
     reset();
   }, [openDialog]);
+
+  React.useEffect(() => {
+    setValue("totalChapters", undefined);
+  }, [selectedBookId, setValue]);
 
   const onSubmit: SubmitHandler<ICreateMeetingForm> = (data) => {
     if (!selectedClubId) {
@@ -127,11 +140,21 @@ const CreateMeetingDialog = ({
       meetingTime,
       chapterStart,
       chapterEnd,
+      totalChapters,
     } = data;
 
     const resolvedBookId =
       bookId && bookId !== MEETING_NO_BOOK_SELECT_VALUE ? bookId : undefined;
     const shouldSendChapterRange = isChaptersMode && resolvedBookId;
+    const resolvedTotalChapters =
+      totalChapters && Number.isFinite(totalChapters) && totalChapters > 0
+        ? totalChapters
+        : undefined;
+
+    if (needsTotalChapters && !resolvedTotalChapters) {
+      toast.error("Informe o total de capítulos do livro.");
+      return;
+    }
 
     createMeetingMutate({
       ...(resolvedBookId ? { bookId: resolvedBookId } : {}),
@@ -139,6 +162,9 @@ const CreateMeetingDialog = ({
         ? {
             chapterStart: chapterStart ?? null,
             chapterEnd: chapterEnd ?? null,
+            ...(needsTotalChapters
+              ? { totalChapters: resolvedTotalChapters }
+              : {}),
           }
         : {}),
       description,
@@ -295,6 +321,31 @@ const CreateMeetingDialog = ({
                   </div>
                 </div>
               )}
+            {needsTotalChapters && (
+              <div>
+                <h3 className="text-lg font-medium mb-1">
+                  Total de capítulos do livro:
+                </h3>
+                <Input
+                  type="number"
+                  min={1}
+                  {...register("totalChapters", {
+                    valueAsNumber: true,
+                    validate: (value) =>
+                      !needsTotalChapters ||
+                      (Number.isInteger(value) && value >= 1) ||
+                      "Informe um número inteiro positivo.",
+                  })}
+                  className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                  placeholder="Ex.: 24"
+                />
+                {errors.totalChapters && (
+                  <p className="text-xs text-primary mt-1">
+                    {errors.totalChapters.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className=" mt-5 ">

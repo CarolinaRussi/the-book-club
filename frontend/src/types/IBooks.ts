@@ -76,3 +76,9 @@ export interface IBookReviewPayload {
   userId: string;
   bookId: string;
 }
+
+export interface IBookTotalChaptersPayload {
+  clubId: string;
+  bookId: string;
+  totalChapters: number;
+}

@@ -18,8 +18,14 @@ import {
   AlertDialogTrigger,
 } from "../../ui/alert-dialog";
 import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 import { ScrollArea } from "../../ui/scroll-area";
-import type { IBook, IBookReviewPayload, IReview } from "../../../types/IBooks";
+import type {
+  IBook,
+  IBookReviewPayload,
+  IBookTotalChaptersPayload,
+  IReview,
+} from "../../../types/IBooks";
 import { Rating } from "react-simple-star-rating";
 import { LuCalendarDays } from "react-icons/lu";
 import { formatMonthYear, getInitials } from "../../../utils/formatters";
@@ -35,7 +41,10 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "../../../types/IApi";
-import { saveReview } from "../../../api/mutations/bookMutate";
+import {
+  saveReview,
+  updateBookTotalChapters,
+} from "../../../api/mutations/bookMutate";
 import { Card, CardTitle } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { RiResetLeftFill } from "react-icons/ri";
@@ -55,6 +64,7 @@ interface IBookReviewForm {
   rating: number;
   comment: string;
   readingStatus: ReadingStatus | undefined;
+  totalChapters?: number;
 }
 
 interface AddReviewDialogProps {
@@ -85,11 +95,13 @@ const AddReviewDialog = ({
     reset,
     control,
     setValue,
+    getValues,
   } = useForm<IBookReviewForm>({
     defaultValues: {
       rating: 0,
       comment: "",
       readingStatus: undefined,
+      totalChapters: undefined,
     },
   });
 
@@ -102,11 +114,13 @@ const AddReviewDialog = ({
       setValue("readingStatus", userReview?.readingStatus || undefined);
       setValue("rating", userReview?.rating || 0);
       setValue("comment", userReview?.comment || "");
+      setValue("totalChapters", book.totalChapters ?? undefined);
     } else if (!open) {
       reset({
         rating: 0,
         comment: "",
         readingStatus: undefined,
+        totalChapters: undefined,
       });
     }
   }, [open, book, user, setValue, reset]);
@@ -142,6 +156,48 @@ const AddReviewDialog = ({
       toast.error(error.message || "Avaliação com erro, tente novamente.");
     },
   });
+
+  const {
+    mutate: updateBookTotalChaptersMutate,
+    isPending: isUpdatingTotalChapters,
+  } = useMutation<any, IApiError, IBookTotalChaptersPayload>({
+    mutationFn: updateBookTotalChapters,
+    onSuccess: async () => {
+      toast.success("Total de capítulos atualizado com sucesso!");
+      await queryClient.invalidateQueries({
+        queryKey: ["booksFromSelectedClub"],
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        error.message || "Não foi possível atualizar o total de capítulos.",
+      );
+    },
+  });
+
+  const handleUpdateTotalChapters = () => {
+    if (!selectedClubId || !book) {
+      toast.error("Clube ou livro não encontrado, não é possível salvar.");
+      return;
+    }
+
+    const totalChapters = getValues("totalChapters");
+
+    if (
+      typeof totalChapters !== "number" ||
+      !Number.isInteger(totalChapters) ||
+      totalChapters < 1
+    ) {
+      toast.error("Informe um número inteiro positivo.");
+      return;
+    }
+
+    updateBookTotalChaptersMutate({
+      clubId: selectedClubId,
+      bookId: book.id,
+      totalChapters,
+    });
+  };
 
   const onSubmit: SubmitHandler<IBookReviewForm> = (data) => {
     if (!selectedClubId || !user || !book) {
@@ -264,6 +320,35 @@ const AddReviewDialog = ({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            <hr className="my-4 "></hr>
+
+            <div className="flex flex-col gap-3">
+              <h1 className="text-primary font-semibold text-xl">
+                Dados do livro
+              </h1>
+              <div>
+                <h3 className="text-primary font-semibold">
+                  Total de capítulos:
+                </h3>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    type="number"
+                    min={1}
+                    {...register("totalChapters", { valueAsNumber: true })}
+                    className="border-2 border-secondary"
+                    placeholder="Ex.: 24"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUpdateTotalChapters}
+                    disabled={isUpdatingTotalChapters}
+                  >
+                    {isUpdatingTotalChapters ? "Salvando..." : "Salvar"}
+                  </Button>
+                </div>
               </div>
             </div>
 

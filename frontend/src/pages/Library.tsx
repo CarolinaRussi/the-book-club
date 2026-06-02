@@ -314,7 +314,7 @@ export default function Library() {
                       )}
                     </div>
 
-                    <div className="relative w-[5.5rem] shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:w-full md:aspect-2/3 md:shrink md:rounded-t-xl">
+                    <div className="relative w-22 shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:w-full md:aspect-2/3 md:shrink md:rounded-t-xl">
                       <img
                         src={book.coverUrl}
                         alt={book.title}

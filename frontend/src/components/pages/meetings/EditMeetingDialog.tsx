@@ -54,6 +54,7 @@ interface IEditMeetingForm {
   bookId: string;
   chapterStart?: number;
   chapterEnd?: number;
+  totalChapters?: number;
 }
 
 const EditMeetingDialog = ({
@@ -72,6 +73,7 @@ const EditMeetingDialog = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<IEditMeetingForm>({
     defaultValues: {
@@ -83,12 +85,19 @@ const EditMeetingDialog = ({
       bookId: meeting?.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
       chapterStart: meeting?.chapterStart ?? undefined,
       chapterEnd: meeting?.chapterEnd ?? undefined,
+      totalChapters: undefined,
     },
   });
 
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
   const isChaptersMode = selectedClub?.readingMode === "chapters";
   const selectedBookId = watch("bookId");
+  const selectedBook = booksFromSelectedClub.find(
+    (book) => book.id === selectedBookId
+  );
+  const needsTotalChapters = Boolean(
+    isChaptersMode && selectedBook && selectedBook.totalChapters == null
+  );
 
   useEffect(() => {
     if (meeting) {
@@ -101,9 +110,14 @@ const EditMeetingDialog = ({
         bookId: meeting.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
         chapterStart: meeting.chapterStart ?? undefined,
         chapterEnd: meeting.chapterEnd ?? undefined,
+        totalChapters: undefined,
       });
     }
   }, [meeting, reset, openDialog]);
+
+  useEffect(() => {
+    setValue("totalChapters", undefined);
+  }, [selectedBookId, setValue]);
 
   const { mutate: updateMeetingMutate } = useMutation<
     any,
@@ -123,7 +137,7 @@ const EditMeetingDialog = ({
       });
       reset();
       onOpenChange(false);
-      toast.success("Encontro marcado com sucesso!");
+      toast.success("Encontro alterado com sucesso!");
     },
     onError: (error) => {
       toast.error(
@@ -147,15 +161,29 @@ const EditMeetingDialog = ({
       meetingDate,
       meetingTime,
       status,
+      totalChapters,
     } = data;
     const resolvedBookId = bookId === MEETING_NO_BOOK_SELECT_VALUE ? null : bookId;
     const shouldSendChapterRange = isChaptersMode && resolvedBookId;
+    const resolvedTotalChapters =
+      totalChapters && Number.isFinite(totalChapters) && totalChapters > 0
+        ? totalChapters
+        : undefined;
+
+    if (needsTotalChapters && !resolvedTotalChapters) {
+      toast.error("Informe o total de capítulos do livro.");
+      return;
+    }
 
     updateMeetingMutate({
       id: meeting.id,
       bookId: resolvedBookId,
       chapterStart: shouldSendChapterRange ? chapterStart ?? null : null,
       chapterEnd: shouldSendChapterRange ? chapterEnd ?? null : null,
+      totalChapters:
+        shouldSendChapterRange && needsTotalChapters
+          ? resolvedTotalChapters
+          : undefined,
       description,
       location,
       meetingDate: formatMeetingDateForApi(meetingDate),
@@ -336,6 +364,31 @@ const EditMeetingDialog = ({
                   </div>
                 </div>
               )}
+            {needsTotalChapters && (
+              <div>
+                <h3 className="text-lg font-medium mb-1">
+                  Total de capítulos do livro:
+                </h3>
+                <Input
+                  type="number"
+                  min={1}
+                  {...register("totalChapters", {
+                    valueAsNumber: true,
+                    validate: (value) =>
+                      !needsTotalChapters ||
+                      (Number.isInteger(value) && value >= 1) ||
+                      "Informe um número inteiro positivo.",
+                  })}
+                  className="border-2 border-secondary rounded-md p-2 w-full text-foreground bg-background"
+                  placeholder="Ex.: 24"
+                />
+                {errors.totalChapters && (
+                  <p className="text-xs text-primary mt-1">
+                    {errors.totalChapters.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className=" mt-5 ">

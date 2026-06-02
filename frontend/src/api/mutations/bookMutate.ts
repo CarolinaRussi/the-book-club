@@ -1,6 +1,10 @@
 import axios from "axios";
 import { api } from "../index";
-import type { IBookPayload, IBookReviewPayload } from "../../types/IBooks";
+import type {
+  IBookPayload,
+  IBookReviewPayload,
+  IBookTotalChaptersPayload,
+} from "../../types/IBooks";
 
 export async function createBook(data: IBookPayload): Promise<any> {
   try {
@@ -57,5 +61,22 @@ export async function deleteClubBook(data: {
       throw { message: error.response.data.message };
     }
     throw { message: "Erro desconhecido ao excluir o livro" };
+  }
+}
+
+export async function updateBookTotalChapters(
+  data: IBookTotalChaptersPayload,
+): Promise<any> {
+  try {
+    const response = await api.patch(
+      `/club-books/${data.clubId}/${data.bookId}/total-chapters`,
+      { totalChapters: data.totalChapters },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido ao atualizar total de capítulos" };
   }
 }

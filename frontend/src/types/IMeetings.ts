@@ -21,6 +21,7 @@ export interface IMeetingCreatePayload {
   meetingTime: string;
   chapterStart?: number | null;
   chapterEnd?: number | null;
+  totalChapters?: number | null;
   bookId?: string | null;
   clubId: string;
 }
@@ -33,6 +34,7 @@ export interface IMeetingUpdatePayload {
   meetingTime: string;
   chapterStart?: number | null;
   chapterEnd?: number | null;
+  totalChapters?: number | null;
   status: MeetingStatus;
   bookId?: string | null;
   clubId: string;
