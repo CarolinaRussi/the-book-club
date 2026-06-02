@@ -47,17 +47,19 @@ pnpm install
 
 ### 4. Rodar o projeto em modo de desenvolvimento
 
-Para subir a API, entre na pasta `backend-drizzle` pelo terminal:
+Na raiz do projeto, execute:
 
 ```bash
-cd backend-drizzle
 pnpm dev
 ```
 
-Para rodar o front, entre na pasta frontend pelo terminal
+Esse comando sobe o backend (`backend-drizzle`) e o frontend (`frontend`) ao mesmo tempo.
+
+Se precisar rodar apenas uma parte do projeto:
 
 ```bash
-pnpm dev
+pnpm --filter backend-drizzle dev
+pnpm --filter frontend dev
 ```
 
 O terminal exibirá um endereço local (geralmente http://localhost:5173).
