@@ -195,6 +195,18 @@ export async function findActiveClubBookByClubAndBook(
   return row ?? null;
 }
 
+export async function updateBookTotalChaptersById(
+  bookId: string,
+  totalChapters: number
+) {
+  const [row] = await db
+    .update(book)
+    .set({ totalChapters })
+    .where(eq(book.id, bookId))
+    .returning();
+  return row ?? null;
+}
+
 export async function softDeleteClubBookById(id: string) {
   const [row] = await db
     .update(clubBook)

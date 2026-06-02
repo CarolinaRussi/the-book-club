@@ -204,6 +204,37 @@ export class DeleteClubBookForbiddenError extends Error {
   }
 }
 
+export class InvalidBookTotalChaptersError extends Error {
+  constructor() {
+    super("Total de capítulos deve ser um número inteiro positivo.");
+    this.name = "InvalidBookTotalChaptersError";
+  }
+}
+
+export async function updateBookTotalChapters(input: {
+  clubId: string;
+  bookId: string;
+  totalChapters: number;
+}) {
+  if (!Number.isInteger(input.totalChapters) || input.totalChapters < 1) {
+    throw new InvalidBookTotalChaptersError();
+  }
+
+  const clubBook = await bookRepository.findActiveClubBookByClubAndBook(
+    input.clubId,
+    input.bookId
+  );
+
+  if (!clubBook) {
+    throw new ClubBookNotFoundError();
+  }
+
+  return bookRepository.updateBookTotalChaptersById(
+    input.bookId,
+    input.totalChapters
+  );
+}
+
 export async function saveReview(input: {
   userId: string;
   clubId: string;

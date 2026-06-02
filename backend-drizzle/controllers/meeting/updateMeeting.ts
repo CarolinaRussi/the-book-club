@@ -20,6 +20,11 @@ export const updateMeeting = async (req: Request, res: Response) => {
     ? Number(req.body.chapterStart)
     : null;
   const chapterEnd = req.body.chapterEnd ? Number(req.body.chapterEnd) : null;
+  const rawTotalChapters = req.body.totalChapters ?? req.body.total_chapters;
+  const totalChapters =
+    rawTotalChapters !== undefined && rawTotalChapters !== ""
+      ? Number(rawTotalChapters)
+      : undefined;
 
   const { id } = req.params;
 
@@ -44,6 +49,7 @@ export const updateMeeting = async (req: Request, res: Response) => {
       bookId,
       chapterStart,
       chapterEnd,
+      totalChapters,
       description,
       location,
       meetingDate,

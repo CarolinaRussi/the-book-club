@@ -3,6 +3,7 @@ import { BookStatus } from "../enums/bookStatus";
 import { ReadingMode } from "../enums/readingMode";
 import { createId } from "../utils/id";
 import * as meetingRepository from "../repositories/meetingRepository";
+import * as bookRepository from "../repositories/bookRepository";
 import * as googleCalendarSyncService from "./googleCalendarSyncService";
 
 export class InvalidMeetingChapterRangeError extends Error {
@@ -84,6 +85,7 @@ export async function createMeeting(input: {
   bookId?: string | null;
   chapterStart?: number | null;
   chapterEnd?: number | null;
+  totalChapters?: number | null;
   description?: string | null;
   location: string;
   meetingDate: string;
@@ -99,6 +101,7 @@ export async function createMeeting(input: {
     bookId,
     chapterStart,
     chapterEnd,
+    totalChapters: input.totalChapters,
   });
 
   const newMeeting = await meetingRepository.insertMeeting({
@@ -148,6 +151,7 @@ export async function updateMeeting(
     bookId?: string | null;
     chapterStart?: number | null;
     chapterEnd?: number | null;
+    totalChapters?: number | null;
     description?: string | null;
     location: string;
     meetingDate: string;
@@ -165,6 +169,7 @@ export async function updateMeeting(
     bookId,
     chapterStart,
     chapterEnd,
+    totalChapters: input.totalChapters,
   });
 
   const updatedMeeting = await meetingRepository.updateMeetingById(
@@ -300,6 +305,7 @@ async function validateMeetingChapterInput(input: {
   bookId: string | null;
   chapterStart: number | null;
   chapterEnd: number | null;
+  totalChapters?: number | null;
 }) {
   if (input.chapterStart === null && input.chapterEnd === null) {
     return;
@@ -347,12 +353,37 @@ async function validateMeetingChapterInput(input: {
     throw new InvalidMeetingChapterRangeError("Livro não encontrado.");
   }
 
-  if (
-    bookRow.totalChapters !== null &&
-    input.chapterEnd > bookRow.totalChapters
-  ) {
+  let effectiveTotalChapters = bookRow.totalChapters;
+
+  if (effectiveTotalChapters === null) {
+    if (input.totalChapters === undefined || input.totalChapters === null) {
+      throw new InvalidMeetingChapterRangeError(
+        "Informe o total de capítulos do livro para marcar intervalo de capítulos."
+      );
+    }
+
+    if (!Number.isInteger(input.totalChapters) || input.totalChapters < 1) {
+      throw new InvalidMeetingChapterRangeError(
+        "Total de capítulos deve ser um número inteiro positivo."
+      );
+    }
+
+    if (input.totalChapters < input.chapterEnd) {
+      throw new InvalidMeetingChapterRangeError(
+        "O total de capítulos do livro não pode ser menor que o capítulo final do encontro."
+      );
+    }
+
+    await bookRepository.updateBookTotalChaptersById(
+      input.bookId,
+      input.totalChapters
+    );
+    effectiveTotalChapters = input.totalChapters;
+  }
+
+  if (input.chapterEnd > effectiveTotalChapters) {
     throw new InvalidMeetingChapterRangeError(
-      `O capítulo final não pode ultrapassar o total de capítulos do livro (${bookRow.totalChapters}).`
+      `O capítulo final não pode ultrapassar o total de capítulos do livro (${effectiveTotalChapters}).`
     );
   }
 }

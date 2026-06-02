@@ -10,6 +10,11 @@ export const createMeeting = async (req: Request, res: Response) => {
     ? Number(req.body.chapterStart)
     : null;
   const chapterEnd = req.body.chapterEnd ? Number(req.body.chapterEnd) : null;
+  const rawTotalChapters = req.body.totalChapters ?? req.body.total_chapters;
+  const totalChapters =
+    rawTotalChapters !== undefined && rawTotalChapters !== ""
+      ? Number(rawTotalChapters)
+      : undefined;
 
   if (!location || !meetingDate || !meetingTime || !clubId) {
     return res.status(400).json({ message: "Preencha todos os campos!" });
@@ -28,6 +33,7 @@ export const createMeeting = async (req: Request, res: Response) => {
       bookId,
       chapterStart,
       chapterEnd,
+      totalChapters,
       description,
       location,
       meetingDate,
