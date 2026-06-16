@@ -9,6 +9,7 @@ import memberRoutes from "../routes/memberRoutes";
 import bookRoutes from "../routes/bookRoutes";
 import meetingRoutes from "../routes/meetingRoutes";
 import googleAuthRoutes from "../routes/googleAuthRoutes";
+import feedRoutes from "../routes/feedRoutes";
 
 const app = express();
 const port = process.env.PORT || 4001;
@@ -21,6 +22,7 @@ app.use("/api", googleAuthRoutes);
 app.use(authRoutes);
 app.use(clubRoutes);
 app.use(userRoutes);
+app.use(feedRoutes);
 app.use(bookRoutes);
 app.use(meetingRoutes);
 app.use(memberRoutes);
