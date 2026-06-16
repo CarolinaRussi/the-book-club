@@ -1,8 +1,9 @@
 import { alias } from "drizzle-orm/pg-core";
-import { and, count, desc, eq, exists, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import {
   book,
+  club,
   clubBook,
   member,
   review,
@@ -87,4 +88,30 @@ export async function countFinishedBooksFeed(viewerUserId: string) {
     .where(finishedFeedFilter(viewerUserId));
 
   return Number(row?.value ?? 0);
+}
+
+export async function findViewerClubsForBookIds(
+  viewerUserId: string,
+  bookIds: string[]
+) {
+  if (bookIds.length === 0) return [];
+
+  return db
+    .select({
+      bookId: clubBook.bookId,
+      clubId: club.id,
+      clubName: club.name,
+    })
+    .from(member)
+    .innerJoin(
+      clubBook,
+      and(
+        eq(clubBook.clubId, member.clubId),
+        inArray(clubBook.bookId, bookIds),
+        isNull(clubBook.deletedAt)
+      )
+    )
+    .innerJoin(club, eq(club.id, member.clubId))
+    .where(eq(member.userId, viewerUserId))
+    .orderBy(asc(club.name));
 }

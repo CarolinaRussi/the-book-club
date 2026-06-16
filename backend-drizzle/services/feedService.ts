@@ -25,6 +25,21 @@ export async function getMyFeedPaginated(
 
   const totalPages = Math.ceil(totalItems / limit);
 
+  const bookIds = [...new Set(rows.map((row) => row.bookId))];
+  const clubLinks = await feedRepository.findViewerClubsForBookIds(
+    viewerUserId,
+    bookIds
+  );
+
+  const clubsByBookId = new Map<string, { id: string; name: string }[]>();
+  for (const link of clubLinks) {
+    const list = clubsByBookId.get(link.bookId) ?? [];
+    if (!list.some((club) => club.id === link.clubId)) {
+      list.push({ id: link.clubId, name: link.clubName });
+    }
+    clubsByBookId.set(link.bookId, list);
+  }
+
   const data = rows.map((row) => ({
     id: row.userBookId,
     type: "finished" as const,
@@ -42,6 +57,7 @@ export async function getMyFeedPaginated(
       author: row.bookAuthor,
       coverUrl: row.bookCoverUrl,
     },
+    clubs: clubsByBookId.get(row.bookId) ?? [],
     readingStatus: row.readingStatus,
     rating: row.rating,
     comment: row.comment,
