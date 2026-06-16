@@ -101,25 +101,18 @@ export default function HomeOnboardingCards({
           )}
           <CardFooter
             className={cn(
-              isCompact ? "pt-0 flex flex-col gap-2 sm:flex-row" : "mt-6 grid grid-cols-3",
+              "flex flex-col gap-3",
+              isCompact ? "pt-0" : "mt-6",
             )}
           >
             <input
-              className={cn(
-                "border border-secondary p-3 shadow-md rounded-xl",
-                isCompact
-                  ? "w-full sm:flex-1"
-                  : "col-span-2 mr-2",
-              )}
+              className="w-full border border-secondary p-3 shadow-md rounded-xl"
               placeholder="Ex.: ENTREASPAS"
               value={clubCode}
               onChange={handleCodeChange}
             />
             <Button
-              className={cn(
-                "font-semibold rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer",
-                isCompact ? "w-full sm:w-auto py-5 sm:px-6" : "col-span-1 text-1xl py-6",
-              )}
+              className="w-full font-semibold rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer py-5"
               onClick={() => setConfirmingClub(true)}
               disabled={clubCode.length === 0}
             >
