@@ -3,6 +3,7 @@ import { useClub } from "@/contexts/ClubContext";
 import HomeOnboardingCards from "@/components/pages/home/HomeOnboardingCards";
 import HomeUpcomingMeetings from "@/components/pages/home/HomeUpcomingMeetings";
 import HomeSidebar from "@/components/pages/home/HomeSidebar";
+import StickySidebarColumn from "@/components/pages/home/StickySidebarColumn";
 import FeedSection from "@/components/pages/home/FeedSection";
 import HomeEmptyState from "@/components/pages/home/HomeEmptyState";
 import { TbBooks } from "react-icons/tb";
@@ -41,9 +42,11 @@ export default function Home() {
             className="mt-6 md:hidden"
           />
 
-          <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8 items-start">
+          <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8">
             <FeedSection />
-            <HomeSidebar className="hidden md:flex sticky top-6" />
+            <StickySidebarColumn className="hidden md:block">
+              <HomeSidebar />
+            </StickySidebarColumn>
           </div>
 
           <HomeOnboardingCards
