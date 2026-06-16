@@ -16,6 +16,11 @@ export interface IFeedActivityBook {
   coverUrl: string | null;
 }
 
+export interface IFeedActivityClub {
+  id: string;
+  name: string;
+}
+
 export interface IFeedActivity {
   id: string;
   type: FeedActivityType;
@@ -23,6 +28,7 @@ export interface IFeedActivity {
   actor: IFeedActivityActor;
   isOwnActivity: boolean;
   book: IFeedActivityBook;
+  clubs: IFeedActivityClub[];
   readingStatus: ReadingStatus;
   rating: number | null;
   comment: string | null;

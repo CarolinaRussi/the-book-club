@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDayMonthYear, formatTime } from "@/utils/formatters";
+import HomeEmptyState from "./HomeEmptyState";
 
 type HomeUpcomingMeetingsProps = {
   maxItems?: number;
@@ -28,14 +29,16 @@ export default function HomeUpcomingMeetings({
   const { setSelectedClubId } = useClub();
   const navigate = useNavigate();
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["myUpcomingMeetings", user?.id],
     queryFn: () => fetchMyUpcomingMeetings(5),
     staleTime: 1000 * 60 * 5,
     enabled: !!user,
   });
 
-  const meetings = (data?.data ?? []).slice(0, maxItems);
+  const allMeetings = data?.data ?? [];
+  const meetings = allMeetings.slice(0, maxItems);
+  const hiddenCount = Math.max(allMeetings.length - maxItems, 0);
 
   const handleMeetingClick = (clubId: string) => {
     setSelectedClubId(clubId);
@@ -56,6 +59,14 @@ export default function HomeUpcomingMeetings({
             <Skeleton className="h-14 w-full rounded-lg" />
             <Skeleton className="h-14 w-full rounded-lg" />
           </>
+        ) : isError ? (
+          <HomeEmptyState
+            icon={<Calendar className="h-7 w-7" />}
+            message="Não foi possível carregar os encontros."
+            actionLabel="Tentar novamente"
+            onAction={() => refetch()}
+            className="border-none p-4"
+          />
         ) : meetings.length > 0 ? (
           <>
             <ul className="flex flex-col gap-2">
@@ -73,28 +84,31 @@ export default function HomeUpcomingMeetings({
                       {formatDayMonthYear(meeting.meetingDate)} ·{" "}
                       {formatTime(meeting.meetingTime)}
                     </p>
-                    {meeting.book && (
+                    {meeting.book ? (
                       <p className="text-xs text-muted-foreground mt-1 truncate">
                         {meeting.book.title}
                       </p>
-                    )}
+                    ) : null}
                   </button>
                 </li>
               ))}
             </ul>
             <Button variant="link" className="h-auto p-0 self-start" asChild>
-              <Link to="/meetings">Ver encontros</Link>
+              <Link to="/meetings">
+                {hiddenCount > 0
+                  ? `Ver todos (${allMeetings.length})`
+                  : "Ver encontros"}
+              </Link>
             </Button>
           </>
         ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Nenhum encontro marcado nos seus clubes.
-            </p>
-            <Button variant="link" className="h-auto p-0 self-start" asChild>
-              <Link to="/meetings">Ver encontros</Link>
-            </Button>
-          </>
+          <HomeEmptyState
+            icon={<Calendar className="h-7 w-7" />}
+            message="Nenhum encontro marcado nos seus clubes."
+            actionLabel="Ver encontros"
+            actionTo="/meetings"
+            className="border-none p-4"
+          />
         )}
       </CardContent>
     </Card>

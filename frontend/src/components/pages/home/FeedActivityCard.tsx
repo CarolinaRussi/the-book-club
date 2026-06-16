@@ -1,6 +1,7 @@
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { Rating } from "react-simple-star-rating";
 import type { IFeedActivity } from "@/types/IFeed";
+import { useClub } from "@/contexts/ClubContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,30 @@ type FeedActivityCardProps = {
   activity: IFeedActivity;
 };
 
+function pickClubForLibrary(
+  clubs: IFeedActivity["clubs"],
+  selectedClubId: string | null,
+) {
+  if (clubs.length === 0) return null;
+  if (selectedClubId && clubs.some((club) => club.id === selectedClubId)) {
+    return selectedClubId;
+  }
+  return clubs[0].id;
+}
+
 export default function FeedActivityCard({ activity }: FeedActivityCardProps) {
-  const { actor, book, isOwnActivity, rating, comment, updatedAt } = activity;
+  const { actor, book, clubs, isOwnActivity, rating, comment, updatedAt } =
+    activity;
+  const { selectedClubId, setSelectedClubId } = useClub();
+  const navigate = useNavigate();
   const displayName = actor.nickname || actor.name;
+  const libraryClubId = pickClubForLibrary(clubs, selectedClubId);
+
+  const handleOpenLibrary = () => {
+    if (!libraryClubId) return;
+    setSelectedClubId(libraryClubId);
+    navigate("/library");
+  };
 
   return (
     <Card className="w-full overflow-hidden">
@@ -78,11 +100,18 @@ export default function FeedActivityCard({ activity }: FeedActivityCardProps) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="pt-0">
-        <Button variant="link" className="h-auto p-0" asChild>
-          <Link to="/library">Ver na biblioteca</Link>
-        </Button>
-      </CardFooter>
+      {libraryClubId ? (
+        <CardFooter className="pt-0">
+          <Button
+            variant="link"
+            className="h-auto p-0"
+            type="button"
+            onClick={handleOpenLibrary}
+          >
+            Ver na biblioteca
+          </Button>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

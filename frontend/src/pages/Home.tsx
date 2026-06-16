@@ -4,6 +4,8 @@ import HomeOnboardingCards from "@/components/pages/home/HomeOnboardingCards";
 import HomeUpcomingMeetings from "@/components/pages/home/HomeUpcomingMeetings";
 import HomeSidebar from "@/components/pages/home/HomeSidebar";
 import FeedSection from "@/components/pages/home/FeedSection";
+import HomeEmptyState from "@/components/pages/home/HomeEmptyState";
+import { TbBooks } from "react-icons/tb";
 
 export default function Home() {
   const { user } = useAuth();
@@ -26,10 +28,11 @@ export default function Home() {
       {!hasClubs ? (
         <>
           <HomeOnboardingCards variant="onboarding" />
-          <p className="text-muted-foreground mt-6">
-            Você ainda não faz parte de nenhum clube. Crie um ou use um código
-            de convite!
-          </p>
+          <HomeEmptyState
+            icon={<TbBooks className="h-8 w-8" />}
+            message="Você ainda não faz parte de nenhum clube. Crie um ou use um código de convite!"
+            className="mt-6"
+          />
         </>
       ) : (
         <>
