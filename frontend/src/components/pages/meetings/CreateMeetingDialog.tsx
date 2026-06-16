@@ -93,22 +93,28 @@ const CreateMeetingDialog = ({
     isChaptersMode && selectedBook && selectedBook.totalChapters == null
   );
 
-  const { mutate: createMeetingMutate } = useMutation<
+  const { mutate: createMeetingMutate, isPending } = useMutation<
     any,
     IApiError,
     IMeetingCreatePayload
   >({
     mutationFn: createMeeting,
     onSuccess: async () => {
-      queryClient.invalidateQueries({
-        queryKey: ["meetings", selectedClubId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["pastMeetings", selectedClubId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["booksFromSelectedClub", selectedClubId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["meetings", selectedClubId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["pastMeetings", selectedClubId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["booksFromSelectedClub", selectedClubId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myUpcomingMeetings"],
+          refetchType: "all",
+        }),
+      ]);
       reset();
       onOpenChange(false);
       toast.success("Encontro marcado com sucesso!");
@@ -176,7 +182,13 @@ const CreateMeetingDialog = ({
   };
 
   return (
-    <Dialog open={openDialog} onOpenChange={onOpenChange}>
+    <Dialog
+      open={openDialog}
+      onOpenChange={(open) => {
+        if (isPending) return;
+        onOpenChange(open);
+      }}
+    >
       <DialogContent className="sm:max-w-[425px] lg:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="gap-0 mb-4">
@@ -353,10 +365,13 @@ const CreateMeetingDialog = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isPending}
             >
               Cancelar
             </Button>
-            <Button type="submit">Marcar encontro</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Marcando…" : "Marcar encontro"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

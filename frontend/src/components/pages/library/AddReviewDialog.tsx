@@ -143,12 +143,17 @@ const AddReviewDialog = ({
     mutationFn: saveReview,
     onSuccess: async () => {
       toast.success("Avaliação salva com sucesso!");
-      await queryClient.invalidateQueries({
-        queryKey: ["booksFromSelectedClub"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["bookUsers"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["booksFromSelectedClub", selectedClubId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["bookUsers"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myFeed"],
+        }),
+      ]);
       onOpenChange(false);
     },
     onError: (error) => {

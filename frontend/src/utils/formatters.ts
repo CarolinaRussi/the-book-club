@@ -1,4 +1,5 @@
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const getInitials = (name: string) => {
   if (!name?.trim()) return "?";
@@ -61,3 +62,13 @@ export function formatMeetingTimeForApi(timeFromInput: string): string {
   const s = rawS.replace(/\D/g, "").slice(0, 2).padStart(2, "0");
   return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s}`;
 }
+
+export const formatRelativeTime = (
+  dateValue: string | Date | undefined,
+): string => {
+  const date = parseDate(
+    dateValue instanceof Date ? dateValue.toISOString() : dateValue,
+  );
+  if (!date) return "";
+  return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+};

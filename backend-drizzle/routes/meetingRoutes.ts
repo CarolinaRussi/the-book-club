@@ -4,6 +4,7 @@ import {
   cancelMeeting,
   createMeeting,
   getMeetingsFromClub,
+  getMyUpcomingMeetings,
   getPastMeetingsFromClub,
   resyncMeetingGoogleCalendar,
   updateMeeting,
@@ -11,6 +12,7 @@ import {
 
 const router = Router();
 
+router.get("/me/upcoming-meetings", authMiddleware, getMyUpcomingMeetings);
 router.get("/club/:id/meetings", authMiddleware, getMeetingsFromClub);
 router.get("/club/:id/meetings/past", authMiddleware, getPastMeetingsFromClub);
 router.post("/create-meeting", authMiddleware, createMeeting);

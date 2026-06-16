@@ -1,0 +1,1 @@
+export { getMyFeed } from "./getMyFeed";

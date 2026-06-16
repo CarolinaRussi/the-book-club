@@ -1,161 +1,57 @@
-import { FaPlus } from "react-icons/fa6";
-import { useAuth } from "../contexts/AuthContext";
-import { MdOutlineEmail } from "react-icons/md";
-import { useClub } from "../contexts/ClubContext";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import CreateClubDialog from "../components/pages/home/CreateClubDialog";
-import { type ChangeEvent, useState } from "react";
-import ConfirmClubDialog from "../components/pages/home/ConfirmClubDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { useClub } from "@/contexts/ClubContext";
+import HomeOnboardingCards from "@/components/pages/home/HomeOnboardingCards";
+import HomeUpcomingMeetings from "@/components/pages/home/HomeUpcomingMeetings";
+import HomeSidebar from "@/components/pages/home/HomeSidebar";
+import FeedSection from "@/components/pages/home/FeedSection";
+import HomeEmptyState from "@/components/pages/home/HomeEmptyState";
+import { TbBooks } from "react-icons/tb";
 
 export default function Home() {
   const { user } = useAuth();
   const { clubs } = useClub();
-  const [createClubOpen, setCreateClubOpen] = useState(false);
-  const [clubCode, setClubCode] = useState("");
-  const [isConfirmingClub, setConfirmingClub] = useState(false);
-
-  const handleCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setClubCode(e.target.value.toUpperCase());
-  };
+  const hasClubs = clubs.length > 0;
 
   return (
-    <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
+    <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-20">
       <div id="boas-vindas" className="flex flex-col items-start">
-        <h1 className="text-5xl font-bold text-foreground ">
+        <h1 className="text-3xl md:text-5xl font-bold text-foreground">
           Olá, {user?.nickname || "Bem-vindo ao Clube do Livro"}
         </h1>
-
-        <h3 className="text-2xl mt-3 w-full text-muted-foreground">
-          O que você gostaria de fazer hoje?
-        </h3>
+        <p className="text-lg md:text-2xl mt-3 w-full text-muted-foreground">
+          {hasClubs
+            ? "Atualizações dos seus clubes"
+            : "O que você gostaria de fazer hoje?"}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-10 mt-5">
-        <Card className="w-full gap-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FaPlus size={24} className="text-primary" />
-              Criar novo clube
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Crie seu próprio clube do livro e convide amigos para participar
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button
-              className="mt-6 font-semibold text-1xl py-6 w-full rounded-xl bg-primary text-primary-foreground cursor-pointer hover:bg-primary/80"
-              onClick={() => setCreateClubOpen(true)}
-            >
-              Criar Clube
-            </Button>
-          </CardFooter>
-        </Card>
-        <Card className="w-full gap-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MdOutlineEmail size={24} className="text-primary" />
-              Entrar em um clube
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Recebeu um convite? Digite o código para entrar em um clube
-            </p>
-          </CardContent>
-          <CardFooter className="mt-6 grid grid-cols-3">
-            <input
-              className="col-span-2 border border-secondary p-3 mr-2 shadow-md rounded-xl "
-              placeholder="Ex.: ENTREASPAS"
-              value={clubCode}
-              onChange={handleCodeChange}
-            />
-            <Button
-              className="col-span-1 font-semibold text-1xl py-6 rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer"
-              onClick={() => setConfirmingClub(true)}
-              disabled={clubCode.length === 0}
-            >
-              Inserir código
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+      {!hasClubs ? (
+        <>
+          <HomeOnboardingCards variant="onboarding" />
+          <HomeEmptyState
+            icon={<TbBooks className="h-8 w-8" />}
+            message="Você ainda não faz parte de nenhum clube. Crie um ou use um código de convite!"
+            className="mt-6"
+          />
+        </>
+      ) : (
+        <>
+          <HomeUpcomingMeetings
+            maxItems={3}
+            className="mt-6 md:hidden"
+          />
 
-      <div className="grid grid-cols-1 gap-10 mt-5">
-        <Card id="card-meus-clubes" className="w-full mt-3 gap-2">
-          <CardHeader>
-            <CardTitle className="text-2xl text-left">Seus Clubes</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {clubs.length > 0 ? (
-              clubs.map((club) => (
-                <Card key={club.id} className="w-full gap-0 ">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xl font-semibold text-primary">
-                      {club.name}
-                      {club.ownerId === user?.id ? (
-                        <Badge className="ml-2">Admin</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="ml-2">
-                          Membro
-                        </Badge>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  {club.description && (
-                    <CardContent className="pt-0 pb-2">
-                      <p className="text-md text-muted-foreground">
-                        {club.description}
-                      </p>
-                    </CardContent>
-                  )}
-                  <CardFooter className="flex justify-between text-sm text-muted-foreground">
-                    <span>
-                      Criado em: {new Date(club.createdAt).toLocaleDateString()}
-                    </span>
-                    <Badge
-                      variant={
-                        club.status === "active" ? "default" : "secondary"
-                      }
-                    >
-                      {club.status === "active" ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <p className="text-muted-foreground">
-                Você ainda não faz parte de nenhum clube. Crie um ou use um
-                código de convite!
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      <CreateClubDialog
-        open={createClubOpen}
-        onOpenChange={setCreateClubOpen}
-      />
-      <ConfirmClubDialog
-        invitationCode={clubCode}
-        open={isConfirmingClub}
-        onOpenChange={(isOpen) => {
-          setConfirmingClub(isOpen);
-          if (!isOpen) {
-            setClubCode("");
-          }
-        }}
-        onSuccess={() => setClubCode("")}
-      />
+          <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8 items-start">
+            <FeedSection />
+            <HomeSidebar className="hidden md:flex sticky top-6" />
+          </div>
+
+          <HomeOnboardingCards
+            variant="compact"
+            className="mt-8 md:hidden"
+          />
+        </>
+      )}
     </div>
   );
 }

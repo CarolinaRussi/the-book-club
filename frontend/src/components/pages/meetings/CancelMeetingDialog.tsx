@@ -42,6 +42,10 @@ const CancelMeetingDialog = ({
       queryClient.invalidateQueries({
         queryKey: ["pastMeetings", selectedClubId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["myUpcomingMeetings"],
+        refetchType: "all",
+      });
       onOpenChange(false);
       toast.success("Encontro cancelado.");
     },
