@@ -46,6 +46,10 @@ const CompleteMeetingDialog = ({
       queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub", selectedClubId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["myUpcomingMeetings"],
+        refetchType: "all",
+      });
       onOpenChange(false);
       toast.success("Encontro concluído.");
     },

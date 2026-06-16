@@ -135,6 +135,10 @@ const EditMeetingDialog = ({
       queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub", selectedClubId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["myUpcomingMeetings"],
+        refetchType: "all",
+      });
       reset();
       onOpenChange(false);
       toast.success("Encontro alterado com sucesso!");

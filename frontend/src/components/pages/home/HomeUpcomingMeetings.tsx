@@ -33,6 +33,7 @@ export default function HomeUpcomingMeetings({
     queryKey: ["myUpcomingMeetings", user?.id],
     queryFn: () => fetchMyUpcomingMeetings(5),
     staleTime: 1000 * 60 * 5,
+    refetchOnMount: "always",
     enabled: !!user,
   });
 
@@ -93,20 +94,16 @@ export default function HomeUpcomingMeetings({
                 </li>
               ))}
             </ul>
-            <Button variant="link" className="h-auto p-0 self-start" asChild>
-              <Link to="/meetings">
-                {hiddenCount > 0
-                  ? `Ver todos (${allMeetings.length})`
-                  : "Ver encontros"}
-              </Link>
-            </Button>
+            {hiddenCount > 0 ? (
+              <Button variant="link" className="h-auto p-0 self-start" asChild>
+                <Link to="/meetings">Ver todos ({allMeetings.length})</Link>
+              </Button>
+            ) : null}
           </>
         ) : (
           <HomeEmptyState
             icon={<Calendar className="h-7 w-7" />}
             message="Nenhum encontro marcado nos seus clubes."
-            actionLabel="Ver encontros"
-            actionTo="/meetings"
             className="border-none p-4"
           />
         )}
