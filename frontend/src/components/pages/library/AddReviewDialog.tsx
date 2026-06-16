@@ -19,7 +19,6 @@ import {
 } from "../../ui/alert-dialog";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
-import { ScrollArea } from "../../ui/scroll-area";
 import type {
   IBook,
   IBookReviewPayload,
@@ -233,10 +232,10 @@ const AddReviewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-[calc(100vw-2rem)] flex-col overflow-hidden pr-0 sm:max-w-[425px] lg:max-w-2xl">
+      <DialogContent className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-6 pr-0 sm:max-w-[425px] lg:max-w-2xl">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
         >
           <DialogHeader className="shrink-0 gap-0 pr-8">
             <div className="flex flex-wrap items-start justify-center gap-2 text-center sm:justify-start sm:text-left">
@@ -280,7 +279,7 @@ const AddReviewDialog = ({
             </div>
             <DialogDescription></DialogDescription>
           </DialogHeader>
-          <ScrollArea className="min-h-0 flex-1 overflow-hidden pr-4">
+          <div className="min-h-0 overflow-y-auto overscroll-contain pr-4">
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-4 sm:gap-3">
               <div className="mx-auto w-28 sm:mx-0 sm:w-auto">
                 <img
@@ -485,7 +484,7 @@ const AddReviewDialog = ({
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
