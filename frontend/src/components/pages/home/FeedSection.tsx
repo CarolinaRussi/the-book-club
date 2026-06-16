@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FeedActivityCard from "./FeedActivityCard";
 import HomeEmptyState from "./HomeEmptyState";
 
-const FEED_PAGE_SIZE = 20;
+const FEED_PAGE_SIZE = 10;
 
 export default function FeedSection() {
   const { user } = useAuth();

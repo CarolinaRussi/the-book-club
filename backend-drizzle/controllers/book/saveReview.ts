@@ -12,8 +12,7 @@ export const saveReview = async (req: Request, res: Response) => {
 
     if (!clubId || !bookId || !readingStatus || !userId) {
       return res.status(400).json({
-        message:
-          "Dados incompletos. clubId, bookId e status são obrigatórios.",
+        message: "Selecione o status da leitura para salvar sua avaliação.",
       });
     }
 

@@ -211,6 +211,11 @@ const AddReviewDialog = ({
       return;
     }
 
+    if (!data.readingStatus) {
+      toast.error("Selecione o status da leitura antes de salvar.");
+      return;
+    }
+
     const hasRatingOrReview = data.rating > 0 || data.comment.trim() !== "";
 
     const isInvalidStatusForRating =
