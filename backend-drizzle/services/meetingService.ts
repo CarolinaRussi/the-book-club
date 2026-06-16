@@ -4,6 +4,7 @@ import { ReadingMode } from "../enums/readingMode";
 import { createId } from "../utils/id";
 import * as meetingRepository from "../repositories/meetingRepository";
 import * as bookRepository from "../repositories/bookRepository";
+import * as clubRepository from "../repositories/clubRepository";
 import * as googleCalendarSyncService from "./googleCalendarSyncService";
 
 export class InvalidMeetingChapterRangeError extends Error {
@@ -78,6 +79,38 @@ export async function getPastMeetingsFromClub(
   }));
 
   return { data, totalPages, currentPage: page, totalItems };
+}
+
+export async function getMyUpcomingMeetings(userId: string, limit: number) {
+  const clubIds = await clubRepository.findClubIdsByUserId(userId);
+  const rows = await meetingRepository.findUpcomingMeetingsByClubIds(
+    clubIds,
+    limit
+  );
+
+  const data = rows.map((row) => ({
+    id: row.id,
+    meetingDate: row.meetingDate,
+    meetingTime: row.meetingTime,
+    location: row.location,
+    description: row.description,
+    chapterStart: row.chapterStart,
+    chapterEnd: row.chapterEnd,
+    club: {
+      id: row.clubId,
+      name: row.clubName,
+    },
+    book: row.bookId
+      ? {
+          id: row.bookId,
+          title: row.bookTitle!,
+          author: row.bookAuthor,
+          coverUrl: row.bookCoverUrl,
+        }
+      : null,
+  }));
+
+  return { data };
 }
 
 export async function createMeeting(input: {

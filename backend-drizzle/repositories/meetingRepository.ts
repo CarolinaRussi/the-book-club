@@ -1,4 +1,4 @@
-import { eq, and, inArray, count } from "drizzle-orm";
+import { eq, and, inArray, count, asc, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { meeting, clubBook, club, book } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
@@ -83,6 +83,42 @@ export async function countPastMeetingsByClubId(clubId: string) {
       )
     );
   return Number(row?.value ?? 0);
+}
+
+export async function findUpcomingMeetingsByClubIds(
+  clubIds: string[],
+  limit: number
+) {
+  if (clubIds.length === 0) return [];
+
+  return db
+    .select({
+      id: meeting.id,
+      meetingDate: meeting.meetingDate,
+      meetingTime: meeting.meetingTime,
+      location: meeting.location,
+      description: meeting.description,
+      chapterStart: meeting.chapterStart,
+      chapterEnd: meeting.chapterEnd,
+      clubId: club.id,
+      clubName: club.name,
+      bookId: book.id,
+      bookTitle: book.title,
+      bookAuthor: book.author,
+      bookCoverUrl: book.coverUrl,
+    })
+    .from(meeting)
+    .innerJoin(club, eq(meeting.clubId, club.id))
+    .leftJoin(book, eq(meeting.bookId, book.id))
+    .where(
+      and(
+        inArray(meeting.clubId, clubIds),
+        eq(meeting.status, MeetingStatus.SCHEDULED),
+        sql`(${meeting.meetingDate} + ${meeting.meetingTime}) >= CURRENT_TIMESTAMP`
+      )
+    )
+    .orderBy(asc(meeting.meetingDate), asc(meeting.meetingTime))
+    .limit(limit);
 }
 
 export async function findMeetingById(meetingId: string) {
