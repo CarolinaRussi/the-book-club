@@ -4,11 +4,5 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter frontend build",
   "outputDirectory": "frontend/dist",
-  "crons": [
-    {
-      "path": "/api/ping",
-      "schedule": "0 8 * * *"
-    }
-  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
