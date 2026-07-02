@@ -13,6 +13,7 @@ import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
 import Me from "./pages/Me.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
+import NotFound from "./pages/NotFound.tsx";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
           },
         ],
       },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);
