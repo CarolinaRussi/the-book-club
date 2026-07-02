@@ -17,6 +17,10 @@ const port = process.env.PORT || 4001;
 app.use(express.json());
 app.use(cors());
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.use("/api", googleAuthRoutes);
 
 app.use(authRoutes);
