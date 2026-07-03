@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
+import HeaderClubSwitcher from "./HeaderClubSwitcher";
 import { FiHome } from "react-icons/fi";
 import { TbBooks, TbCoffee } from "react-icons/tb";
 import {
@@ -9,13 +10,6 @@ import {
   MdOutlinePerson,
 } from "react-icons/md";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -23,8 +17,7 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { FiMenu } from "react-icons/fi";
-import { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
 const privateNavItems = [
   {
@@ -60,10 +53,8 @@ const privateNavItems = [
 export default function Header() {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-  const { selectedClubId, setSelectedClubId, clubs, isLoadingClubs } =
-    useClub();
+  const { clubs } = useClub();
 
-  const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const filteredNavItems = useMemo(() => {
@@ -121,44 +112,24 @@ export default function Header() {
 
   return (
     <header className="bg-background p-4 flex flex-row justify-between items-center shadow-md relative z-10">
-      <div className="flex flex-row items-center gap-3 min-w-0">
+      <div className="flex min-w-0 flex-row items-center gap-2">
         <button
           type="button"
           onClick={() => navigate(isLoggedIn ? "/home" : "/")}
-          className="shrink-0 text-xl font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer"
+          className={
+            isLoggedIn && clubs.length > 0
+              ? "shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+              : "shrink-0 text-xl font-bold text-primary transition-opacity hover:opacity-80 cursor-pointer"
+          }
         >
           Entrelivros
         </button>
-        {isLoggedIn && (
+        {isLoggedIn && clubs.length > 0 && (
           <>
-            {clubs && clubs.length > 0 && (
-              <Select
-                value={selectedClubId || ""}
-                onValueChange={(value) => {
-                  setSelectedClubId(value);
-                  queryClient.invalidateQueries({
-                    queryKey: ["booksFromSelectedClub", value],
-                  });
-                  setIsMobileMenuOpen(false);
-                }}
-                disabled={isLoadingClubs}
-              >
-                <SelectTrigger className="w-full border-2 ml-2 border-secondary justify-center text-lg py-6">
-                  <SelectValue placeholder="Carregando..." />
-                </SelectTrigger>
-                <SelectContent className="border-secondary bg-background rounded-lg">
-                  {clubs.map((club) => (
-                    <SelectItem
-                      key={club.id}
-                      value={club.id}
-                      className="cursor-pointer text-lg p-3"
-                    >
-                      {club.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <span className="shrink-0 text-muted-foreground" aria-hidden>
+              ·
+            </span>
+            <HeaderClubSwitcher />
           </>
         )}
       </div>
