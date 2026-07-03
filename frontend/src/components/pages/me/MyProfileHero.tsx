@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 type EditableField = "name" | "nickname" | "bio" | "genres";
 
 function appendGenres(formData: FormData, genres: string[]) {
+  if (genres.length === 0) {
+    formData.append("favoritesGenres", "");
+    return;
+  }
   genres.forEach((tag) => formData.append("favoritesGenres", tag));
 }
 

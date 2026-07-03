@@ -16,6 +16,17 @@ const USER_UPDATE_BLOCKED_KEYS = new Set([
   "googleAccountEmail",
 ]);
 
+function normalizeFavoritesGenres(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map(String).map((value) => value.trim()).filter(Boolean);
+  }
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  return [];
+}
+
 export async function getUserAuthenticated(userId: string) {
   const row = await userRepository.findUserById(userId);
   if (!row) {
@@ -38,6 +49,11 @@ export async function updateUserProfile(input: {
   const updateData: Record<string, unknown> = { ...input.otherData };
   for (const key of USER_UPDATE_BLOCKED_KEYS) {
     delete updateData[key];
+  }
+  if ("favoritesGenres" in updateData) {
+    updateData.favoritesGenres = normalizeFavoritesGenres(
+      updateData.favoritesGenres,
+    );
   }
   const oldPublicId = foundUser.profilePicturePublicId;
   const remove = input.removeProfilePicture;
