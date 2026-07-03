@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import { fetchReadersByClubId } from "../api/queries/fetchReaders";
 import { formatDayMonthYear, getInitials } from "../utils/formatters";
@@ -14,6 +16,8 @@ import { useEffect, useState } from "react";
 import Pagination from "../components/ui/pagination";
 
 export default function Readers() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { selectedClubId } = useClub();
   const [readersPage, setReadersPage] = useState(1);
   const itemsPerPage = 8;
@@ -38,6 +42,14 @@ export default function Readers() {
   const readers = readersData?.data || [];
   const totalPages = readersData?.totalPages || 1;
 
+  const handleOpenProfile = (readerUserId: string) => {
+    if (user?.id === readerUserId) {
+      navigate("/me");
+      return;
+    }
+    navigate(`/users/${readerUserId}`);
+  };
+
   return (
     <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
       <div className="flex flex-col items-start">
@@ -57,7 +69,16 @@ export default function Readers() {
               readers.map((reader) => (
                 <div
                   key={reader.user.id}
-                  className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleOpenProfile(reader.user.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleOpenProfile(reader.user.id);
+                    }
+                  }}
+                  className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md cursor-pointer transition-shadow hover:shadow-lg"
                 >
                   <Avatar className="mb-4 size-30 ">
                     <AvatarImage

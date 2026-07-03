@@ -3,7 +3,6 @@ export interface IReaders {
   user: {
     id: string;
     bio: string;
-    email: string;
     favoritesGenres: string[];
     name: string;
     nickname: string;

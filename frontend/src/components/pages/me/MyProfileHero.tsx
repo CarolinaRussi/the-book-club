@@ -216,7 +216,7 @@ export default function MyProfileHero() {
               onChange={(e) => setDraftNickname(e.target.value)}
               onBlur={() => handleBlurSave("nickname", draftNickname)}
               onKeyDown={(e) => handleKeyDownSave(e, "nickname", draftNickname)}
-              className="min-w-[8rem] max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-2xl font-bold text-foreground sm:text-3xl"
+              className="min-w-32 max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-2xl font-bold text-foreground sm:text-3xl"
             />
           ) : (
             <button
@@ -241,7 +241,7 @@ export default function MyProfileHero() {
               onChange={(e) => setDraftName(e.target.value)}
               onBlur={() => handleBlurSave("name", draftName)}
               onKeyDown={(e) => handleKeyDownSave(e, "name", draftName)}
-              className="min-w-[8rem] max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-base text-muted-foreground sm:text-lg"
+              className="min-w-32 max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-base text-muted-foreground sm:text-lg"
             />
           ) : (
             <button
@@ -295,8 +295,8 @@ export default function MyProfileHero() {
         }
         genresSlot={
           editingField === "genres" ? (
-            <div className="space-y-2 rounded-lg border border-secondary/60 bg-card/30 py-3">
-              <div className="flex gap-2 px-3">
+            <div className="space-y-2 rounded-lg border border-secondary/60 bg-card/30 p-3">
+              <div className="flex gap-2">
                 <input
                   autoFocus
                   value={genreInput}
@@ -338,7 +338,7 @@ export default function MyProfileHero() {
               <button
                 type="button"
                 onClick={() => setEditingField(null)}
-                className="px-3 text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+                className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 Fechar
               </button>

@@ -13,6 +13,7 @@ import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
 import Me from "./pages/Me.tsx";
 import Account from "./pages/Account.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
           {
             path: "/me/account",
             element: <Account />,
+          },
+          {
+            path: "/users/:userId",
+            element: <UserProfile />,
           },
           {
             element: <ClubGuard />,

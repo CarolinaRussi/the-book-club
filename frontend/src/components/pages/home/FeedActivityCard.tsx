@@ -36,6 +36,14 @@ export default function FeedActivityCard({ activity }: FeedActivityCardProps) {
   const displayName = actor.nickname || actor.name;
   const libraryClubId = pickClubForLibrary(clubs, selectedClubId);
 
+  const handleOpenProfile = () => {
+    if (isOwnActivity) {
+      navigate("/me");
+      return;
+    }
+    navigate(`/users/${actor.id}`);
+  };
+
   const handleOpenLibrary = () => {
     if (!libraryClubId) return;
     setSelectedClubId(libraryClubId);
@@ -45,13 +53,26 @@ export default function FeedActivityCard({ activity }: FeedActivityCardProps) {
   return (
     <Card className="w-full overflow-hidden">
       <CardHeader className="flex flex-row items-start gap-3 space-y-0 pb-3">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={actor.profilePicture ?? undefined} alt={actor.name} />
-          <AvatarFallback>{getInitials(actor.name)}</AvatarFallback>
-        </Avatar>
+        <button
+          type="button"
+          onClick={handleOpenProfile}
+          className="shrink-0 rounded-full cursor-pointer transition-opacity hover:opacity-80"
+          aria-label={`Ver perfil de ${displayName}`}
+        >
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={actor.profilePicture ?? undefined} alt={actor.name} />
+            <AvatarFallback>{getInitials(actor.name)}</AvatarFallback>
+          </Avatar>
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-foreground">{displayName}</span>
+            <button
+              type="button"
+              onClick={handleOpenProfile}
+              className="font-semibold text-foreground cursor-pointer transition-colors hover:text-primary"
+            >
+              {displayName}
+            </button>
             {isOwnActivity && (
               <Badge variant="secondary" className="text-xs">
                 Você

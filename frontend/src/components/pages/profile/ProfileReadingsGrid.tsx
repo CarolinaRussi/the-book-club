@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Pagination from "@/components/ui/pagination";
 import { fetchPaginatedUserBooks } from "@/api/queries/fetchBooks";
+import { fetchUserProfileReadings } from "@/api/queries/fetchUserReadings";
+import ProfileReadingComment from "@/components/pages/profile/ProfileReadingComment";
 import SkeletonMyReadings from "@/components/pages/me/skeletons/SkeletonMyReadings";
 
 interface ProfileReadingsGridProps {
@@ -12,6 +14,8 @@ interface ProfileReadingsGridProps {
   itemsPerPage?: number;
   showClubBadges?: boolean;
   emptyMessage?: string;
+  variant?: "self" | "public";
+  viewerId?: string | null;
 }
 
 export default function ProfileReadingsGrid({
@@ -19,14 +23,22 @@ export default function ProfileReadingsGrid({
   itemsPerPage = 15,
   showClubBadges = true,
   emptyMessage = "Nenhum livro finalizado ainda.",
+  variant = "self",
+  viewerId = null,
 }: ProfileReadingsGridProps) {
   const [booksPage, setBooksPage] = useState(1);
+  const isPublic = variant === "public";
 
   const { data: userBooksData, isFetching } = useQuery({
-    queryKey: ["bookUsers", userId, booksPage],
-    queryFn: () => fetchPaginatedUserBooks(userId, booksPage, itemsPerPage),
+    queryKey: isPublic
+      ? ["userReadings", viewerId, userId, booksPage, "finished"]
+      : ["bookUsers", userId, booksPage],
+    queryFn: () =>
+      isPublic
+        ? fetchUserProfileReadings(userId, booksPage, itemsPerPage)
+        : fetchPaginatedUserBooks(userId, booksPage, itemsPerPage),
     staleTime: 1000 * 60 * 5,
-    enabled: !!userId,
+    enabled: !!userId && (!isPublic || !!viewerId),
   });
 
   const userBooks = userBooksData?.data || [];
@@ -75,11 +87,10 @@ export default function ProfileReadingsGrid({
               <p className="text-sm text-muted-foreground mb-3">
                 {userBook.book!.author}
               </p>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-4">
-                {userBook.myComment?.trim()
-                  ? `"${userBook.myComment.trim()}"`
-                  : "Sem comentário"}
-              </p>
+              <ProfileReadingComment
+                comment={userBook.myComment}
+                mode={isPublic ? "expandable" : "fixed-clamp"}
+              />
 
               <div className="flex items-center justify-between mb-3">
                 <Rating
