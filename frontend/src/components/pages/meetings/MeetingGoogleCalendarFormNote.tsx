@@ -21,7 +21,7 @@ export default function MeetingGoogleCalendarFormNote() {
       Sem Google Calendar conectado na sua conta, não enviaremos convites
       automáticos por calendário.{" "}
       <Link
-        to="/me?tab=profile#google-calendar-perfil"
+        to="/me/account#google-calendar-perfil"
         className="text-primary font-medium underline underline-offset-2 hover:text-primary/90"
       >
         Conectar no perfil

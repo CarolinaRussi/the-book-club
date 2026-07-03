@@ -43,7 +43,7 @@ const privateNavItems = [
   },
   {
     to: "/me",
-    label: "Meu Espaço",
+    label: "Perfil",
     Icon: MdOutlinePerson,
     size: 24,
     requiresClub: false,
