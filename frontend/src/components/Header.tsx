@@ -121,10 +121,14 @@ export default function Header() {
 
   return (
     <header className="bg-background p-4 flex flex-row justify-between items-center shadow-md relative z-10">
-      <div
-        className="flex flex-row items-center gap-2 cursor-pointer"
-        onClick={() => navigate(isLoggedIn ? "/home" : "/")}
-      >
+      <div className="flex flex-row items-center gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={() => navigate(isLoggedIn ? "/home" : "/")}
+          className="shrink-0 text-xl font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer"
+        >
+          Entrelivros
+        </button>
         {isLoggedIn && (
           <>
             {clubs && clubs.length > 0 && (

@@ -93,7 +93,7 @@ function buildSummary(m: MeetingForCal): string {
   if (book) {
     return `Encontro: ${book}`;
   }
-  return `Encontro — ${m.club?.name ?? "The Book Club"}`;
+  return `Encontro — ${m.club?.name ?? "Entrelivros"}`;
 }
 
 function buildDescription(m: MeetingForCal): string {

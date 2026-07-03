@@ -1,4 +1,4 @@
-# Backend The Book Club (Drizzle ORM)
+# Backend Entrelivros (Drizzle ORM)
 
 API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 

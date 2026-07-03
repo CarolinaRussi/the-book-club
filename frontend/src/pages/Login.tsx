@@ -43,7 +43,7 @@ export default function Login() {
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Entrar</h1>
       <h2 className="text-warm-brown mb-4">
-        Entre com sua conta para acessar o Clube do Livro
+        Entre com sua conta para acessar o Entrelivros
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input

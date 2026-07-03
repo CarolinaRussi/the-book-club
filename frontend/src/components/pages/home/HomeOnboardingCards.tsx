@@ -107,7 +107,7 @@ export default function HomeOnboardingCards({
           >
             <input
               className="w-full border border-secondary p-3 shadow-md rounded-xl"
-              placeholder="Ex.: ENTREASPAS"
+              placeholder="Ex.: ENTRELIVROS"
               value={clubCode}
               onChange={handleCodeChange}
             />

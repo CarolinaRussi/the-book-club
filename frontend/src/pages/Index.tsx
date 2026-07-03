@@ -12,7 +12,7 @@ export default function Index() {
       />
 
       <h1 className="mt-5 max-w-[min(100%,36rem)] text-balance text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl">
-        Bem-vindo ao Clube do Livro
+        Bem-vindo ao Entrelivros
       </h1>
 
       <h2 className="mt-4 max-w-2xl text-pretty text-base text-warm-brown sm:text-lg md:text-2xl">

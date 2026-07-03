@@ -1,6 +1,6 @@
-# The BookClub
+# Entrelivros
 
-Plataforma voltada para clubes do livro, criada para facilitar a organização de encontros, o registro de leituras e a troca de experiências entre leitoras.  
+Plataforma voltada para clubes do livro ([entrelivros.com](https://entrelivros.com)), criada para facilitar a organização de encontros, o registro de leituras e a troca de experiências entre leitoras.  
 Permite marcar reuniões, organizar leituras por livro ou capítulos, salvar livros lidos com notas e reviews, e descobrir outras pessoas com interesses literários em comum.
 
 ---

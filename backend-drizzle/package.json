@@ -2,7 +2,7 @@
   "name": "backend-drizzle",
   "packageManager": "pnpm@10.19.0",
   "version": "1.0.0",
-  "description": "The Book Club API - Drizzle ORM",
+  "description": "Entrelivros API - Drizzle ORM",
   "main": "dist/server/server.js",
   "scripts": {
     "dev": "tsx watch server/server.ts",

@@ -10,9 +10,9 @@ export default function PrivacyPolicy() {
         Política de privacidade
       </h1>
       <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-        O <strong className="text-foreground">The Book Club</strong> (também
-        apresentado como <strong className="text-foreground">O Clube do Livro</strong>)
-        é uma plataforma para organização de clubes de leitura, encontros e
+        O <strong className="text-foreground">Entrelivros</strong> (
+        <strong className="text-foreground">entrelivros.com</strong>) é uma
+        plataforma para organização de clubes de leitura, encontros e
         interações entre leitoras. Esta política descreve que dados pessoais
         tratamos, para quê e com que base, incluindo a integração opcional ao{" "}
         <strong className="text-foreground">Google Calendar</strong>.
@@ -24,8 +24,8 @@ export default function PrivacyPolicy() {
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           Os dados pessoais tratados através desta aplicação são da
-          responsabilidade da titular do projeto The Book Club / O Clube do
-          Livro. Para questões sobre privacidade ou exercício de direitos,
+          responsabilidade da titular do projeto Entrelivros (entrelivros.com).
+          Para questões sobre privacidade ou exercício de direitos,
           utilize o{" "}
           <strong className="text-foreground">
             e-mail de contato do programador

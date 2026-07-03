@@ -17,7 +17,7 @@ export default function Home() {
     <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-20">
       <div id="boas-vindas" className="flex flex-col items-start">
         <h1 className="text-3xl md:text-5xl font-bold text-foreground">
-          Olá, {user?.nickname || "Bem-vindo ao Clube do Livro"}
+          Olá, {user?.nickname || "Bem-vindo de volta"}
         </h1>
         <p className="text-lg md:text-2xl mt-3 w-full text-muted-foreground">
           {hasClubs

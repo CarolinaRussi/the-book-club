@@ -43,7 +43,7 @@ export default function Register() {
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Criar conta</h1>
       <h2 className="text-warm-brown mb-4 w-80">
-        Junte-se ao Clube do Livro e comece sua jornada literária!
+        Junte-se ao Entrelivros e comece sua jornada literária!
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
