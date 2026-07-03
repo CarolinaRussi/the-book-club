@@ -4,6 +4,8 @@ import {
   getUserAuthenticated,
   updatePersonalLibrary,
   updateUser,
+  getUserProfile,
+  getUserReadings,
 } from "../controllers/user";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
@@ -19,5 +21,7 @@ router.put(
   updateUser
 );
 router.post("/update-personal-library", authMiddleware, updatePersonalLibrary);
+router.get("/users/:userId/profile", authMiddleware, getUserProfile);
+router.get("/users/:userId/readings", authMiddleware, getUserReadings);
 
 export default router;

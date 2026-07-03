@@ -30,7 +30,6 @@ export async function getMembersFromClub(
       bio: m.userBio,
       favoritesGenres: m.userFavoritesGenres,
       profilePicture: m.userProfilePicture,
-      email: m.userEmail,
     },
   }));
 

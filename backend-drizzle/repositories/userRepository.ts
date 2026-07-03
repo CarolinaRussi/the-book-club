@@ -97,16 +97,19 @@ export async function insertUserBook(values: typeof userBook.$inferInsert) {
   return row ?? null;
 }
 
-export async function countUserBooksByUserId(userId: string) {
+export async function countUserBooksByUserId(
+  userId: string,
+  readingStatus?: ReadingStatus,
+) {
+  const statusFilter =
+    readingStatus !== undefined
+      ? eq(userBook.readingStatus, readingStatus)
+      : ne(userBook.readingStatus, ReadingStatus.DROPPED);
+
   const [{ value: totalItems }] = await db
     .select({ value: count() })
     .from(userBook)
-    .where(
-      and(
-        eq(userBook.userId, userId),
-        ne(userBook.readingStatus, ReadingStatus.DROPPED),
-      ),
-    );
+    .where(and(eq(userBook.userId, userId), statusFilter));
   return Number(totalItems ?? 0);
 }
 
@@ -114,10 +117,16 @@ export async function findUserBooksPaginatedForUser(
   userId: string,
   offset: number,
   limit: number,
+  readingStatus?: ReadingStatus,
 ) {
+  const statusFilter =
+    readingStatus !== undefined
+      ? eq(userBook.readingStatus, readingStatus)
+      : ne(userBook.readingStatus, ReadingStatus.DROPPED);
+
   return db.query.userBook.findMany({
-    where: (ub, { eq, and, ne }) =>
-      and(eq(ub.userId, userId), ne(ub.readingStatus, ReadingStatus.DROPPED)),
+    where: (ub, { eq, and }) =>
+      and(eq(ub.userId, userId), statusFilter),
     orderBy: (ub, { desc }) => [desc(ub.updatedAt)],
     offset,
     limit,
