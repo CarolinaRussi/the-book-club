@@ -7,6 +7,8 @@ import Register from "./pages/Register.tsx";
 import Meetings from "./pages/Meetings.tsx";
 import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
 import Index from "./pages/Index.tsx";
@@ -23,12 +25,14 @@ const router = createBrowserRouter([
     children: [
       { path: "/privacidade", element: <PrivacyPolicy /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
+      { path: "/reset-password", element: <ResetPassword /> },
       {
         element: <PublicRoute />,
         children: [
           { path: "/", element: <Index /> },
           { path: "/login", element: <Login /> },
           { path: "/register", element: <Register /> },
+          { path: "/forgot-password", element: <ForgotPassword /> },
         ],
       },
       {

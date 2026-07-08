@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import type { IApiError, IApiReturnData } from "../types/IApi";
 import type { ILoginData } from "../types/ILogin";
@@ -34,64 +34,76 @@ export default function Login() {
   });
 
   const onSubmit: SubmitHandler<ILoginData> = (data) => {
-    const { email, password } = data;
-
-    loginMutate({ email, password });
+    loginMutate({ email: data.email, password: data.password });
   };
+
   return (
-    <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 h-160 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
-      <GiBookCover size={100} className="text-primary" />
-      <h1 className="text-4xl font-bold text-foreground">Entrar</h1>
-      <h2 className="text-warm-brown mb-4">
-        Entre com sua conta para acessar o Entrelivros
-      </h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          {...register("email", { required: true })}
-          placeholder="Email"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.email && (
-          <h3 className="text-xs text-primary">E-mail é obrigatório</h3>
-        )}
-        <input
-          {...register("password", { required: true, minLength: 6 })}
-          type="password"
-          placeholder="Senha"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.password && (
-          <h3 className="text-xs text-primary">
-            Senha é obrigatória e deve ter no mínimo 6 caracteres
-          </h3>
-        )}
+    <div className="mt-20 flex w-120 flex-col items-center rounded-lg border-2 border-secondary bg-background p-8 text-center text-foreground shadow-md">
+      <GiBookCover size={72} className="text-primary" />
+      <h1 className="mt-4 text-3xl font-bold">Entrar</h1>
+      <p className="mt-1 text-sm text-warm-brown">Entre com sua conta para acessar o Entrelivros</p>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mt-8 flex w-full max-w-80 flex-col items-center gap-4"
+      >
+        <div className="w-full space-y-1">
+          <input
+            {...register("email", { required: true })}
+            type="email"
+            placeholder="E-mail"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.email && (
+            <p className="text-left text-xs text-primary">E-mail é obrigatório</p>
+          )}
+        </div>
+
+        <div className="w-full space-y-1">
+          <input
+            {...register("password", { required: true, minLength: 6 })}
+            type="password"
+            placeholder="Senha"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.password && (
+            <p className="text-left text-xs text-primary">
+              Senha é obrigatória e deve ter no mínimo 6 caracteres
+            </p>
+          )}
+          <Link
+            to="/forgot-password"
+            className="block pt-1 text-center text-xs text-warm-brown transition-colors hover:text-primary"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
+
         <button
           type="submit"
           disabled={isPending}
-          className={`bg-primary text-background font-semibold rounded-lg p-2 w-80 mt-6 transition-colors ${
+          className={`mt-2 w-full rounded-lg bg-primary p-2.5 font-semibold text-background transition-colors ${
             isPending
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-foreground cursor-pointer"
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:bg-foreground"
           }`}
         >
           {isPending ? "Entrando..." : "Entrar"}
         </button>
       </form>
-      <h3 className="text-warm-brown mt-4">
+
+      <p className="mt-6 text-sm text-warm-brown">
         Não tem uma conta?{" "}
-        <a
-          href="/register"
-          className="text-primary font-semibold hover:underline"
-        >
+        <Link to="/register" className="font-semibold text-primary hover:underline">
           Cadastre-se
-        </a>
-      </h3>
-      <a
-        href="/"
-        className="text-warm-brown mt-2 text-sm hover:text-primary hover:underline"
+        </Link>
+      </p>
+      <Link
+        to="/"
+        className="mt-3 text-xs text-warm-brown/80 transition-colors hover:text-primary"
       >
         Voltar para página inicial
-      </a>
+      </Link>
     </div>
   );
 }

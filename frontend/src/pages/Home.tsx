@@ -14,7 +14,7 @@ export default function Home() {
   const hasClubs = clubs.length > 0;
 
   return (
-    <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-20">
+    <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-15">
       <div id="boas-vindas" className="flex flex-col items-start">
         <h1 className="text-3xl md:text-5xl font-bold text-foreground">
           Olá, {user?.nickname || "Bem-vindo de volta"}
@@ -37,10 +37,7 @@ export default function Home() {
         </>
       ) : (
         <>
-          <HomeUpcomingMeetings
-            maxItems={3}
-            className="mt-6 md:hidden"
-          />
+          <HomeUpcomingMeetings maxItems={3} className="mt-6 md:hidden" />
 
           <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8">
             <FeedSection />
@@ -49,10 +46,7 @@ export default function Home() {
             </StickySidebarColumn>
           </div>
 
-          <HomeOnboardingCards
-            variant="compact"
-            className="mt-8 md:hidden"
-          />
+          <HomeOnboardingCards variant="compact" className="mt-8 md:hidden" />
         </>
       )}
     </div>
