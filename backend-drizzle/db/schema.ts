@@ -75,6 +75,11 @@ export const user = pgTable("User", {
   ),
   googleCalendarId: varchar("google_calendar_id", { length: 255 }),
   googleAccountEmail: varchar("google_account_email", { length: 255 }),
+  passwordResetTokenHash: varchar("password_reset_token_hash", { length: 255 }),
+  passwordResetExpiresAt: timestamp("password_reset_expires_at", {
+    withTimezone: true,
+    precision: 6,
+  }),
 });
 
 // Club

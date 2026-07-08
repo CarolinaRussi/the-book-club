@@ -23,11 +23,13 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
    ```bash
    pnpm db:push    # sincroniza o schema com o banco (desenvolvimento)
    # ou
-   pnpm db:generate  # gera novos arquivos de migração após mudar db/schema.ts
+   pnpm exec drizzle-kit generate --name=descricao_da_mudanca
    pnpm db:migrate   # aplica migrações em sequência
    ```
 
-   Banco já existente: rode `pnpm db:migrate` para aplicar migrações incrementais; ou `pnpm db:push` para alinhar o schema ao `schema.ts` sem histórico SQL.
+   **Nome da migração:** sempre passe `--name` descritivo em snake_case (ex.: `password_reset_fields`). Não use `pnpm db:generate` sem nome — o Drizzle gera sufixos aleatórios.
+
+   Banco já existente: rode `pnpm db:migrate` para aplicar migrações incrementais; ou `pnpm db:push` para alinhar o schema ao `schema.ts` sem histórico SQL (só desenvolvimento).
 
 3. **Desenvolvimento**
 
@@ -44,7 +46,7 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 |--------------------|------------------------------------|
 | `pnpm dev`         | Servidor em modo watch             |
 | `pnpm build`       | Compila TypeScript para `dist/`    |
-| `pnpm db:generate` | Gera migrações Drizzle             |
+| `pnpm exec drizzle-kit generate --name=…` | Gera migração com nome descritivo (obrigatório) |
 | `pnpm db:migrate`  | Aplica migrações                   |
 | `pnpm db:push`     | Sincroniza schema com o banco      |
 | `pnpm db:studio`   | Abre o Drizzle Studio no navegador |

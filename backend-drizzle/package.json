@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:reset-schema": "tsx scripts/reset-public-schema.ts",
     "db:studio": "drizzle-kit studio",
-    "calendar:create-event": "tsx scripts/googleCalendarCreateMeetingEvent.ts"
+    "calendar:create-event": "tsx scripts/googleCalendarCreateMeetingEvent.ts",
+    "email:test": "tsx scripts/sendTestEmail.ts"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nanoid": "^5.0.9",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "resend": "^6.17.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

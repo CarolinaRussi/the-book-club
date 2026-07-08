@@ -1,13 +1,18 @@
-import { eq, ne, count, and, inArray } from "drizzle-orm";
+import { eq, ne, count, and, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { user, userBook, review, clubBook, club, member } from "../db/schema";
 import { ReadingStatus } from "../enums/readingStatus";
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export async function findUserByEmail(email: string) {
+  const normalized = normalizeEmail(email);
   const [row] = await db
     .select()
     .from(user)
-    .where(eq(user.email, email))
+    .where(sql`lower(${user.email}) = ${normalized}`)
     .limit(1);
   return row ?? null;
 }
@@ -45,6 +50,34 @@ export async function updateUserById(
     .where(eq(user.id, id))
     .returning();
   return row ?? null;
+}
+
+export async function setUserPasswordReset(
+  userId: string,
+  tokenHash: string,
+  expiresAt: Date,
+) {
+  return updateUserById(userId, {
+    passwordResetTokenHash: tokenHash,
+    passwordResetExpiresAt: expiresAt,
+  });
+}
+
+export async function findUserByPasswordResetTokenHash(tokenHash: string) {
+  const [row] = await db
+    .select()
+    .from(user)
+    .where(eq(user.passwordResetTokenHash, tokenHash))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateUserPassword(userId: string, hashedPassword: string) {
+  return updateUserById(userId, {
+    password: hashedPassword,
+    passwordResetTokenHash: null,
+    passwordResetExpiresAt: null,
+  });
 }
 
 export async function updateUserGoogleOAuth(

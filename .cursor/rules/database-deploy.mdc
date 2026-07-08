@@ -1,0 +1,37 @@
+---
+description: Migrações Drizzle — nome descritivo, generate e deploy em produção
+alwaysApply: true
+---
+
+# Banco de dados — Drizzle (migrações)
+
+## Gerar migração — nome descritivo obrigatório
+
+Ao alterar `db/schema.ts`, **sempre** gere a migração com `--name` descritivo em **snake_case** (inglês), resumindo a mudança:
+
+```bash
+cd backend-drizzle
+pnpm exec drizzle-kit generate --name=password_reset_fields
+```
+
+**Não** rode `pnpm db:generate` sem `--name` — o Drizzle gera sufixos aleatórios (`heavy_giant_man`, etc.) e o histórico fica ilegível.
+
+Exemplos de nomes bons: `password_reset_fields`, `meeting_book_optional`, `club_book_suggested_by`.
+
+O arquivo resultante segue o padrão `{índice}_{nome}.sql` (ex.: `0005_password_reset_fields.sql`).
+
+## Aplicar em desenvolvimento
+
+```bash
+pnpm db:migrate
+```
+
+## Aplicar em produção (fluxo da Carolina)
+
+1. Alterar `DATABASE_URL` no `backend-drizzle/.env` para o banco de **produção**.
+2. `pnpm db:migrate` na pasta `backend-drizzle`.
+3. Reverter o `.env` para desenvolvimento local (não commitar `.env`).
+
+Os arquivos `drizzle/*.sql` ficam no `.gitignore`; o SQL é gerado localmente. No git vão o journal (`drizzle/meta/_journal.json`) e os snapshots.
+
+**Não** sugerir `db:push` em prod como padrão — usar **`db:migrate`** neste fluxo.
