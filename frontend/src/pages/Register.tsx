@@ -11,6 +11,7 @@ import {
   confirmPasswordFieldRules,
   passwordFieldRules,
 } from "../utils/passwordPolicy";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -84,23 +85,21 @@ export default function Register() {
         {errors.email && (
           <h3 className="text-xs text-primary">E-mail é obrigatório</h3>
         )}
-        <input
+        <PasswordInput
           {...register("password", passwordFieldRules())}
-          type="password"
           placeholder="Senha"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+          className="mt-4 w-80 p-2"
         />
         {errors.password && (
           <h3 className="text-xs text-primary">{errors.password.message}</h3>
         )}
-        <input
+        <PasswordInput
           {...register(
             "confirmPassword",
             confirmPasswordFieldRules(() => password),
           )}
-          type="password"
           placeholder="Confirmar Senha"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+          className="mt-4 w-80 p-2"
         />
         {errors.confirmPassword && (
           <h3 className="text-xs text-primary">

@@ -9,6 +9,7 @@ import {
   confirmPasswordFieldRules,
   passwordFieldRules,
 } from "@/utils/passwordPolicy";
+import { PasswordInput } from "@/components/ui/password-input";
 
 type ResetPasswordForm = {
   password: string;
@@ -75,23 +76,21 @@ export default function ResetPassword() {
         Crie uma nova senha para acessar o Entrelivros.
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <input
+        <PasswordInput
           {...register("password", passwordFieldRules())}
-          type="password"
           placeholder="Nova senha"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+          className="mt-4 w-80 p-2"
         />
         {errors.password && (
           <h3 className="text-xs text-primary">{errors.password.message}</h3>
         )}
-        <input
+        <PasswordInput
           {...register(
             "confirmPassword",
             confirmPasswordFieldRules(() => password),
           )}
-          type="password"
           placeholder="Confirmar nova senha"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
+          className="mt-4 w-80 p-2"
         />
         {errors.confirmPassword && (
           <h3 className="text-xs text-primary">

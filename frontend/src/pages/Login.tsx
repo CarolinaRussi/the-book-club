@@ -12,6 +12,7 @@ import {
   passwordMinLengthMessage,
   passwordRequiredMessage,
 } from "../utils/passwordPolicy";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -65,11 +66,9 @@ export default function Login() {
         </div>
 
         <div className="w-full space-y-1">
-          <input
+          <PasswordInput
             {...register("password", { required: true, minLength: PASSWORD_MIN_LENGTH })}
-            type="password"
             placeholder="Senha"
-            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
           />
           {errors.password && (
             <p className="text-left text-xs text-primary">
@@ -80,7 +79,7 @@ export default function Login() {
           )}
           <Link
             to="/forgot-password"
-            className="block pt-1 text-center text-xs text-warm-brown transition-colors hover:text-primary"
+            className="block pt-1 text-right text-xs text-warm-brown transition-colors hover:text-primary"
           >
             Esqueci minha senha
           </Link>

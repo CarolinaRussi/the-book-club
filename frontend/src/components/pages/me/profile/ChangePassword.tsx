@@ -11,6 +11,7 @@ import {
   confirmPasswordFieldRules,
   passwordFieldRules,
 } from "@/utils/passwordPolicy";
+import { PasswordInput } from "@/components/ui/password-input";
 
 interface ChangePasswordProps {
   register: UseFormRegister<IUserUpdateForm>;
@@ -34,15 +35,14 @@ const ChangePassword = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div className="flex flex-col gap-2 w-full">
               <div>Senha atual:</div>
-              <input
-                type="password"
+              <PasswordInput
                 {...register("oldPassword", {
                   required: isChangingPassword
                     ? "Senha atual é obrigatória"
                     : false,
                 })}
                 autoComplete="new-password"
-                className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
+                className="p-2"
               />
               {errors.oldPassword && (
                 <h3 className="text-xs text-primary">
@@ -52,8 +52,7 @@ const ChangePassword = ({
             </div>
             <div className="flex flex-col gap-2 w-full">
               <div>Nova Senha:</div>
-              <input
-                type="password"
+              <PasswordInput
                 {...register(
                   "password",
                   passwordFieldRules({
@@ -62,7 +61,7 @@ const ChangePassword = ({
                       : false,
                   }),
                 )}
-                className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
+                className="p-2"
               />
               {errors.password && (
                 <h3 className="text-xs text-primary">
@@ -72,8 +71,7 @@ const ChangePassword = ({
             </div>
             <div className="flex flex-col gap-2 w-full">
               <div>Confirmar Nova Senha:</div>
-              <input
-                type="password"
+              <PasswordInput
                 {...register(
                   "confirmPassword",
                   confirmPasswordFieldRules(() => password, {
@@ -82,7 +80,7 @@ const ChangePassword = ({
                       : false,
                   }),
                 )}
-                className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
+                className="p-2"
               />
               {errors.confirmPassword && (
                 <h3 className="text-xs text-primary">
