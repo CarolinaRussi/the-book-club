@@ -7,6 +7,10 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import type { IUserUpdateForm } from "@//types/IUser";
+import {
+  confirmPasswordFieldRules,
+  passwordFieldRules,
+} from "@/utils/passwordPolicy";
 
 interface ChangePasswordProps {
   register: UseFormRegister<IUserUpdateForm>;
@@ -50,11 +54,14 @@ const ChangePassword = ({
               <div>Nova Senha:</div>
               <input
                 type="password"
-                {...register("password", {
-                  required: isChangingPassword
-                    ? "Nova senha é obrigatória"
-                    : false,
-                })}
+                {...register(
+                  "password",
+                  passwordFieldRules({
+                    required: isChangingPassword
+                      ? "Nova senha é obrigatória"
+                      : false,
+                  }),
+                )}
                 className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
               />
               {errors.password && (
@@ -67,15 +74,14 @@ const ChangePassword = ({
               <div>Confirmar Nova Senha:</div>
               <input
                 type="password"
-                {...register("confirmPassword", {
-                  required: isChangingPassword
-                    ? "Confirmação é obrigatória"
-                    : false,
-                  validate: (value) =>
-                    !isChangingPassword ||
-                    value === password ||
-                    "As senhas não coincidem",
-                })}
+                {...register(
+                  "confirmPassword",
+                  confirmPasswordFieldRules(() => password, {
+                    required: isChangingPassword
+                      ? "Confirmação é obrigatória"
+                      : false,
+                  }),
+                )}
                 className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
               />
               {errors.confirmPassword && (

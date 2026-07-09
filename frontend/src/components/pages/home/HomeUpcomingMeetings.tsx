@@ -4,12 +4,7 @@ import { Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import { fetchMyUpcomingMeetings } from "@/api/queries/fetchUpcomingMeetings";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -76,7 +71,7 @@ export default function HomeUpcomingMeetings({
                   <button
                     type="button"
                     onClick={() => handleMeetingClick(meeting.club.id)}
-                    className="w-full rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/60"
+                    className="w-full rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/60 cursor-pointer"
                   >
                     <p className="font-medium text-sm text-primary truncate">
                       {meeting.club.name}

@@ -7,6 +7,11 @@ import { useAuth } from "../contexts/AuthContext";
 import type { IApiError, IApiReturnData } from "../types/IApi";
 import type { ILoginData } from "../types/ILogin";
 import { loginUser } from "../api/mutations/authMutate";
+import {
+  PASSWORD_MIN_LENGTH,
+  passwordMinLengthMessage,
+  passwordRequiredMessage,
+} from "../utils/passwordPolicy";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -61,14 +66,16 @@ export default function Login() {
 
         <div className="w-full space-y-1">
           <input
-            {...register("password", { required: true, minLength: 6 })}
+            {...register("password", { required: true, minLength: PASSWORD_MIN_LENGTH })}
             type="password"
             placeholder="Senha"
             className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
           />
           {errors.password && (
             <p className="text-left text-xs text-primary">
-              Senha é obrigatória e deve ter no mínimo 6 caracteres
+              {errors.password.type === "minLength"
+                ? passwordMinLengthMessage
+                : passwordRequiredMessage}
             </p>
           )}
           <Link

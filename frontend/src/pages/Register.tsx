@@ -7,6 +7,10 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import type { IFormInput, IRegisterData } from "../types/IRegister";
 import type { IApiError, IApiReturnData } from "../types/IApi";
+import {
+  confirmPasswordFieldRules,
+  passwordFieldRules,
+} from "../utils/passwordPolicy";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -81,22 +85,19 @@ export default function Register() {
           <h3 className="text-xs text-primary">E-mail é obrigatório</h3>
         )}
         <input
-          {...register("password", { required: true, minLength: 6 })}
+          {...register("password", passwordFieldRules())}
           type="password"
           placeholder="Senha"
           className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
         />
         {errors.password && (
-          <h3 className="text-xs text-primary">
-            Senha é obrigatória e deve ter no mínimo 6 caracteres
-          </h3>
+          <h3 className="text-xs text-primary">{errors.password.message}</h3>
         )}
         <input
-          {...register("confirmPassword", {
-            required: true,
-            validate: (value) =>
-              value === password || "As senhas não coincidem",
-          })}
+          {...register(
+            "confirmPassword",
+            confirmPasswordFieldRules(() => password),
+          )}
           type="password"
           placeholder="Confirmar Senha"
           className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"

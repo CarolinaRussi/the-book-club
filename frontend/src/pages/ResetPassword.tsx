@@ -5,6 +5,10 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { resetPassword } from "@/api/mutations/authMutate";
 import type { IApiError } from "@/types/IApi";
+import {
+  confirmPasswordFieldRules,
+  passwordFieldRules,
+} from "@/utils/passwordPolicy";
 
 type ResetPasswordForm = {
   password: string;
@@ -72,13 +76,7 @@ export default function ResetPassword() {
       </h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
-          {...register("password", {
-            required: "Senha é obrigatória",
-            minLength: {
-              value: 6,
-              message: "A senha deve ter no mínimo 6 caracteres",
-            },
-          })}
+          {...register("password", passwordFieldRules())}
           type="password"
           placeholder="Nova senha"
           className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
@@ -87,11 +85,10 @@ export default function ResetPassword() {
           <h3 className="text-xs text-primary">{errors.password.message}</h3>
         )}
         <input
-          {...register("confirmPassword", {
-            required: "Confirme a senha",
-            validate: (value) =>
-              value === password || "As senhas não coincidem",
-          })}
+          {...register(
+            "confirmPassword",
+            confirmPasswordFieldRules(() => password),
+          )}
           type="password"
           placeholder="Confirmar nova senha"
           className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
