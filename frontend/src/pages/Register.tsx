@@ -88,7 +88,7 @@ export default function Register() {
         <PasswordInput
           {...register("password", passwordFieldRules())}
           placeholder="Senha"
-          className="mt-4 w-80 p-2"
+          containerClassName="mt-4 w-80"
         />
         {errors.password && (
           <h3 className="text-xs text-primary">{errors.password.message}</h3>
@@ -99,7 +99,7 @@ export default function Register() {
             confirmPasswordFieldRules(() => password),
           )}
           placeholder="Confirmar Senha"
-          className="mt-4 w-80 p-2"
+          containerClassName="mt-4 w-80"
         />
         {errors.confirmPassword && (
           <h3 className="text-xs text-primary">

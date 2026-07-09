@@ -1,21 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
-import type { FocusEvent, KeyboardEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Camera, Settings } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateUser } from "@/api/mutations/userMutate";
 import type { IApiError } from "@/types/IApi";
 import type { IUser } from "@/types/IUser";
 import ProfileHero from "@/components/pages/profile/ProfileHero";
 import ProfileAvatarCropDialog from "@/components/pages/me/profile/ProfileAvatarCropDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getInitials } from "@/utils/formatters";
-import { cn } from "@/lib/utils";
-
-type EditableField = "name" | "nickname" | "bio" | "genres";
 
 function appendGenres(formData: FormData, genres: string[]) {
   if (genres.length === 0) {
@@ -25,26 +33,66 @@ function appendGenres(formData: FormData, genres: string[]) {
   genres.forEach((tag) => formData.append("favoritesGenres", tag));
 }
 
+function genresEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  return a.every((tag, index) => tag === b[index]);
+}
+
 export default function MyProfileHero() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-  const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftNickname, setDraftNickname] = useState("");
   const [draftBio, setDraftBio] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [genreInput, setGenreInput] = useState("");
 
-  useEffect(() => {
+  const resetDraftsFromUser = useCallback(() => {
     if (!user) return;
     setDraftName(user.name ?? "");
     setDraftNickname(user.nickname ?? "");
     setDraftBio(user.bio ?? "");
     setTags(user.favoritesGenres ?? []);
+    setGenreInput("");
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return undefined;
+    });
+    setPendingAvatarFile(null);
+    setRemoveProfilePicture(false);
   }, [user]);
+
+  useEffect(() => {
+    if (!user || isEditing) return;
+    resetDraftsFromUser();
+  }, [user, isEditing, resetDraftsFromUser]);
+
+  const isDirty = useCallback(() => {
+    if (!user) return false;
+    return (
+      draftNickname.trim() !== (user.nickname ?? "") ||
+      draftName.trim() !== (user.name ?? "") ||
+      draftBio.trim() !== (user.bio ?? "") ||
+      !genresEqual(tags, user.favoritesGenres ?? []) ||
+      pendingAvatarFile !== null ||
+      removeProfilePicture
+    );
+  }, [
+    user,
+    draftNickname,
+    draftName,
+    draftBio,
+    tags,
+    pendingAvatarFile,
+    removeProfilePicture,
+  ]);
 
   const { mutate: saveProfile, isPending } = useMutation<
     IUser,
@@ -62,50 +110,58 @@ export default function MyProfileHero() {
     },
   });
 
-  const buildFormData = useCallback(
-    (extra?: (fd: FormData) => void) => {
-      const formData = new FormData();
-      formData.append("id", user!.id);
-      extra?.(formData);
-      return formData;
-    },
-    [user],
-  );
+  const handleStartEditing = () => {
+    resetDraftsFromUser();
+    setIsEditing(true);
+  };
 
-  const saveTextField = useCallback(
-    (field: "name" | "nickname" | "bio", value: string) => {
-      if (!user) return;
-      const trimmed = value.trim();
-      const current =
-        field === "name"
-          ? user.name
-          : field === "nickname"
-            ? user.nickname
-            : user.bio;
-      if (trimmed === (current ?? "")) {
-        setEditingField(null);
-        return;
-      }
-      if (field !== "bio" && !trimmed) {
-        toast.error("Este campo não pode ficar vazio.");
-        return;
-      }
-      const formData = buildFormData((fd) => fd.append(field, trimmed));
-      saveProfile(formData, {
-        onSuccess: () => setEditingField(null),
-      });
-    },
-    [user, buildFormData, saveProfile],
-  );
+  const handleCancelEditing = () => {
+    if (isDirty()) {
+      setDiscardConfirmOpen(true);
+      return;
+    }
+    setIsEditing(false);
+    resetDraftsFromUser();
+  };
 
-  const saveGenres = useCallback(
-    (nextTags: string[]) => {
-      if (!user) return;
-      const formData = buildFormData((fd) => appendGenres(fd, nextTags));
-      saveProfile(formData);
-    },
-    [user, buildFormData, saveProfile],
-  );
+  const handleConfirmDiscard = () => {
+    setDiscardConfirmOpen(false);
+    setIsEditing(false);
+    resetDraftsFromUser();
+  };
+
+  const handleSave = () => {
+    if (!user) return;
+
+    const trimmedNickname = draftNickname.trim();
+    if (!trimmedNickname) {
+      toast.error("Apelido não pode ficar vazio.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("id", user.id);
+    formData.append("name", draftName.trim());
+    formData.append("nickname", trimmedNickname);
+    formData.append("bio", draftBio.trim());
+    appendGenres(formData, tags);
+
+    if (pendingAvatarFile) {
+      formData.append("profile_picture", pendingAvatarFile);
+    }
+    if (removeProfilePicture) {
+      formData.append("removeProfilePicture", "true");
+    }
+
+    saveProfile(formData, {
+      onSuccess: () => {
+        setIsEditing(false);
+        setPendingAvatarFile(null);
+        setRemoveProfilePicture(false);
+        setPreviewUrl(undefined);
+      },
+    });
+  };
 
   const handlePickImageFile = (file: File) => {
     setCropImageSrc(URL.createObjectURL(file));
@@ -119,81 +175,80 @@ export default function MyProfileHero() {
   };
 
   const handleCroppedAvatar = (file: File) => {
-    if (!user) return;
-    const formData = buildFormData((fd) => {
-      fd.append("profile_picture", file);
-    });
+    setPendingAvatarFile(file);
+    setRemoveProfilePicture(false);
     setPreviewUrl((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return URL.createObjectURL(file);
     });
-    saveProfile(formData);
   };
 
-  const handleBlurSave = (
-    field: "name" | "nickname" | "bio",
-    value: string,
-  ) => {
-    saveTextField(field, value);
-  };
-
-  const handleKeyDownSave = (
-    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: "name" | "nickname" | "bio",
-    value: string,
-  ) => {
-    if (e.key === "Enter" && field !== "bio") {
-      e.preventDefault();
-      saveTextField(field, value);
-    }
-    if (e.key === "Escape") {
-      if (!user) return;
-      if (field === "name") setDraftName(user.name ?? "");
-      if (field === "nickname") setDraftNickname(user.nickname ?? "");
-      if (field === "bio") setDraftBio(user.bio ?? "");
-      setEditingField(null);
-    }
+  const handleRemoveImage = () => {
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return undefined;
+    });
+    setPendingAvatarFile(null);
+    setRemoveProfilePicture(true);
   };
 
   const addTag = () => {
     const trimmed = genreInput.trim();
     if (!trimmed || tags.includes(trimmed)) return;
-    const next = [...tags, trimmed];
-    setTags(next);
+    setTags((prev) => [...prev, trimmed]);
     setGenreInput("");
-    saveGenres(next);
   };
 
   const removeTag = (tag: string) => {
-    const next = tags.filter((t) => t !== tag);
-    setTags(next);
-    saveGenres(next);
+    setTags((prev) => prev.filter((t) => t !== tag));
   };
 
   if (!user) return null;
 
-  const displayPicture = previewUrl || user.profilePicture;
-  const editableHint = "cursor-pointer rounded-md transition-colors hover:bg-secondary/40";
+  const displayPicture = removeProfilePicture
+    ? undefined
+    : previewUrl || user.profilePicture;
+
+  const actionsSlot = (
+    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+      <Button type="button" size="sm" onClick={handleStartEditing}>
+        Editar perfil
+      </Button>
+      <Link
+        to="/me/account"
+        title="Senha e configurações"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        Conta
+      </Link>
+    </div>
+  );
+
+  if (!isEditing) {
+    return (
+      <ProfileHero
+        name={user.name}
+        nickname={user.nickname}
+        bio={user.bio}
+        profilePicture={user.profilePicture}
+        favoritesGenres={user.favoritesGenres ?? []}
+        actionsSlot={actionsSlot}
+      />
+    );
+  }
 
   return (
     <>
-      <ProfileHero
-        actionsSlot={
-          <Link
-            to="/me/account"
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
-            aria-label="Conta e configurações"
-          >
-            <Settings className="h-5 w-5" />
-            <span className="hidden sm:inline">Conta</span>
-          </Link>
-        }
-        avatarSlot={
+      <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+        <div className="flex flex-col items-center gap-2">
           <label className="group relative block cursor-pointer">
             <Avatar className="size-28 shrink-0 sm:size-32 md:size-36">
-              <AvatarImage src={displayPicture || undefined} alt={user.name} />
+              <AvatarImage
+                src={displayPicture || undefined}
+                alt={draftNickname || user.name}
+              />
               <AvatarFallback className="text-3xl text-primary" delayMs={600}>
-                {getInitials(user.name || "")}
+                {getInitials(draftNickname || user.name || "")}
               </AvatarFallback>
             </Avatar>
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60 opacity-0 transition-opacity group-hover:opacity-100">
@@ -210,123 +265,102 @@ export default function MyProfileHero() {
               }}
             />
           </label>
-        }
-        nicknameSlot={
-          editingField === "nickname" ? (
-            <input
-              autoFocus
+          {displayPicture ? (
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="text-sm text-primary hover:underline cursor-pointer"
+            >
+              Remover foto
+            </button>
+          ) : null}
+        </div>
+
+        <div className="min-w-0 w-full flex-1 space-y-5 sm:w-auto">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="profile-nickname"
+              className="text-sm font-medium text-foreground"
+            >
+              Apelido
+            </label>
+            <p className="text-sm text-muted-foreground">
+              Como você aparece no clube (feed, leitores, comentários).
+            </p>
+            <Input
+              id="profile-nickname"
               disabled={isPending}
               value={draftNickname}
               onChange={(e) => setDraftNickname(e.target.value)}
-              onBlur={() => handleBlurSave("nickname", draftNickname)}
-              onKeyDown={(e) => handleKeyDownSave(e, "nickname", draftNickname)}
-              className="min-w-32 max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-2xl font-bold text-foreground sm:text-3xl"
+              className="max-w-md text-lg font-semibold"
             />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingField("nickname")}
-              className={cn(
-                "block text-left text-2xl font-bold text-foreground sm:text-3xl",
-                editableHint,
-                "px-2 py-1",
-              )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="profile-name"
+              className="text-sm font-medium text-foreground"
             >
-              {user.nickname || "Apelido"}
-            </button>
-          )
-        }
-        nameSlot={
-          editingField === "name" ? (
-            <input
-              autoFocus
+              Nome completo
+            </label>
+            <p className="text-sm text-muted-foreground">
+              Opcional; aparece abaixo do apelido no seu perfil.
+            </p>
+            <Input
+              id="profile-name"
               disabled={isPending}
               value={draftName}
               onChange={(e) => setDraftName(e.target.value)}
-              onBlur={() => handleBlurSave("name", draftName)}
-              onKeyDown={(e) => handleKeyDownSave(e, "name", draftName)}
-              className="min-w-32 max-w-md rounded-md border border-secondary bg-background px-2 py-1 text-base text-muted-foreground sm:text-lg"
+              placeholder="Fulana de tal"
+              className="max-w-md"
             />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingField("name")}
-              className={cn(
-                "block text-left text-base text-muted-foreground sm:text-lg",
-                editableHint,
-                "px-2 py-1",
-              )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="profile-bio"
+              className="text-sm font-medium text-foreground"
             >
-              {user.name || "Adicionar nome completo"}
-            </button>
-          )
-        }
-        bioSlot={
-          editingField === "bio" ? (
+              Bio
+            </label>
             <textarea
-              autoFocus
+              id="profile-bio"
               disabled={isPending}
               value={draftBio}
               onChange={(e) => setDraftBio(e.target.value)}
-              onBlur={(e: FocusEvent<HTMLTextAreaElement>) =>
-                handleBlurSave("bio", e.target.value)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setDraftBio(user.bio ?? "");
-                  setEditingField(null);
-                }
-              }}
               rows={4}
               placeholder="Conte um pouco sobre você e suas preferências literárias..."
-              className="w-full max-w-2xl rounded-md border border-secondary bg-background px-3 py-2 text-base text-foreground"
+              className="w-full max-w-2xl rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:opacity-50"
             />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingField("bio")}
-              className={cn(
-                "block max-w-2xl text-left text-base leading-relaxed",
-                user.bio ? "text-muted-foreground" : "text-muted-foreground/70 italic",
-                editableHint,
-                "px-2 py-1 whitespace-pre-wrap",
-              )}
-            >
-              {user.bio?.trim() ||
-                "Clique para adicionar uma bio — é o que outros leitores verão."}
-            </button>
-          )
-        }
-        genresSlot={
-          editingField === "genres" ? (
-            <div className="space-y-2 rounded-lg border border-secondary/60 bg-card/30 p-3">
-              <div className="flex gap-2">
-                <input
-                  autoFocus
-                  value={genreInput}
-                  onChange={(e) => setGenreInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addTag();
-                    }
-                    if (e.key === "Escape") {
-                      setTags(user.favoritesGenres ?? []);
-                      setEditingField(null);
-                    }
-                  }}
-                  placeholder="Ex.: Ficção, Romance..."
-                  className="flex-1 rounded-md border border-secondary bg-background px-2 py-1.5 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={addTag}
-                  disabled={isPending}
-                  className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground cursor-pointer disabled:opacity-50"
-                >
-                  Adicionar
-                </button>
-              </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">
+              Gêneros preferidos
+            </p>
+            <div className="flex max-w-2xl gap-2">
+              <Input
+                value={genreInput}
+                disabled={isPending}
+                onChange={(e) => setGenreInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+                placeholder="Ex.: Ficção, Romance..."
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={addTag}
+                disabled={isPending}
+              >
+                Adicionar
+              </Button>
+            </div>
+            {tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <Badge
@@ -339,37 +373,24 @@ export default function MyProfileHero() {
                   </Badge>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setEditingField(null)}
-                className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                Fechar
-              </button>
-            </div>
-          ) : (
-            <button
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <Button
               type="button"
-              onClick={() => setEditingField("genres")}
-              className={cn("block w-full text-left", editableHint, "py-1")}
+              variant="outline"
+              onClick={handleCancelEditing}
+              disabled={isPending}
             >
-              {tags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((genre) => (
-                    <Badge key={genre} variant="secondary">
-                      {genre}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-sm text-muted-foreground/70 italic">
-                  Clique para adicionar
-                </span>
-              )}
-            </button>
-          )
-        }
-      />
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isPending}>
+              {isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <ProfileAvatarCropDialog
         open={!!cropImageSrc}
@@ -377,6 +398,23 @@ export default function MyProfileHero() {
         onOpenChange={handleCropDialogOpenChange}
         onCropComplete={handleCroppedAvatar}
       />
+
+      <AlertDialog open={discardConfirmOpen} onOpenChange={setDiscardConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As mudanças que você fez no perfil ainda não foram salvas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDiscard}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
