@@ -4,6 +4,7 @@ import {
   DuplicateEmailError,
   JwtSecretMissingError,
 } from "../../services/authService";
+import { InvalidPasswordFormatError } from "../../utils/passwordPolicy";
 
 export const register = async (req: Request, res: Response) => {
   const { name, lastName, email, nickname, password } = req.body;
@@ -27,6 +28,9 @@ export const register = async (req: Request, res: Response) => {
       user,
     });
   } catch (error) {
+    if (error instanceof InvalidPasswordFormatError) {
+      return res.status(400).json({ message: error.message });
+    }
     if (error instanceof DuplicateEmailError) {
       return res.status(400).json({ message: error.message });
     }

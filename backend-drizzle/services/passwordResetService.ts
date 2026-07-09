@@ -7,6 +7,7 @@ import {
 import { getFrontendUrl } from "../utils/emailConfig";
 import { sendPasswordResetEmail } from "./emailService";
 import * as userRepository from "../repositories/userRepository";
+import { assertPasswordMeetsPolicy } from "../utils/passwordPolicy";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
@@ -54,6 +55,7 @@ export async function resetPassword(
   token: string,
   password: string,
 ): Promise<{ message: string }> {
+  assertPasswordMeetsPolicy(password);
   const tokenHash = hashPasswordResetToken(token.trim());
   const foundUser =
     await userRepository.findUserByPasswordResetTokenHash(tokenHash);

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { UserStatus } from "../enums/userStatus";
 import { createId } from "../utils/id";
 import { toPublicUser } from "../utils/publicUser";
+import { assertPasswordMeetsPolicy } from "../utils/passwordPolicy";
 import * as userRepository from "../repositories/userRepository";
 
 export class DuplicateEmailError extends Error {
@@ -47,6 +48,7 @@ export async function register(input: {
   nickname: string;
   password: string;
 }) {
+  assertPasswordMeetsPolicy(input.password);
   const hashedPassword = await bcrypt.hash(input.password, 10);
   const fullName = `${input.name} ${input.lastName}`;
 

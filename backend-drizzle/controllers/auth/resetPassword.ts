@@ -3,6 +3,7 @@ import {
   InvalidResetTokenError,
   resetPassword,
 } from "../../services/passwordResetService";
+import { InvalidPasswordFormatError } from "../../utils/passwordPolicy";
 
 export const resetPasswordHandler = async (req: Request, res: Response) => {
   const token = typeof req.body?.token === "string" ? req.body.token : "";
@@ -14,10 +15,8 @@ export const resetPasswordHandler = async (req: Request, res: Response) => {
     return;
   }
 
-  if (!password || password.length < 6) {
-    res.status(400).json({
-      message: "A senha deve ter no mínimo 6 caracteres.",
-    });
+  if (!password) {
+    res.status(400).json({ message: "Informe a nova senha." });
     return;
   }
 
@@ -25,6 +24,9 @@ export const resetPasswordHandler = async (req: Request, res: Response) => {
     const result = await resetPassword(token, password);
     res.status(200).json(result);
   } catch (error) {
+    if (error instanceof InvalidPasswordFormatError) {
+      return res.status(400).json({ message: error.message });
+    }
     if (error instanceof InvalidResetTokenError) {
       return res.status(400).json({ message: error.message });
     }
