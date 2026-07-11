@@ -50,3 +50,17 @@ export async function cancelMeeting(id: string | undefined): Promise<any> {
     throw { message: "Erro desconhecido" };
   }
 }
+
+export async function resyncMeetingGoogleCalendar(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await api.post(`/resync-meeting-google-calendar/${id}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro ao sincronizar com o Google Calendar." };
+  }
+}

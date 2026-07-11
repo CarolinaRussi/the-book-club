@@ -12,6 +12,8 @@ export interface IMeeting {
   status: MeetingStatus;
   createdAt: string;
   book: IBook | null;
+  googleEventId?: string | null;
+  googleSyncError?: string | null;
 }
 
 export interface IMeetingCreatePayload {
