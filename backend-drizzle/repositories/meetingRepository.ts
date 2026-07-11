@@ -1,4 +1,4 @@
-import { eq, and, inArray, count, asc, sql } from "drizzle-orm";
+import { eq, and, inArray, count, asc, lt, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { meeting, clubBook, club, book } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
@@ -124,6 +124,33 @@ export async function findUpcomingMeetingsByClubIds(
         eq(meeting.status, MeetingStatus.SCHEDULED),
         sql`(${meeting.meetingDate} + ${meeting.meetingTime}) >= CURRENT_TIMESTAMP`
       )
+    )
+    .orderBy(asc(meeting.meetingDate), asc(meeting.meetingTime))
+    .limit(limit);
+}
+
+export async function findScheduledMeetingsBeforeDate(
+  beforeDateYmd: string,
+  limit: number,
+) {
+  return db
+    .select({
+      id: meeting.id,
+      clubId: meeting.clubId,
+      location: meeting.location,
+      description: meeting.description,
+      meetingDate: meeting.meetingDate,
+      meetingTime: meeting.meetingTime,
+      bookId: meeting.bookId,
+      chapterStart: meeting.chapterStart,
+      chapterEnd: meeting.chapterEnd,
+    })
+    .from(meeting)
+    .where(
+      and(
+        eq(meeting.status, MeetingStatus.SCHEDULED),
+        lt(meeting.meetingDate, beforeDateYmd),
+      ),
     )
     .orderBy(asc(meeting.meetingDate), asc(meeting.meetingTime))
     .limit(limit);

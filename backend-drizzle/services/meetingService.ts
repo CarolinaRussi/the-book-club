@@ -292,6 +292,51 @@ export async function cancelMeeting(meetingId: string) {
   return cancelledMeeting;
 }
 
+export async function autoCompleteOverdueMeetings(limit = 100) {
+  const todayYmd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const overdueMeetings =
+    await meetingRepository.findScheduledMeetingsBeforeDate(todayYmd, limit);
+
+  let completed = 0;
+  let failed = 0;
+
+  for (const meetingRow of overdueMeetings) {
+    try {
+      const meetingDate =
+        typeof meetingRow.meetingDate === "string"
+          ? meetingRow.meetingDate.slice(0, 10)
+          : new Date(meetingRow.meetingDate).toISOString().slice(0, 10);
+
+      await updateMeeting(meetingRow.id, {
+        clubId: meetingRow.clubId,
+        location: meetingRow.location,
+        description: meetingRow.description,
+        meetingDate,
+        meetingTime: String(meetingRow.meetingTime).slice(0, 8),
+        bookId: meetingRow.bookId,
+        chapterStart: meetingRow.chapterStart,
+        chapterEnd: meetingRow.chapterEnd,
+        status: MeetingStatus.COMPLETED,
+      });
+      completed += 1;
+    } catch (error) {
+      failed += 1;
+      console.error(
+        `[meetings:auto-complete] falha meetingId=${meetingRow.id}`,
+        error,
+      );
+    }
+  }
+
+  return { completed, failed, todayYmd };
+}
+
 export async function resyncMeetingGoogleCalendar(meetingId: string) {
   const meeting = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
   if (!meeting) {

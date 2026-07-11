@@ -1,0 +1,27 @@
+---
+description: Evitar over-engineering, segurança e abstrações extras sem pedido
+alwaysApply: true
+---
+
+# Escopo mínimo — sem exageros
+
+Implemente **só o que a tarefa pediu** (e o que os guias do projeto já exigem). Prefira a solução mais simples que funcione.
+
+## Não fazer sem pedido explícito
+
+- Camadas, helpers, utils ou ficheiros novos “para ficar organizado”
+- Wrappers genéricos, factories, interfaces só com uma implementação
+- Listas deny/allow, validação defensiva em cascata, ou “endurecimento” de segurança além do padrão já usado no repo
+- Feature flags, locks, retries, métricas ou auditoria “por precaução”
+- Refactors fora do ficheiro/fluxo da tarefa
+
+## Preferir
+
+- Reutilizar funções e padrões **já existentes** no projeto
+- Poucas funções, nomes claros, fluxo linear fácil de ler
+- Se houver dúvida entre “mínimo” e “mais completo”, **perguntar no chat** antes de expandir
+
+## Exceções
+
+- O que já está nos guias (`BACKEND-GUIDE` / `FRONTEND-GUIDE`) ou no doc da feature em curso
+- O que a pessoa pediu de forma explícita nesta conversa

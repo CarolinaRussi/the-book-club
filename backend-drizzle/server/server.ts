@@ -2,6 +2,7 @@ import "dotenv/config";
 import "../config/cloudinary";
 import express from "express";
 import cors from "cors";
+import cron from "node-cron";
 import authRoutes from "../routes/authRoutes";
 import userRoutes from "../routes/userRoutes";
 import clubRoutes from "../routes/clubRoutes";
@@ -10,6 +11,7 @@ import bookRoutes from "../routes/bookRoutes";
 import meetingRoutes from "../routes/meetingRoutes";
 import googleAuthRoutes from "../routes/googleAuthRoutes";
 import feedRoutes from "../routes/feedRoutes";
+import { autoCompleteOverdueMeetings } from "../services/meetingService";
 
 const app = express();
 const port = process.env.PORT || 4001;
@@ -30,6 +32,27 @@ app.use(feedRoutes);
 app.use(bookRoutes);
 app.use(meetingRoutes);
 app.use(memberRoutes);
+
+if (process.env.ENABLE_MEETING_AUTO_COMPLETE === "true") {
+  cron.schedule(
+    "0 3 * * *",
+    () => {
+      void autoCompleteOverdueMeetings()
+        .then((result) => {
+          console.log(
+            `[meetings:auto-complete] today=${result.todayYmd} completed=${result.completed} failed=${result.failed}`,
+          );
+        })
+        .catch((error) => {
+          console.error("[meetings:auto-complete]", error);
+        });
+    },
+    { timezone: "America/Sao_Paulo" },
+  );
+  console.log(
+    "Auto-conclusão de encontros agendada (03:00 America/Sao_Paulo)",
+  );
+}
 
 app.listen(port, () => {
   console.log(
