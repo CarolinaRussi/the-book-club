@@ -39,33 +39,33 @@ export class GoogleOAuthMissingRefreshError extends Error {
 }
 
 function requireEnv(name: string): string {
-  const v = process.env[name];
-  if (!v || !v.trim()) {
+  const value = process.env[name];
+  if (!value || !value.trim()) {
     throw new GoogleOAuthConfigError(`Variável de ambiente ${name} não definida`);
   }
-  return v.trim();
+  return value.trim();
 }
 
 function googleClientId(): string {
-  const v =
+  const clientId =
     process.env.GOOGLE_CLIENT_ID?.trim();
-  if (!v) {
+  if (!clientId) {
     throw new GoogleOAuthConfigError(
       "GOOGLE_CLIENT_ID não definido",
     );
   }
-  return v;
+  return clientId;
 }
 
 function googleClientSecret(): string {
-  const v =
+  const clientSecret =
     process.env.GOOGLE_CLIENT_SECRET?.trim();
-  if (!v) {
+  if (!clientSecret) {
     throw new GoogleOAuthConfigError(
       "GOOGLE_CLIENT_SECRET não definido",
     );
   }
-  return v;
+  return clientSecret;
 }
 
 export function getGoogleOAuthWebCredentials(): {
@@ -101,9 +101,9 @@ export function parseGoogleOAuthState(state: string): string {
       throw new GoogleOAuthStateError("State inválido");
     }
     return payload.sub;
-  } catch (e) {
-    if (e instanceof GoogleOAuthStateError) {
-      throw e;
+  } catch (error) {
+    if (error instanceof GoogleOAuthStateError) {
+      throw error;
     }
     throw new GoogleOAuthStateError("State inválido ou expirado");
   }

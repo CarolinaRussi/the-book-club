@@ -14,7 +14,7 @@ export class InvalidMeetingChapterRangeError extends Error {
   }
 }
 
-function formatMeetingBook(m: {
+function formatMeetingBook(meeting: {
   book: {
     id: string;
     title: string;
@@ -22,12 +22,12 @@ function formatMeetingBook(m: {
     coverUrl: string | null;
   } | null;
 }) {
-  return m.book
+  return meeting.book
     ? {
-        id: m.book.id,
-        title: m.book.title,
-        author: m.book.author,
-        coverUrl: m.book.coverUrl,
+        id: meeting.book.id,
+        title: meeting.book.title,
+        author: meeting.book.author,
+        coverUrl: meeting.book.coverUrl,
       }
     : null;
 }
@@ -36,16 +36,18 @@ export async function getMeetingsFromClub(clubId: string) {
   const meetingsList = await meetingRepository.findMeetingsWithBookByClubId(
     clubId
   );
-  return meetingsList.map((m) => ({
-    id: m.id,
-    status: m.status,
-    location: m.location,
-    description: m.description,
-    meetingDate: m.meetingDate,
-    meetingTime: m.meetingTime,
-    chapterStart: m.chapterStart,
-    chapterEnd: m.chapterEnd,
-    book: formatMeetingBook(m),
+  return meetingsList.map((meeting) => ({
+    id: meeting.id,
+    status: meeting.status,
+    location: meeting.location,
+    description: meeting.description,
+    meetingDate: meeting.meetingDate,
+    meetingTime: meeting.meetingTime,
+    chapterStart: meeting.chapterStart,
+    chapterEnd: meeting.chapterEnd,
+    googleEventId: meeting.googleEventId,
+    googleSyncError: meeting.googleSyncError,
+    book: formatMeetingBook(meeting),
   }));
 }
 
@@ -65,17 +67,17 @@ export async function getPastMeetingsFromClub(
   ]);
 
   const totalPages = Math.ceil(totalItems / limit);
-  const data = meetingsList.map((m) => ({
-    id: m.id,
-    status: m.status,
-    location: m.location,
-    description: m.description,
-    meetingDate: m.meetingDate,
-    meetingTime: m.meetingTime,
-    createdAt: m.createdAt,
-    chapterStart: m.chapterStart,
-    chapterEnd: m.chapterEnd,
-    book: formatMeetingBook(m as any),
+  const data = meetingsList.map((meeting) => ({
+    id: meeting.id,
+    status: meeting.status,
+    location: meeting.location,
+    description: meeting.description,
+    meetingDate: meeting.meetingDate,
+    meetingTime: meeting.meetingTime,
+    createdAt: meeting.createdAt,
+    chapterStart: meeting.chapterStart,
+    chapterEnd: meeting.chapterEnd,
+    book: formatMeetingBook(meeting as any),
   }));
 
   return { data, totalPages, currentPage: page, totalItems };
@@ -155,9 +157,9 @@ export async function createMeeting(input: {
     throw new Error("insert_meeting_failed");
   }
 
-  void googleCalendarSyncService
+  await googleCalendarSyncService
     .createGoogleCalendarEventForMeeting(newMeeting.id)
-    .catch((err) => console.error(err));
+    .catch((error) => console.error(error));
 
   if (!bookId) {
     return newMeeting;
@@ -225,16 +227,16 @@ export async function updateMeeting(
   }
 
   if (input.status === MeetingStatus.CANCELLED) {
-    void googleCalendarSyncService
+    await googleCalendarSyncService
       .deleteGoogleCalendarEventForMeeting(meetingId)
-      .catch((err) => console.error(err));
+      .catch((error) => console.error(error));
   } else if (
     input.status === MeetingStatus.SCHEDULED &&
     updatedMeeting.googleEventId
   ) {
-    void googleCalendarSyncService
+    await googleCalendarSyncService
       .updateGoogleCalendarEventForMeeting(meetingId)
-      .catch((err) => console.error(err));
+      .catch((error) => console.error(error));
   }
 
   if (input.status === MeetingStatus.COMPLETED && bookId) {
@@ -281,47 +283,47 @@ export async function updateMeeting(
 }
 
 export async function cancelMeeting(meetingId: string) {
-  const row = await meetingRepository.setMeetingCancelled(meetingId);
-  if (row) {
-    void googleCalendarSyncService
+  const cancelledMeeting = await meetingRepository.setMeetingCancelled(meetingId);
+  if (cancelledMeeting) {
+    await googleCalendarSyncService
       .deleteGoogleCalendarEventForMeeting(meetingId)
-      .catch((err) => console.error(err));
+      .catch((error) => console.error(error));
   }
-  return row;
+  return cancelledMeeting;
 }
 
 export async function resyncMeetingGoogleCalendar(meetingId: string) {
-  const m = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
-  if (!m) {
+  const meeting = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
+  if (!meeting) {
     return { success: false as const, message: "Encontro não encontrado." };
   }
-  if (m.status === MeetingStatus.CANCELLED) {
+  if (meeting.status === MeetingStatus.CANCELLED) {
     return {
       success: false as const,
       message: "Encontro cancelado; não é possível sincronizar.",
     };
   }
-  if (m.googleEventId) {
-    const r =
+  if (meeting.googleEventId) {
+    const syncResult =
       await googleCalendarSyncService.updateGoogleCalendarEventForMeeting(
         meetingId,
       );
-    if (!r.ok) {
-      return { success: false as const, message: r.error };
+    if (!syncResult.ok) {
+      return { success: false as const, message: syncResult.error };
     }
     return {
       success: true as const,
       message: "Evento atualizado no Google Calendar.",
     };
   }
-  const r =
+  const syncResult =
     await googleCalendarSyncService.createGoogleCalendarEventForMeeting(
       meetingId,
     );
-  if (!r.ok) {
-    return { success: false as const, message: r.error };
+  if (!syncResult.ok) {
+    return { success: false as const, message: syncResult.error };
   }
-  if (r.skipped) {
+  if (syncResult.skipped) {
     return {
       success: true as const,
       message: "Já existia evento vinculado; nada a alterar.",

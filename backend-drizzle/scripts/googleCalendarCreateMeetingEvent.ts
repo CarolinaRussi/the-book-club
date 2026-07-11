@@ -8,11 +8,11 @@ if (!meetingId) {
 }
 
 createGoogleCalendarEventForMeeting(meetingId)
-  .then((r) => {
-    console.log(JSON.stringify(r, null, 2));
-    process.exit(r.ok ? 0 : 1);
+  .then((result) => {
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(result.ok ? 0 : 1);
   })
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   });

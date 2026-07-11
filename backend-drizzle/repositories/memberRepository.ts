@@ -61,7 +61,7 @@ export async function findActiveMemberEmailsByClubId(
     .from(member)
     .innerJoin(user, eq(member.userId, user.id))
     .where(activeMemberUserFilter(clubId));
-  return [...new Set(rows.map((r) => r.email))];
+  return [...new Set(rows.map((row) => row.email))];
 }
 
 export async function insertMember(values: {

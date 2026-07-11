@@ -21,15 +21,15 @@ export async function getMembersFromClub(
 
   const totalPages = Math.ceil(totalItems / limit);
 
-  const data = membersRows.map((m) => ({
-    joinedAt: m.joinedAt,
+  const data = membersRows.map((memberRow) => ({
+    joinedAt: memberRow.joinedAt,
     user: {
-      id: m.userId,
-      name: m.userName,
-      nickname: m.userNickname,
-      bio: m.userBio,
-      favoritesGenres: m.userFavoritesGenres,
-      profilePicture: m.userProfilePicture,
+      id: memberRow.userId,
+      name: memberRow.userName,
+      nickname: memberRow.userNickname,
+      bio: memberRow.userBio,
+      favoritesGenres: memberRow.userFavoritesGenres,
+      profilePicture: memberRow.userProfilePicture,
     },
   }));
 

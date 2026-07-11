@@ -8,14 +8,17 @@ export async function findClubIdsByUserId(userId: string) {
     .select()
     .from(member)
     .where(eq(member.userId, userId));
-  return memberships.map((m) => m.clubId);
+  return memberships.map((membership) => membership.clubId);
 }
 
 export async function findClubsByIds(clubIds: string[]) {
   if (clubIds.length === 0) return [];
   return db.query.club.findMany({
-    where: (c, { inArray }) => inArray(c.id, clubIds),
-    orderBy: (c, { desc }) => [desc(c.status), desc(c.createdAt)],
+    where: (clubRow, { inArray }) => inArray(clubRow.id, clubIds),
+    orderBy: (clubRow, { desc }) => [
+      desc(clubRow.status),
+      desc(clubRow.createdAt),
+    ],
   });
 }
 
@@ -92,8 +95,8 @@ export async function findOwnedClubsPaginated(
   limit: number
 ) {
   return db.query.club.findMany({
-    where: (c, { eq }) => eq(c.ownerId, ownerId),
-    orderBy: (c, { desc }) => [desc(c.createdAt)],
+    where: (clubRow, { eq }) => eq(clubRow.ownerId, ownerId),
+    orderBy: (clubRow, { desc }) => [desc(clubRow.createdAt)],
     offset,
     limit,
     with: {

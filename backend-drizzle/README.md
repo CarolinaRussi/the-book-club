@@ -14,7 +14,7 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 
 1. **Variáveis de ambiente**
 
-   Crie o `.env` a partir do `.env.example`. Variáveis necessárias: `DATABASE_URL`, `PORT`, `JWT_SECRET` e as do Cloudinary.
+   Crie o `.env` a partir do `.env.example`. Variáveis necessárias: `DATABASE_URL`, `PORT`, `JWT_SECRET`, as do Cloudinary e, para Google Calendar: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_OAUTH_SUCCESS_REDIRECT`, `GOOGLE_TOKEN_ENCRYPTION_KEY` (detalhe em `BACKEND-GUIDE.md`).
 
 2. **Banco de dados**
 

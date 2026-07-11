@@ -11,11 +11,11 @@ function appendQuery(
   base: string,
   params: Record<string, string>,
 ): string {
-  const u = new URL(base);
-  for (const [k, v] of Object.entries(params)) {
-    u.searchParams.set(k, v);
+  const url = new URL(base);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
   }
-  return u.toString();
+  return url.toString();
 }
 
 export const getGoogleOAuthCallback = async (

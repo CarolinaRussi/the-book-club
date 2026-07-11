@@ -11,16 +11,16 @@ export class GoogleCalendarNotConnectedError extends Error {
 }
 
 export async function getCalendarClientForUserId(userId: string) {
-  const u = await userRepository.findUserById(userId);
-  if (!u?.googleRefreshToken) {
+  const user = await userRepository.findUserById(userId);
+  if (!user?.googleRefreshToken) {
     throw new GoogleCalendarNotConnectedError();
   }
   const { clientId, clientSecret, redirectUri } = getGoogleOAuthWebCredentials();
   const oauth2 = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
   oauth2.setCredentials({
-    refresh_token: decryptGoogleRefreshToken(u.googleRefreshToken),
+    refresh_token: decryptGoogleRefreshToken(user.googleRefreshToken),
   });
   const calendar = google.calendar({ version: "v3", auth: oauth2 });
-  const calendarId = u.googleCalendarId?.trim() || "primary";
+  const calendarId = user.googleCalendarId?.trim() || "primary";
   return { calendar, calendarId };
 }

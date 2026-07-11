@@ -12,8 +12,11 @@ const pastStatuses = [
 
 export async function findMeetingsWithBookByClubId(clubId: string) {
   return db.query.meeting.findMany({
-    where: (m, { eq }) => eq(m.clubId, clubId),
-    orderBy: (m, { desc }) => [desc(m.meetingDate), desc(m.meetingTime)],
+    where: (meetingRow, { eq }) => eq(meetingRow.clubId, clubId),
+    orderBy: (meetingRow, { desc }) => [
+      desc(meetingRow.meetingDate),
+      desc(meetingRow.meetingTime),
+    ],
     columns: {
       id: true,
       status: true,
@@ -23,6 +26,8 @@ export async function findMeetingsWithBookByClubId(clubId: string) {
       meetingTime: true,
       chapterStart: true,
       chapterEnd: true,
+      googleEventId: true,
+      googleSyncError: true,
     },
     with: {
       book: {
@@ -43,9 +48,12 @@ export async function findPastMeetingsWithBookPaginated(
   limit: number
 ) {
   return db.query.meeting.findMany({
-    where: (m, { eq, and, inArray }) =>
-      and(eq(m.clubId, clubId), inArray(m.status, [...pastStatuses])),
-    orderBy: (m, { desc }) => [desc(m.meetingDate), desc(m.meetingTime)],
+    where: (meetingRow, { eq, and, inArray }) =>
+      and(eq(meetingRow.clubId, clubId), inArray(meetingRow.status, [...pastStatuses])),
+    orderBy: (meetingRow, { desc }) => [
+      desc(meetingRow.meetingDate),
+      desc(meetingRow.meetingTime),
+    ],
     offset,
     limit,
     columns: {
@@ -135,7 +143,7 @@ export async function findMeetingById(meetingId: string) {
 
 export async function findMeetingForGoogleCalendar(meetingId: string) {
   return db.query.meeting.findFirst({
-    where: (m, { eq }) => eq(m.id, meetingId),
+    where: (meetingRow, { eq }) => eq(meetingRow.id, meetingId),
     columns: {
       id: true,
       clubId: true,

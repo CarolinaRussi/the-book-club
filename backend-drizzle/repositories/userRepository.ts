@@ -116,8 +116,8 @@ export async function findUserBookByUserAndBook(
   bookId: string,
 ) {
   return db.query.userBook.findFirst({
-    where: (ub, { and, eq }) =>
-      and(eq(ub.userId, userId), eq(ub.bookId, bookId)),
+    where: (userBookRow, { and, eq }) =>
+      and(eq(userBookRow.userId, userId), eq(userBookRow.bookId, bookId)),
   });
 }
 
@@ -158,9 +158,9 @@ export async function findUserBooksPaginatedForUser(
       : ne(userBook.readingStatus, ReadingStatus.DROPPED);
 
   return db.query.userBook.findMany({
-    where: (ub, { eq, and }) =>
-      and(eq(ub.userId, userId), statusFilter),
-    orderBy: (ub, { desc }) => [desc(ub.updatedAt)],
+    where: (userBookRow, { eq, and }) =>
+      and(eq(userBookRow.userId, userId), statusFilter),
+    orderBy: (userBookRow, { desc }) => [desc(userBookRow.updatedAt)],
     offset,
     limit,
     with: {

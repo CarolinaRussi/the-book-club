@@ -1,5 +1,6 @@
 import * as meetingRepository from "../repositories/meetingRepository";
 import * as memberRepository from "../repositories/memberRepository";
+import * as userRepository from "../repositories/userRepository";
 import {
   getCalendarClientForUserId,
   GoogleCalendarNotConnectedError,
@@ -7,12 +8,16 @@ import {
 
 const DEFAULT_DURATION_MIN = 120;
 const DEFAULT_TIMEZONE = "America/Sao_Paulo";
+const RECONNECT_MSG =
+  "Acesso ao Google expirou ou foi revogado. Reconecte em Conta e tente sincronizar de novo.";
 
 function meetingDurationMinutes(): number {
   const raw = process.env.GOOGLE_CALENDAR_MEETING_DURATION_MINUTES?.trim();
   if (!raw) return DEFAULT_DURATION_MIN;
-  const n = Number(raw);
-  return Number.isFinite(n) && n > 0 && n <= 24 * 60 ? n : DEFAULT_DURATION_MIN;
+  const minutes = Number(raw);
+  return Number.isFinite(minutes) && minutes > 0 && minutes <= 24 * 60
+    ? minutes
+    : DEFAULT_DURATION_MIN;
 }
 
 function calendarTimeZone(): string {
@@ -21,18 +26,42 @@ function calendarTimeZone(): string {
   );
 }
 
-function truncateMessage(s: string, max = 1800): string {
-  if (s.length <= max) return s;
-  return `${s.slice(0, max - 3)}...`;
+function truncateMessage(text: string, max = 1800): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 3)}...`;
 }
 
-function formatGoogleCalendarFailure(err: unknown): string {
-  if (err && typeof err === "object" && "response" in err) {
-    const r = err as {
+function isInvalidGoogleAuth(error: unknown): boolean {
+  const raw = formatGoogleCalendarFailure(error).toLowerCase();
+  return raw.includes("invalid_grant") || /\b401\b/.test(raw);
+}
+
+async function recordSyncFailure(
+  meetingId: string,
+  createdByUserId: string | null | undefined,
+  error: unknown,
+): Promise<string> {
+  if (createdByUserId && isInvalidGoogleAuth(error)) {
+    await userRepository.clearUserGoogleOAuth(createdByUserId);
+    await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
+      googleSyncError: RECONNECT_MSG,
+    });
+    return RECONNECT_MSG;
+  }
+  const message = formatGoogleCalendarFailure(error);
+  await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
+    googleSyncError: message,
+  });
+  return message;
+}
+
+function formatGoogleCalendarFailure(error: unknown): string {
+  if (error && typeof error === "object" && "response" in error) {
+    const googleError = error as {
       response?: { status?: number; statusText?: string; data?: unknown };
     };
-    const status = r.response?.status;
-    const data = r.response?.data;
+    const status = googleError.response?.status;
+    const data = googleError.response?.data;
     const body =
       typeof data === "string"
         ? data
@@ -40,28 +69,28 @@ function formatGoogleCalendarFailure(err: unknown): string {
           ? JSON.stringify(data)
           : "";
     return truncateMessage(
-      `Google Calendar ${status ?? "?"} ${r.response?.statusText ?? ""} ${body}`.trim(),
+      `Google Calendar ${status ?? "?"} ${googleError.response?.statusText ?? ""} ${body}`.trim(),
     );
   }
-  if (err instanceof Error) {
-    return truncateMessage(err.message);
+  if (error instanceof Error) {
+    return truncateMessage(error.message);
   }
   return "Erro desconhecido ao falar com o Google Calendar.";
 }
 
-function normalizeTime(t: string): string {
-  const parts = t.split(":");
-  const h = parts[0] ?? "00";
-  const m = parts[1] ?? "00";
-  const s = (parts[2] ?? "00").slice(0, 2);
-  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.padStart(2, "0")}`;
+function normalizeTime(time: string): string {
+  const parts = time.split(":");
+  const hours = parts[0] ?? "00";
+  const minutes = parts[1] ?? "00";
+  const seconds = (parts[2] ?? "00").slice(0, 2);
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
 }
 
-function meetingDateToYmd(d: string | Date): string {
-  if (typeof d === "string") {
-    return d.slice(0, 10);
+function meetingDateToYmd(date: string | Date): string {
+  if (typeof date === "string") {
+    return date.slice(0, 10);
   }
-  return d.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
 }
 
 function buildStartEndDateTime(
@@ -70,17 +99,17 @@ function buildStartEndDateTime(
 ): { start: { dateTime: string; timeZone: string }; end: { dateTime: string; timeZone: string } } {
   const dateStr = meetingDateToYmd(meetingDate);
   const timeStr = normalizeTime(meetingTime);
-  const tz = calendarTimeZone();
+  const timeZone = calendarTimeZone();
   const startLocal = new Date(`${dateStr}T${timeStr}`);
   const endLocal = new Date(
     startLocal.getTime() + meetingDurationMinutes() * 60_000,
   );
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const fmt = (dt: Date) =>
-    `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const formatLocalDateTime = (dateTime: Date) =>
+    `${dateTime.getFullYear()}-${pad(dateTime.getMonth() + 1)}-${pad(dateTime.getDate())}T${pad(dateTime.getHours())}:${pad(dateTime.getMinutes())}:${pad(dateTime.getSeconds())}`;
   return {
-    start: { dateTime: fmt(startLocal), timeZone: tz },
-    end: { dateTime: fmt(endLocal), timeZone: tz },
+    start: { dateTime: formatLocalDateTime(startLocal), timeZone },
+    end: { dateTime: formatLocalDateTime(endLocal), timeZone },
   };
 }
 
@@ -88,29 +117,29 @@ type MeetingForCal = NonNullable<
   Awaited<ReturnType<typeof meetingRepository.findMeetingForGoogleCalendar>>
 >;
 
-function buildSummary(m: MeetingForCal): string {
-  const book = m.book?.title?.trim();
-  if (book) {
-    return `Encontro: ${book}`;
+function buildSummary(meeting: MeetingForCal): string {
+  const bookTitle = meeting.book?.title?.trim();
+  if (bookTitle) {
+    return `Encontro: ${bookTitle}`;
   }
-  return `Encontro — ${m.club?.name ?? "Entrelivros"}`;
+  return `Encontro — ${meeting.club?.name ?? "Entrelivros"}`;
 }
 
-function buildDescription(m: MeetingForCal): string {
+function buildDescription(meeting: MeetingForCal): string {
   const lines: string[] = [];
-  if (m.club?.name) {
-    lines.push(`Clube: ${m.club.name}`);
+  if (meeting.club?.name) {
+    lines.push(`Clube: ${meeting.club.name}`);
   }
-  if (m.book?.title) {
-    lines.push(`Livro: ${m.book.title}`);
+  if (meeting.book?.title) {
+    lines.push(`Livro: ${meeting.book.title}`);
   }
-  if (m.chapterStart != null && m.chapterEnd != null) {
-    lines.push(`Capítulos: ${m.chapterStart}–${m.chapterEnd}`);
+  if (meeting.chapterStart != null && meeting.chapterEnd != null) {
+    lines.push(`Capítulos: ${meeting.chapterStart}–${meeting.chapterEnd}`);
   }
-  if (m.description?.trim()) {
-    lines.push(m.description.trim());
+  if (meeting.description?.trim()) {
+    lines.push(meeting.description.trim());
   }
-  lines.push(`Local: ${m.location}`);
+  lines.push(`Local: ${meeting.location}`);
   return lines.join("\n\n");
 }
 
@@ -122,52 +151,53 @@ export type GoogleCalendarCreateResult =
 export async function createGoogleCalendarEventForMeeting(
   meetingId: string,
 ): Promise<GoogleCalendarCreateResult> {
-  const m = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
-  if (!m) {
+  const meeting = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
+  if (!meeting) {
     return { ok: false, error: "Meeting não encontrada." };
   }
-  if (m.googleEventId) {
-    return { ok: true, skipped: true, googleEventId: m.googleEventId };
+  if (meeting.googleEventId) {
+    return { ok: true, skipped: true, googleEventId: meeting.googleEventId };
   }
-  if (!m.createdByUserId) {
-    const msg =
-      "Meeting sem created_by_user_id; não é possível escolher calendário.";
-    await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-      googleSyncError: truncateMessage(msg),
-    });
-    return { ok: false, error: msg };
+  if (!meeting.createdByUserId) {
+    return {
+      ok: false,
+      error: "Meeting sem created_by_user_id; não é possível escolher calendário.",
+    };
   }
 
   try {
     const { calendar, calendarId } = await getCalendarClientForUserId(
-      m.createdByUserId,
+      meeting.createdByUserId,
     );
     const attendeeEmails =
-      await memberRepository.findActiveMemberEmailsByClubId(m.clubId);
+      await memberRepository.findActiveMemberEmailsByClubId(meeting.clubId);
     const attendees = attendeeEmails.map((email) => ({ email }));
 
-    const { start, end } = buildStartEndDateTime(m.meetingDate, m.meetingTime);
+    const { start, end } = buildStartEndDateTime(
+      meeting.meetingDate,
+      meeting.meetingTime,
+    );
 
-    const res = await calendar.events.insert({
+    const insertResult = await calendar.events.insert({
       calendarId,
       sendUpdates: "all",
       requestBody: {
-        summary: buildSummary(m),
-        description: buildDescription(m),
-        location: m.location,
+        summary: buildSummary(meeting),
+        description: buildDescription(meeting),
+        location: meeting.location,
         start,
         end,
         attendees: attendees.length > 0 ? attendees : undefined,
       },
     });
 
-    const eventId = res.data.id;
+    const eventId = insertResult.data.id;
     if (!eventId) {
-      const msg = "Google não devolveu id do evento.";
+      const message = "Google não devolveu id do evento.";
       await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-        googleSyncError: truncateMessage(msg),
+        googleSyncError: truncateMessage(message),
       });
-      return { ok: false, error: msg };
+      return { ok: false, error: message };
     }
 
     await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
@@ -183,19 +213,16 @@ export async function createGoogleCalendarEventForMeeting(
       googleEventId: eventId,
       calendarId,
     };
-  } catch (err) {
-    if (err instanceof GoogleCalendarNotConnectedError) {
-      const msg = err.message;
-      await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-        googleSyncError: truncateMessage(msg),
-      });
-      return { ok: false, error: msg };
+  } catch (error) {
+    if (error instanceof GoogleCalendarNotConnectedError) {
+      return { ok: false, error: error.message };
     }
-    const msg = formatGoogleCalendarFailure(err);
-    await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-      googleSyncError: msg,
-    });
-    return { ok: false, error: msg };
+    const message = await recordSyncFailure(
+      meetingId,
+      meeting.createdByUserId,
+      error,
+    );
+    return { ok: false, error: message };
   }
 }
 
@@ -206,31 +233,34 @@ export type GoogleCalendarSimpleResult =
 export async function updateGoogleCalendarEventForMeeting(
   meetingId: string,
 ): Promise<GoogleCalendarSimpleResult> {
-  const m = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
-  if (!m?.googleEventId || !m.googleCalendarId) {
+  const meeting = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
+  if (!meeting?.googleEventId || !meeting.googleCalendarId) {
     return { ok: false, error: "Meeting sem evento Google associado." };
   }
-  if (!m.createdByUserId) {
+  if (!meeting.createdByUserId) {
     return { ok: false, error: "Meeting sem created_by_user_id." };
   }
 
   try {
     const { calendar, calendarId } = await getCalendarClientForUserId(
-      m.createdByUserId,
+      meeting.createdByUserId,
     );
-    const { start, end } = buildStartEndDateTime(m.meetingDate, m.meetingTime);
+    const { start, end } = buildStartEndDateTime(
+      meeting.meetingDate,
+      meeting.meetingTime,
+    );
     const attendeeEmails =
-      await memberRepository.findActiveMemberEmailsByClubId(m.clubId);
+      await memberRepository.findActiveMemberEmailsByClubId(meeting.clubId);
     const attendees = attendeeEmails.map((email) => ({ email }));
 
     await calendar.events.patch({
-      calendarId: m.googleCalendarId ?? calendarId,
-      eventId: m.googleEventId,
+      calendarId: meeting.googleCalendarId ?? calendarId,
+      eventId: meeting.googleEventId,
       sendUpdates: "all",
       requestBody: {
-        summary: buildSummary(m),
-        description: buildDescription(m),
-        location: m.location,
+        summary: buildSummary(meeting),
+        description: buildDescription(meeting),
+        location: meeting.location,
         start,
         end,
         attendees: attendees.length > 0 ? attendees : undefined,
@@ -242,41 +272,53 @@ export async function updateGoogleCalendarEventForMeeting(
       googleSyncError: null,
     });
     return { ok: true };
-  } catch (err) {
-    const msg = formatGoogleCalendarFailure(err);
-    await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-      googleSyncError: msg,
-    });
-    return { ok: false, error: msg };
+  } catch (error) {
+    if (error instanceof GoogleCalendarNotConnectedError) {
+      const message = error.message;
+      await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
+        googleSyncError: truncateMessage(message),
+      });
+      return { ok: false, error: message };
+    }
+    const message = await recordSyncFailure(
+      meetingId,
+      meeting.createdByUserId,
+      error,
+    );
+    return { ok: false, error: message };
   }
 }
 
 export async function deleteGoogleCalendarEventForMeeting(
   meetingId: string,
 ): Promise<GoogleCalendarSimpleResult> {
-  const m = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
-  if (!m?.googleEventId || !m.googleCalendarId) {
+  const meeting = await meetingRepository.findMeetingForGoogleCalendar(meetingId);
+  if (!meeting?.googleEventId || !meeting.googleCalendarId) {
     return { ok: true };
   }
-  if (!m.createdByUserId) {
+  if (!meeting.createdByUserId) {
     return { ok: false, error: "Meeting sem created_by_user_id." };
   }
 
   try {
-    const { calendar } = await getCalendarClientForUserId(m.createdByUserId);
+    const { calendar } = await getCalendarClientForUserId(
+      meeting.createdByUserId,
+    );
     try {
       await calendar.events.delete({
-        calendarId: m.googleCalendarId,
-        eventId: m.googleEventId,
+        calendarId: meeting.googleCalendarId,
+        eventId: meeting.googleEventId,
         sendUpdates: "all",
       });
-    } catch (err) {
-      const msg = formatGoogleCalendarFailure(err);
-      if (!msg.includes("404")) {
-        await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-          googleSyncError: msg,
-        });
-        return { ok: false, error: msg };
+    } catch (error) {
+      const message = formatGoogleCalendarFailure(error);
+      if (!message.includes("404")) {
+        const recorded = await recordSyncFailure(
+          meetingId,
+          meeting.createdByUserId,
+          error,
+        );
+        return { ok: false, error: recorded };
       }
     }
 
@@ -287,11 +329,15 @@ export async function deleteGoogleCalendarEventForMeeting(
       googleSyncError: null,
     });
     return { ok: true };
-  } catch (err) {
-    const msg = formatGoogleCalendarFailure(err);
-    await meetingRepository.updateMeetingGoogleCalendarFields(meetingId, {
-      googleSyncError: msg,
-    });
-    return { ok: false, error: msg };
+  } catch (error) {
+    if (error instanceof GoogleCalendarNotConnectedError) {
+      return { ok: true };
+    }
+    const message = await recordSyncFailure(
+      meetingId,
+      meeting.createdByUserId,
+      error,
+    );
+    return { ok: false, error: message };
   }
 }

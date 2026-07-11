@@ -103,49 +103,55 @@ export async function getBooksByClubId(
       userRepository.findUsersByIds(suggestedByUserIds),
     ]);
 
-  const booksMap = new Map(booksList.map((b) => [b.id, b]));
+  const booksMap = new Map(booksList.map((book) => [book.id, book]));
   const userBooksMap = new Map(
-    userBooksForBooks.map((ub) => [`${ub.userId}-${ub.bookId}`, ub])
+    userBooksForBooks.map((userBook) => [
+      `${userBook.userId}-${userBook.bookId}`,
+      userBook,
+    ])
   );
   const suggesterById = new Map(
-    suggesterRows.map((u) => [
-      u.id,
-      { id: u.id, name: u.name, nickname: u.nickname },
+    suggesterRows.map((user) => [
+      user.id,
+      { id: user.id, name: user.name, nickname: user.nickname },
     ])
   );
 
   const formattedData = clubBooksPaginated
-    .map((cb) => {
-      const b = booksMap.get(cb.bookId);
-      if (!b) return null;
-      const bookReviews = allReviews.filter((r) => r.bookId === b.id);
-      const formattedReviews = bookReviews.map((r) => {
-        const ub = userBooksMap.get(`${r.userId}-${b.id}`);
+    .map((clubBook) => {
+      const book = booksMap.get(clubBook.bookId);
+      if (!book) return null;
+      const bookReviews = allReviews.filter(
+        (review) => review.bookId === book.id
+      );
+      const formattedReviews = bookReviews.map((review) => {
+        const userBook = userBooksMap.get(`${review.userId}-${book.id}`);
         return {
-          id: r.id,
-          rating: r.rating,
-          comment: r.comment,
-          readingStatus: ub?.readingStatus ?? "not_started",
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          readingStatus: userBook?.readingStatus ?? "not_started",
           user: {
-            id: r.userIdFull,
-            name: r.userName,
-            nickname: r.userNickname,
-            profilePicture: r.userProfilePicture,
+            id: review.userIdFull,
+            name: review.userName,
+            nickname: review.userNickname,
+            profilePicture: review.userProfilePicture,
           },
         };
       });
       const isInLibrary = userId
         ? userBooksForBooks.some(
-            (ub) => ub.userId === userId && ub.bookId === b.id
+            (userBook) =>
+              userBook.userId === userId && userBook.bookId === book.id
           )
         : false;
-      const suggestedBy = cb.suggestedByUserId
-        ? suggesterById.get(cb.suggestedByUserId) ?? null
+      const suggestedBy = clubBook.suggestedByUserId
+        ? suggesterById.get(clubBook.suggestedByUserId) ?? null
         : null;
       return {
-        ...b,
-        status: cb.status,
-        addedAt: cb.addedAt,
+        ...book,
+        status: clubBook.status,
+        addedAt: clubBook.addedAt,
         reviews: formattedReviews,
         isInLibrary,
         suggestedBy,
@@ -173,11 +179,11 @@ export async function getBooksByTitleOrAuthor(query: string | undefined) {
   }
   const searchPattern = `%${query}%`;
   const books = await bookRepository.searchBooksByTitleOrAuthor(searchPattern);
-  return books.map((b) => ({
-    id: b.id,
-    title: b.title,
-    author: b.author,
-    coverUrl: b.coverUrl,
+  return books.map((book) => ({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    coverUrl: book.coverUrl,
   }));
 }
 
