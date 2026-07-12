@@ -47,22 +47,19 @@ export async function deleteClub(id: string): Promise<any> {
   }
 }
 
-export async function banMember(
-  memberId: string
-): Promise<any> {
+export async function removeMember(memberId: string): Promise<unknown> {
   if (!memberId) {
     throw { message: "ID do membro é obrigatório." };
   }
 
   try {
     const response = await api.delete(`/delete-member/${memberId}`);
-
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw { message: error.response.data.message };
     }
-    throw { message: "Erro desconhecido ao banir membro." };
+    throw { message: "Erro desconhecido ao remover membro." };
   }
 }
 

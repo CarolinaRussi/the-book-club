@@ -1,4 +1,5 @@
 export interface IReaders {
+  id: string;
   joinedAt: string;
   user: {
     id: string;

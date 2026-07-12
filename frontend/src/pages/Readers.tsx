@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import { fetchReadersByClubId } from "../api/queries/fetchReaders";
+import { removeMember } from "../api/mutations/clubMutate";
 import { formatDayMonthYear, getInitials } from "../utils/formatters";
 import {
   Card,
@@ -12,19 +13,29 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import SkeletonReaders from "../components/pages/readers/Skeleton";
+import RemoveMemberButton from "../components/pages/readers/RemoveMemberButton";
 import { useEffect, useState } from "react";
 import Pagination from "../components/ui/pagination";
+import { toast } from "react-toastify";
+import type { IApiError } from "../types/IApi";
 
 export default function Readers() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { selectedClubId } = useClub();
+  const { clubs, selectedClubId } = useClub();
   const [readersPage, setReadersPage] = useState(1);
   const itemsPerPage = 8;
 
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+  const isAdminOfSelectedClub = !!(
+    user &&
+    selectedClub &&
+    selectedClub.ownerId === user.id
+  );
+
   const handlePageChange = (page: number) => {
     setReadersPage(page);
-    //window.scrollTo({ top: 200, behavior: "smooth" }); //nao sei se eu gosto disso ainda
   };
 
   const { data: readersData, isFetching } = useQuery({
@@ -38,6 +49,20 @@ export default function Readers() {
   useEffect(() => {
     setReadersPage(1);
   }, [selectedClubId]);
+
+  const { mutate: removeMemberMutate, isPending: isRemovingMember } =
+    useMutation<unknown, IApiError, string>({
+      mutationFn: removeMember,
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ["readers", selectedClubId],
+        });
+        toast.success("Membro removido do clube.");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Erro ao remover membro.");
+      },
+    });
 
   const readers = readersData?.data || [];
   const totalPages = readersData?.totalPages || 1;
@@ -66,45 +91,62 @@ export default function Readers() {
         <>
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {selectedClubId && readers && readers.length > 0 ? (
-              readers.map((reader) => (
-                <div
-                  key={reader.user.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleOpenProfile(reader.user.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleOpenProfile(reader.user.id);
-                    }
-                  }}
-                  className="flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md cursor-pointer transition-shadow hover:shadow-lg"
-                >
-                  <Avatar className="mb-4 size-30 ">
-                    <AvatarImage
-                      src={reader.user.profilePicture}
-                      alt={`Foto de perfil de ${reader.user.name}`}
-                    />
-                    <AvatarFallback
-                      className="text-4xl text-primary"
-                      delayMs={600}
-                    >
-                      {getInitials(reader.user.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h1 className="text-2xl font-bold text-center text-foreground mb-3">
-                    {reader.user.nickname}
-                  </h1>
-                  {reader.user.bio && (
-                    <div className="text-sm text-muted-foreground text-center mb-3">
-                      {reader.user.bio}
+              readers.map((reader) => {
+                const canRemoveMember =
+                  isAdminOfSelectedClub &&
+                  selectedClub &&
+                  reader.user.id !== selectedClub.ownerId &&
+                  reader.user.id !== user?.id;
+
+                return (
+                  <div
+                    key={reader.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleOpenProfile(reader.user.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleOpenProfile(reader.user.id);
+                      }
+                    }}
+                    className="relative flex flex-col items-center border border-secondary rounded-lg p-8 bg-background shadow-md cursor-pointer transition-shadow hover:shadow-lg"
+                  >
+                    {canRemoveMember ? (
+                      <RemoveMemberButton
+                        memberName={
+                          reader.user.nickname || reader.user.name
+                        }
+                        disabled={isRemovingMember}
+                        onConfirm={() => removeMemberMutate(reader.id)}
+                      />
+                    ) : null}
+                    <Avatar className="mb-4 size-30 ">
+                      <AvatarImage
+                        src={reader.user.profilePicture}
+                        alt={`Foto de perfil de ${reader.user.name}`}
+                      />
+                      <AvatarFallback
+                        className="text-4xl text-primary"
+                        delayMs={600}
+                      >
+                        {getInitials(reader.user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h1 className="text-2xl font-bold text-center text-foreground mb-3">
+                      {reader.user.nickname}
+                    </h1>
+                    {reader.user.bio && (
+                      <div className="text-sm text-muted-foreground text-center mb-3">
+                        {reader.user.bio}
+                      </div>
+                    )}
+                    <div className="text-sm text-muted-foreground text-center mt-auto">
+                      Membro desde: <p>{formatDayMonthYear(reader.joinedAt)}</p>
                     </div>
-                  )}
-                  <div className="text-sm text-muted-foreground text-center mt-auto">
-                    Membro desde: <p>{formatDayMonthYear(reader.joinedAt)}</p>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <Card className="md:col-span-4 text-center">
                 <CardHeader>
