@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import HeaderClubSwitcher from "./HeaderClubSwitcher";
-import { FiHome } from "react-icons/fi";
+import { FiHome, FiMenu } from "react-icons/fi";
 import { TbBooks, TbCoffee } from "react-icons/tb";
 import {
   MdOutlineLogout,
@@ -17,15 +17,42 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
-import { FiMenu } from "react-icons/fi";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType } from "react";
+import { cn } from "@/lib/utils";
 
-const privateNavItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  Icon: ComponentType<{ size?: number }>;
+  requiresClub: boolean;
+  requiresClubAdmin: boolean;
+  iconOnlyOnDesktop?: boolean;
+};
+
+const generalNavItems: NavItem[] = [
+  {
+    to: "/home",
+    label: "Página inicial",
+    Icon: FiHome,
+    requiresClub: false,
+    requiresClubAdmin: false,
+    //iconOnlyOnDesktop: true,
+  },
+  {
+    to: "/me",
+    label: "Perfil",
+    Icon: MdOutlinePerson,
+    requiresClub: false,
+    requiresClubAdmin: false,
+    //iconOnlyOnDesktop: true,
+  },
+];
+
+const clubNavItems: NavItem[] = [
   {
     to: "/meetings",
     label: "Próximo Encontro",
     Icon: TbCoffee,
-    size: 24,
     requiresClub: true,
     requiresClubAdmin: false,
   },
@@ -33,7 +60,6 @@ const privateNavItems = [
     to: "/library",
     label: "Biblioteca",
     Icon: TbBooks,
-    size: 24,
     requiresClub: true,
     requiresClubAdmin: false,
   },
@@ -41,7 +67,6 @@ const privateNavItems = [
     to: "/readers",
     label: "Leitores",
     Icon: MdOutlinePeopleAlt,
-    size: 24,
     requiresClub: true,
     requiresClubAdmin: false,
   },
@@ -49,29 +74,30 @@ const privateNavItems = [
     to: "/club/manage",
     label: "Gerenciar clube",
     Icon: MdOutlineSettings,
-    size: 24,
     requiresClub: true,
     requiresClubAdmin: true,
   },
-  {
-    to: "/me",
-    label: "Perfil",
-    Icon: MdOutlinePerson,
-    size: 24,
-    requiresClub: false,
-    requiresClubAdmin: false,
-  },
 ];
+
+function navLinkClassName(isActive: boolean, isMobile: boolean) {
+  return cn(
+    "flex items-center gap-2 rounded-md font-medium transition-all",
+    isMobile ? "px-4 py-3 text-lg" : "px-4 py-2 text-sm",
+    isActive
+      ? "bg-primary text-cream shadow-sm"
+      : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground",
+  );
+}
 
 export default function Header() {
   const navigate = useNavigate();
   const { isLoggedIn, logout, user } = useAuth();
   const { clubs, selectedClubId } = useClub();
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const filteredNavItems = useMemo(() => {
-    const hasClubs = clubs && clubs.length > 0;
+  const hasClubs = clubs.length > 0;
+
+  const filteredClubNavItems = useMemo(() => {
     const selectedClub = clubs.find((club) => club.id === selectedClubId);
     const isAdminOfSelectedClub = !!(
       user &&
@@ -79,12 +105,12 @@ export default function Header() {
       selectedClub.ownerId === user.id
     );
 
-    return privateNavItems.filter((item) => {
+    return clubNavItems.filter((item) => {
       if (item.requiresClub && !hasClubs) return false;
       if (item.requiresClubAdmin && !isAdminOfSelectedClub) return false;
       return true;
     });
-  }, [clubs, selectedClubId, user]);
+  }, [clubs, selectedClubId, user, hasClubs]);
 
   const handleLogout = () => {
     logout();
@@ -92,112 +118,133 @@ export default function Header() {
     if (isMobileMenuOpen) setIsMobileMenuOpen(false);
   };
 
-  const NavLinks = ({ isMobile = false }) => (
-    <>
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const renderNavItem = (item: NavItem, isMobile = false) => {
+    const iconOnly = !isMobile && item.iconOnlyOnDesktop;
+
+    return (
       <NavLink
-        to={isLoggedIn ? "/home" : "/"}
+        key={item.to}
+        to={item.to}
+        aria-label={iconOnly ? item.label : undefined}
+        title={iconOnly ? item.label : undefined}
         className={({ isActive }) =>
-          `flex items-center gap-2 ${
-            isMobile ? "px-4 py-3 text-lg" : "px-4 py-2 text-sm"
-          } rounded-md font-medium transition-all ${
-            isActive
-              ? "bg-primary text-cream shadow-sm"
-              : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-          }`
+          cn(
+            navLinkClassName(isActive, isMobile),
+            iconOnly && "justify-center px-2.5",
+          )
         }
-        onClick={() => isMobile && setIsMobileMenuOpen(false)}
+        onClick={() => isMobile && closeMobileMenu()}
       >
-        <FiHome size={isMobile ? 24 : 20} />
-        Home
+        <item.Icon size={isMobile ? 24 : 20} />
+        {iconOnly ? null : item.label}
       </NavLink>
+    );
+  };
 
-      {isLoggedIn &&
-        filteredNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-2 ${
-                isMobile ? "px-4 py-3 text-lg" : "px-4 py-2 text-sm"
-              } rounded-md font-medium transition-all ${
-                isActive
-                  ? "bg-primary text-cream shadow-sm"
-                  : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-              }`
-            }
-            onClick={() => isMobile && setIsMobileMenuOpen(false)}
-          >
-            <item.Icon size={item.size} />
-            {item.label}
-          </NavLink>
-        ))}
-    </>
-  );
-
-  return (
-    <header className="bg-background p-4 flex flex-row justify-between items-center shadow-md relative z-10">
-      <div className="flex min-w-0 flex-row items-center gap-2">
+  if (!isLoggedIn) {
+    return (
+      <header className="relative z-10 flex flex-row items-center justify-between bg-background p-4 shadow-md">
         <button
           type="button"
-          onClick={() => navigate(isLoggedIn ? "/home" : "/")}
-          className={
-            isLoggedIn && clubs.length > 0
-              ? "shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-              : "shrink-0 text-xl font-bold text-primary transition-opacity hover:opacity-80 cursor-pointer"
-          }
+          onClick={() => navigate("/")}
+          className="shrink-0 cursor-pointer text-xl font-bold text-primary transition-opacity hover:opacity-80"
         >
           Entrelivros
         </button>
-        {isLoggedIn && clubs.length > 0 && (
-          <>
-            <span className="shrink-0 text-muted-foreground" aria-hidden>
-              ·
-            </span>
-            <HeaderClubSwitcher />
-          </>
-        )}
-      </div>
+        <NavLink
+          to="/"
+          className={({ isActive }) => navLinkClassName(isActive, false)}
+        >
+          <FiHome size={20} />
+          Home
+        </NavLink>
+      </header>
+    );
+  }
 
-      <div className="hidden md:flex flex-row items-center gap-2">
-        <NavLinks />
-        {isLoggedIn && (
+  return (
+    <header className="relative z-10 bg-background p-4 shadow-md">
+      <div className="hidden md:flex md:items-center md:justify-between md:gap-2">
+        <nav className="flex min-w-0 flex-row items-center justify-start gap-1">
+          {/* <button
+            type="button"
+            onClick={() => navigate("/home")}
+            className="mr-1 shrink-0 cursor-pointer text-xl font-bold text-primary transition-opacity hover:opacity-80"
+          >
+            Entrelivros
+          </button> */}
+          {generalNavItems.map((item) => renderNavItem(item))}
+        </nav>
+
+        <div className="flex min-w-0 flex-row flex-wrap items-center justify-end gap-1">
+          {hasClubs ? (
+            <div className="mr-1 max-w-full shrink">
+              <HeaderClubSwitcher align="end" />
+            </div>
+          ) : null}
+          {filteredClubNavItems.map((item) => renderNavItem(item))}
           <button
+            type="button"
             onClick={handleLogout}
-            className="font-semibold px-4 py-2 flex items-center gap-1 rounded-xl hover:bg-primary hover:text-background text-muted-foreground cursor-pointer"
+            className="flex cursor-pointer items-center gap-1 rounded-xl px-4 py-2 font-semibold text-muted-foreground hover:bg-primary hover:text-background"
           >
             <MdOutlineLogout size={24} />
             Sair
           </button>
-        )}
+        </div>
       </div>
 
-      <div className="md:hidden">
-        {isLoggedIn && (
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <button className="text-foreground p-2">
-                <FiMenu size={28} />
+      <div className="flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => navigate("/home")}
+          className="shrink-0 cursor-pointer text-xl font-bold text-primary transition-opacity hover:opacity-80"
+        >
+          Entrelivros
+        </button>
+
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              className="p-2 text-foreground"
+              aria-label="Abrir menu"
+            >
+              <FiMenu size={28} />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[80vw] bg-background">
+            <SheetHeader className="mb-4 text-left">
+              <SheetTitle className="text-2xl text-primary">Menu</SheetTitle>
+            </SheetHeader>
+
+            <div className="flex flex-col gap-3">
+              {generalNavItems.map((item) => renderNavItem(item, true))}
+
+              {hasClubs ? (
+                <div className="border-t border-border px-4 py-3">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    Clube ativo
+                  </p>
+                  <HeaderClubSwitcher align="start" />
+                </div>
+              ) : null}
+
+              {filteredClubNavItems.map((item) => renderNavItem(item, true))}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-4 py-3 text-lg font-semibold text-destructive hover:bg-destructive/10"
+              >
+                <MdOutlineLogout size={24} />
+                Sair
               </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-background w-[80vw]">
-              <SheetHeader className="mb-4 text-left">
-                <SheetTitle className="text-primary text-2xl">Menu</SheetTitle>
-              </SheetHeader>
-
-              <div className="flex flex-col gap-3">
-                <NavLinks isMobile={true} />
-
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-3 text-lg font-semibold w-full flex items-center gap-2 rounded-xl text-destructive cursor-pointer hover:bg-destructive/10"
-                >
-                  <MdOutlineLogout size={24} />
-                  Sair
-                </button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );

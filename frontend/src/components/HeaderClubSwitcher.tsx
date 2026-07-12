@@ -7,7 +7,13 @@ import { Badge } from "./ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
 
-export default function HeaderClubSwitcher() {
+interface HeaderClubSwitcherProps {
+  align?: "start" | "end";
+}
+
+export default function HeaderClubSwitcher({
+  align = "start",
+}: HeaderClubSwitcherProps) {
   const { user } = useAuth();
   const { selectedClubId, setSelectedClubId, clubs, isLoadingClubs } =
     useClub();
@@ -50,7 +56,7 @@ export default function HeaderClubSwitcher() {
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-2">
+      <PopoverContent align={align} className="w-72 p-2">
         <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
           Trocar de clube
         </p>
