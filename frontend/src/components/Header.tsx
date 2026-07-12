@@ -8,6 +8,7 @@ import {
   MdOutlineLogout,
   MdOutlinePeopleAlt,
   MdOutlinePerson,
+  MdOutlineSettings,
 } from "react-icons/md";
 import {
   Sheet,
@@ -26,6 +27,7 @@ const privateNavItems = [
     Icon: TbCoffee,
     size: 24,
     requiresClub: true,
+    requiresClubAdmin: false,
   },
   {
     to: "/library",
@@ -33,6 +35,7 @@ const privateNavItems = [
     Icon: TbBooks,
     size: 24,
     requiresClub: true,
+    requiresClubAdmin: false,
   },
   {
     to: "/readers",
@@ -40,6 +43,15 @@ const privateNavItems = [
     Icon: MdOutlinePeopleAlt,
     size: 24,
     requiresClub: true,
+    requiresClubAdmin: false,
+  },
+  {
+    to: "/club/manage",
+    label: "Gerenciar clube",
+    Icon: MdOutlineSettings,
+    size: 24,
+    requiresClub: true,
+    requiresClubAdmin: true,
   },
   {
     to: "/me",
@@ -47,20 +59,32 @@ const privateNavItems = [
     Icon: MdOutlinePerson,
     size: 24,
     requiresClub: false,
+    requiresClubAdmin: false,
   },
 ];
 
 export default function Header() {
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
-  const { clubs } = useClub();
+  const { isLoggedIn, logout, user } = useAuth();
+  const { clubs, selectedClubId } = useClub();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const filteredNavItems = useMemo(() => {
     const hasClubs = clubs && clubs.length > 0;
-    return privateNavItems.filter((item) => !item.requiresClub || hasClubs);
-  }, [clubs]);
+    const selectedClub = clubs.find((club) => club.id === selectedClubId);
+    const isAdminOfSelectedClub = !!(
+      user &&
+      selectedClub &&
+      selectedClub.ownerId === user.id
+    );
+
+    return privateNavItems.filter((item) => {
+      if (item.requiresClub && !hasClubs) return false;
+      if (item.requiresClubAdmin && !isAdminOfSelectedClub) return false;
+      return true;
+    });
+  }, [clubs, selectedClubId, user]);
 
   const handleLogout = () => {
     logout();

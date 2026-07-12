@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { PrivateRoute } from "./components/private/PrivateRoute.tsx";
-import { ClubGuard } from "./components/private/ClubGuard.tsx"; // Importe aqui
+import { ClubGuard } from "./components/private/ClubGuard.tsx";
+import { ClubAdminGuard } from "./components/private/ClubAdminGuard.tsx";
 import { Layout } from "./components/layout/index.tsx";
 
 import Register from "./pages/Register.tsx";
@@ -11,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Readers from "./pages/Readers.tsx";
 import Library from "./pages/Library.tsx";
+import ManageClub from "./pages/ManageClub.tsx";
 import Index from "./pages/Index.tsx";
 import { PublicRoute } from "./components/public/PublicRoute.tsx";
 import Me from "./pages/Me.tsx";
@@ -68,6 +70,15 @@ const router = createBrowserRouter([
               {
                 path: "/readers",
                 element: <Readers />,
+              },
+              {
+                element: <ClubAdminGuard />,
+                children: [
+                  {
+                    path: "/club/manage",
+                    element: <ManageClub />,
+                  },
+                ],
               },
             ],
           },
