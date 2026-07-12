@@ -22,6 +22,7 @@ export async function getMembersFromClub(
   const totalPages = Math.ceil(totalItems / limit);
 
   const data = membersRows.map((memberRow) => ({
+    id: memberRow.id,
     joinedAt: memberRow.joinedAt,
     user: {
       id: memberRow.userId,

@@ -7,6 +7,7 @@ const activeMemberUserFilter = (clubId: string) =>
   and(eq(member.clubId, clubId), eq(user.status, UserStatus.ACTIVE));
 
 export type MemberListRow = {
+  id: string;
   joinedAt: typeof member.$inferSelect.joinedAt;
   userId: string;
   userName: string;
@@ -24,6 +25,7 @@ export async function findActiveMembersByClubPaginated(
 ): Promise<MemberListRow[]> {
   const rows = await db
     .select({
+      id: member.id,
       joinedAt: member.joinedAt,
       userId: user.id,
       userName: user.name,
