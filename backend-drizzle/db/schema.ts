@@ -10,7 +10,7 @@ import {
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // Enums (PostgreSQL enum types)
 export const statusEnum = pgEnum("StatusEnum", ["active", "inactive"]);
@@ -136,10 +136,44 @@ export const meeting = pgTable("Meeting", {
     precision: 6,
   }),
   googleSyncError: text("google_sync_error"),
+  recapPromptDismissedAt: timestamp("recap_prompt_dismissed_at", {
+    withTimezone: true,
+    precision: 6,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .defaultNow()
     .notNull(),
 });
+
+// MeetingRecap
+export const meetingRecap = pgTable(
+  "MeetingRecap",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    meetingId: varchar("meeting_id", { length: 255 })
+      .notNull()
+      .references(() => meeting.id, { onDelete: "cascade" }),
+    createdByUserId: varchar("created_by_user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    text: text("text"),
+    imageUrl: varchar("image_url", { length: 1024 }),
+    imagePublicId: varchar("image_public_id", { length: 512 }),
+    createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp("deleted_at", { withTimezone: true, precision: 6 }),
+  },
+  (table) => [
+    uniqueIndex("MeetingRecap_meeting_id_active_key")
+      .on(table.meetingId)
+      .where(sql`${table.deletedAt} is null`),
+  ]
+);
 
 // Member
 export const member = pgTable("Member", {
@@ -278,6 +312,7 @@ export const userRelations = relations(user, ({ many }) => ({
   userBooks: many(userBook),
   reviews: many(review),
   meetingsCreated: many(meeting),
+  meetingRecapsCreated: many(meetingRecap),
   feedbacks: many(feedback),
 }));
 
@@ -305,6 +340,18 @@ export const meetingRelations = relations(meeting, ({ one, many }) => ({
     references: [user.id],
   }),
   confirmations: many(meetingConfirmation),
+  recaps: many(meetingRecap),
+}));
+
+export const meetingRecapRelations = relations(meetingRecap, ({ one }) => ({
+  meeting: one(meeting, {
+    fields: [meetingRecap.meetingId],
+    references: [meeting.id],
+  }),
+  createdBy: one(user, {
+    fields: [meetingRecap.createdByUserId],
+    references: [user.id],
+  }),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({

@@ -50,6 +50,13 @@
       "when": 1783904764261,
       "tag": "0006_feedback_table",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783945694890,
+      "tag": "0007_meeting_recap",
+      "breakpoints": true
     }
   ]
 }
