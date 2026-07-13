@@ -20,6 +20,7 @@ import Account from "./pages/Account.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import InviteJoin from "./pages/InviteJoin.tsx";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: "/privacidade", element: <PrivacyPolicy /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
       { path: "/reset-password", element: <ResetPassword /> },
+      { path: "/convite/:code", element: <InviteJoin /> },
       {
         element: <PublicRoute />,
         children: [

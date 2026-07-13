@@ -18,6 +18,15 @@ export interface IClubWithOwner extends IClub {
   };
 }
 
+export interface IClubInvitePreview {
+  id: string;
+  name: string;
+  description: string;
+  user: {
+    name: string;
+  } | null;
+}
+
 export interface IClubPayload {
   name: string;
   ownerId?: string;
