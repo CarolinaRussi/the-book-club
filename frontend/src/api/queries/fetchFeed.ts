@@ -4,10 +4,15 @@ import { api } from "../index";
 
 export const fetchMyFeed = async (
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  clubIds?: string[]
 ): Promise<IPaginatedResponse<IFeedActivity>> => {
   const { data } = await api.get("/me/feed", {
-    params: { page, limit },
+    params: {
+      page,
+      limit,
+      ...(clubIds?.length ? { clubIds: clubIds.join(",") } : {}),
+    },
   });
   return data;
 };
