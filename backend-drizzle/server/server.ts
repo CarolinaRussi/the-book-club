@@ -11,6 +11,7 @@ import bookRoutes from "../routes/bookRoutes";
 import meetingRoutes from "../routes/meetingRoutes";
 import googleAuthRoutes from "../routes/googleAuthRoutes";
 import feedRoutes from "../routes/feedRoutes";
+import feedbackRoutes from "../routes/feedbackRoutes";
 import { autoCompleteOverdueMeetings } from "../services/meetingService";
 
 const app = express();
@@ -29,6 +30,7 @@ app.use(authRoutes);
 app.use(clubRoutes);
 app.use(userRoutes);
 app.use(feedRoutes);
+app.use(feedbackRoutes);
 app.use(bookRoutes);
 app.use(meetingRoutes);
 app.use(memberRoutes);

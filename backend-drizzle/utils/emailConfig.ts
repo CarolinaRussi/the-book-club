@@ -32,3 +32,11 @@ export function getFrontendUrl(): string {
   }
   return url.replace(/\/$/, "");
 }
+
+export function getFeedbackToEmail(): string {
+  const to = process.env.FEEDBACK_TO_EMAIL?.trim();
+  if (!to) {
+    throw new EmailConfigError("FEEDBACK_TO_EMAIL não definido");
+  }
+  return to;
+}

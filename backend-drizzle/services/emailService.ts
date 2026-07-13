@@ -88,3 +88,55 @@ export async function sendTestEmail(to: string): Promise<{ id: string }> {
     text: "Olá! Este é um e-mail de teste do Entrelivros. Se você recebeu, a integração com a Resend está funcionando.",
   });
 }
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export type FeedbackNotificationInput = {
+  to: string;
+  typeLabel: string;
+  userName: string;
+  userEmail: string;
+  userId: string;
+  message: string;
+  pageUrl: string;
+};
+
+export async function sendFeedbackNotificationEmail(
+  input: FeedbackNotificationInput,
+): Promise<{ id: string }> {
+  const subject = `[Entrelivros Feedback] ${input.typeLabel} — ${input.userName}`;
+  const safeMessage = escapeHtml(input.message);
+  const safePageUrl = escapeHtml(input.pageUrl);
+  const safeName = escapeHtml(input.userName);
+  const safeEmail = escapeHtml(input.userEmail);
+  const safeUserId = escapeHtml(input.userId);
+  const safeType = escapeHtml(input.typeLabel);
+
+  return sendEmail({
+    to: input.to.trim(),
+    subject,
+    html: `
+      <p><strong>Tipo:</strong> ${safeType}</p>
+      <p><strong>Usuária:</strong> ${safeName} (${safeEmail})</p>
+      <p><strong>userId:</strong> ${safeUserId}</p>
+      <p><strong>Página:</strong> ${safePageUrl}</p>
+      <p><strong>Mensagem:</strong></p>
+      <p>${safeMessage.replace(/\n/g, "<br />")}</p>
+    `,
+    text: [
+      `Tipo: ${input.typeLabel}`,
+      `Usuária: ${input.userName} (${input.userEmail})`,
+      `userId: ${input.userId}`,
+      `Página: ${input.pageUrl}`,
+      "",
+      "Mensagem:",
+      input.message,
+    ].join("\n"),
+  });
+}
