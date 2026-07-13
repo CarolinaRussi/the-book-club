@@ -1,7 +1,11 @@
 import { ImagePlus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { compressImageFile } from "@/utils/compressImageFile";
+
+export const MAX_MEETING_RECAP_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export type MeetingRecapFormValue = {
   text: string;
@@ -43,6 +47,9 @@ export default function MeetingRecapForm({
   idPrefix = "meeting-recap",
 }: MeetingRecapFormProps) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
   useEffect(() => {
     if (!value.imageFile) {
@@ -60,6 +67,8 @@ export default function MeetingRecapForm({
       ? null
       : value.existingImageUrl;
 
+  const isBusy = disabled || isCompressing;
+
   return (
     <div className="flex flex-col gap-3">
       <div>
@@ -67,7 +76,7 @@ export default function MeetingRecapForm({
         <textarea
           id={`${idPrefix}-text`}
           value={value.text}
-          disabled={disabled}
+          disabled={isBusy}
           onChange={(event) =>
             onChange({ ...value, text: event.target.value })
           }
@@ -90,7 +99,7 @@ export default function MeetingRecapForm({
               type="button"
               variant="secondary"
               size="sm"
-              disabled={disabled}
+              disabled={isBusy}
               className="absolute right-2 top-2"
               onClick={() =>
                 onChange({
@@ -110,20 +119,41 @@ export default function MeetingRecapForm({
             className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-secondary px-4 py-6 text-center text-sm text-muted-foreground"
           >
             <ImagePlus className="h-6 w-6" />
-            <span>Toque para escolher uma foto</span>
+            <span>
+              {isCompressing
+                ? "Otimizando foto…"
+                : "Toque para escolher uma foto"}
+            </span>
             <Input
               id={`${idPrefix}-image`}
               type="file"
               accept="image/*"
-              disabled={disabled}
+              disabled={isBusy}
               className="sr-only"
-              onChange={(event) => {
+              onChange={async (event) => {
                 const file = event.target.files?.[0] ?? null;
-                onChange({
-                  ...value,
-                  imageFile: file,
-                  removeImage: false,
-                });
+                event.target.value = "";
+                if (!file) return;
+
+                setIsCompressing(true);
+                try {
+                  const compressed = await compressImageFile(file, {
+                    maxBytes: MAX_MEETING_RECAP_IMAGE_BYTES,
+                  });
+                  onChange({
+                    ...valueRef.current,
+                    imageFile: compressed,
+                    removeImage: false,
+                  });
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : "Não foi possível processar a foto. Tente outra imagem.",
+                  );
+                } finally {
+                  setIsCompressing(false);
+                }
               }}
             />
           </label>

@@ -36,7 +36,7 @@ const generalNavItems: NavItem[] = [
     Icon: FiHome,
     requiresClub: false,
     requiresClubAdmin: false,
-    //iconOnlyOnDesktop: true,
+    iconOnlyOnDesktop: true,
   },
   {
     to: "/me",
@@ -44,14 +44,14 @@ const generalNavItems: NavItem[] = [
     Icon: MdOutlinePerson,
     requiresClub: false,
     requiresClubAdmin: false,
-    //iconOnlyOnDesktop: true,
+    iconOnlyOnDesktop: true,
   },
 ];
 
 const clubNavItems: NavItem[] = [
   {
     to: "/meetings",
-    label: "Próximo Encontro",
+    label: "Encontros",
     Icon: TbCoffee,
     requiresClub: true,
     requiresClubAdmin: false,
@@ -72,7 +72,7 @@ const clubNavItems: NavItem[] = [
   },
   {
     to: "/club/manage",
-    label: "Gerenciar clube",
+    label: "Gerenciar",
     Icon: MdOutlineSettings,
     requiresClub: true,
     requiresClubAdmin: true,
@@ -166,21 +166,14 @@ export default function Header() {
 
   return (
     <header className="relative z-10 bg-background p-4 shadow-md">
-      <div className="hidden md:flex md:items-center md:justify-between md:gap-2">
-        <nav className="flex min-w-0 flex-row items-center justify-start gap-1">
-          {/* <button
-            type="button"
-            onClick={() => navigate("/home")}
-            className="mr-1 shrink-0 cursor-pointer text-xl font-bold text-primary transition-opacity hover:opacity-80"
-          >
-            Entrelivros
-          </button> */}
+      <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-3">
+        <nav className="flex shrink-0 flex-row items-center justify-start gap-1">
           {generalNavItems.map((item) => renderNavItem(item))}
         </nav>
 
-        <div className="flex min-w-0 flex-row flex-wrap items-center justify-end gap-1">
+        <div className="flex min-w-0 flex-1 flex-row items-center justify-end gap-1 overflow-hidden">
           {hasClubs ? (
-            <div className="mr-1 max-w-full shrink">
+            <div className="mr-1 min-w-0 max-w-[11rem] shrink xl:max-w-[14rem]">
               <HeaderClubSwitcher align="end" />
             </div>
           ) : null}
@@ -188,15 +181,17 @@ export default function Header() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex cursor-pointer items-center gap-1 rounded-xl px-4 py-2 font-semibold text-muted-foreground hover:bg-primary hover:text-background"
+            title="Sair"
+            aria-label="Sair"
+            className="flex shrink-0 cursor-pointer items-center gap-1 rounded-xl px-2.5 py-2 font-semibold text-muted-foreground hover:bg-primary hover:text-background xl:gap-1 xl:px-4"
           >
-            <MdOutlineLogout size={24} />
-            Sair
+            <MdOutlineLogout size={22} />
+            <span className="hidden xl:inline">Sair</span>
           </button>
         </div>
       </div>
 
-      <div className="flex items-center justify-between md:hidden">
+      <div className="flex items-center justify-between lg:hidden">
         <button
           type="button"
           onClick={() => navigate("/home")}

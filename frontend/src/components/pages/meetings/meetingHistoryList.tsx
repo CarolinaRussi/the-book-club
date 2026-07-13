@@ -171,7 +171,7 @@ const MeetingHistoryList = ({
                       ) : null}
                     </div>
 
-                    <div className="flex flex-col justify-between items-stretch sm:items-end gap-3 shrink-0">
+                    <div className="flex flex-col justify-between items-stretch sm:items-end shrink-0 gap-3 sm:gap-0">
                       <div className="text-start sm:text-end">
                         <p className="font-regular text-sm text-muted-foreground">
                           Livro discutido:
@@ -187,26 +187,28 @@ const MeetingHistoryList = ({
                             </p>
                           )}
                       </div>
-                      <Badge className="self-start sm:self-end">
-                        Encontro{" "}
-                        {meetingStatusLabels[meeting.status].toLowerCase()}
-                      </Badge>
+                      <div className="flex flex-col items-stretch sm:items-end gap-1.5">
+                        <Badge className="self-start sm:self-end">
+                          Encontro{" "}
+                          {meetingStatusLabels[meeting.status].toLowerCase()}
+                        </Badge>
 
-                      {isCompleted && isAdminOfSelectedClub ? (
-                        <Button
-                          type="button"
-                          variant={meeting.recap ? "outline" : "secondary"}
-                          size="sm"
-                          className="w-full"
-                          onClick={() =>
-                            openCompletedEditor(meeting, !meeting.recap)
-                          }
-                        >
-                          {meeting.recap
-                            ? "Editar encontro"
-                            : "Registrar encontro"}
-                        </Button>
-                      ) : null}
+                        {isCompleted && isAdminOfSelectedClub ? (
+                          <Button
+                            type="button"
+                            variant={meeting.recap ? "outline" : "secondary"}
+                            size="sm"
+                            className="w-full"
+                            onClick={() =>
+                              openCompletedEditor(meeting, !meeting.recap)
+                            }
+                          >
+                            {meeting.recap
+                              ? "Editar encontro"
+                              : "Registrar encontro"}
+                          </Button>
+                        ) : null}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

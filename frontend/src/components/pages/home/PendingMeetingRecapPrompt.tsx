@@ -11,16 +11,18 @@ export default function PendingMeetingRecapPrompt() {
     null,
   );
 
-  const { data } = useQuery({
+  const { data, isFetched } = useQuery({
     queryKey: ["pendingMeetingRecap", user?.id],
     queryFn: fetchPendingMeetingRecap,
-    staleTime: 1000 * 60,
+    staleTime: 0,
+    refetchOnMount: "always",
     enabled: !!user,
   });
 
   const pendingMeeting = data?.meeting ?? null;
 
   useEffect(() => {
+    if (!isFetched) return;
     if (!pendingMeeting) {
       setOpen(false);
       return;
@@ -30,7 +32,7 @@ export default function PendingMeetingRecapPrompt() {
       return;
     }
     setOpen(true);
-  }, [pendingMeeting, closedForMeetingId]);
+  }, [pendingMeeting, closedForMeetingId, isFetched]);
 
   return (
     <MeetingRecapDialog
