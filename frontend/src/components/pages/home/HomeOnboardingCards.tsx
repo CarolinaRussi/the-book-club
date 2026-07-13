@@ -33,6 +33,59 @@ export default function HomeOnboardingCards({
   const isOnboarding = variant === "onboarding";
   const isCompact = variant === "compact";
 
+  if (isCompact) {
+    return (
+      <>
+        <div className={cn("flex flex-col gap-2", className)}>
+          <Button
+            className="h-10 w-full rounded-xl bg-primary font-semibold text-primary-foreground hover:bg-primary/80"
+            onClick={() => setCreateClubOpen(true)}
+          >
+            <FaPlus className="mr-2 size-4" />
+            Criar clube
+          </Button>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm text-muted-foreground">
+              Tem um código de convite? Entre em um clube
+            </p>
+            <div className="flex gap-2">
+              <input
+                className="min-w-0 flex-1 rounded-xl border border-secondary px-3 py-2 text-sm shadow-sm"
+                placeholder="Ex.: ENTRELIVROS"
+                value={clubCode}
+                onChange={handleCodeChange}
+                aria-label="Código de convite"
+              />
+              <Button
+                variant="outline"
+                className="h-10 shrink-0 rounded-xl border-secondary px-3 font-semibold"
+                onClick={() => setConfirmingClub(true)}
+                disabled={clubCode.length === 0}
+              >
+                Entrar
+              </Button>
+            </div>
+          </div>
+        </div>
+        <CreateClubDialog
+          open={createClubOpen}
+          onOpenChange={setCreateClubOpen}
+        />
+        <ConfirmClubDialog
+          invitationCode={clubCode}
+          open={isConfirmingClub}
+          onOpenChange={(isOpen) => {
+            setConfirmingClub(isOpen);
+            if (!isOpen) {
+              setClubCode("");
+            }
+          }}
+          onSuccess={() => setClubCode("")}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <div
@@ -43,34 +96,21 @@ export default function HomeOnboardingCards({
           className,
         )}
       >
-        {isCompact && (
-          <h2 className="text-lg font-semibold text-foreground">Ações rápidas</h2>
-        )}
         <Card className="w-full gap-1">
-          <CardHeader className={isCompact ? "pb-2" : undefined}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2",
-                isCompact && "text-base",
-              )}
-            >
-              <FaPlus size={isCompact ? 20 : 24} className="text-primary" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FaPlus size={24} className="text-primary" />
               Criar novo clube
             </CardTitle>
           </CardHeader>
-          {!isCompact && (
-            <CardContent>
-              <p className="text-muted-foreground">
-                Crie seu próprio clube do livro e convide amigos para participar
-              </p>
-            </CardContent>
-          )}
-          <CardFooter className={isCompact ? "pt-0" : undefined}>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Crie seu próprio clube do livro e convide amigos para participar
+            </p>
+          </CardContent>
+          <CardFooter>
             <Button
-              className={cn(
-                "font-semibold w-full rounded-xl bg-primary text-primary-foreground cursor-pointer hover:bg-primary/80",
-                isCompact ? "py-5" : "mt-6 text-1xl py-6",
-              )}
+              className="mt-6 w-full cursor-pointer rounded-xl bg-primary py-6 font-semibold text-1xl text-primary-foreground hover:bg-primary/80"
               onClick={() => setCreateClubOpen(true)}
             >
               Criar Clube
@@ -78,41 +118,26 @@ export default function HomeOnboardingCards({
           </CardFooter>
         </Card>
         <Card className="w-full gap-1">
-          <CardHeader className={isCompact ? "pb-2" : undefined}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2",
-                isCompact && "text-base",
-              )}
-            >
-              <MdOutlineEmail
-                size={isCompact ? 20 : 24}
-                className="text-primary"
-              />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MdOutlineEmail size={24} className="text-primary" />
               Entrar em um clube
             </CardTitle>
           </CardHeader>
-          {!isCompact && (
-            <CardContent>
-              <p className="text-muted-foreground">
-                Recebeu um convite? Digite o código para entrar em um clube
-              </p>
-            </CardContent>
-          )}
-          <CardFooter
-            className={cn(
-              "flex flex-col gap-3",
-              isCompact ? "pt-0" : "mt-6",
-            )}
-          >
+          <CardContent>
+            <p className="text-muted-foreground">
+              Recebeu um convite? Digite o código para entrar em um clube
+            </p>
+          </CardContent>
+          <CardFooter className="mt-6 flex flex-col gap-3">
             <input
-              className="w-full border border-secondary p-3 shadow-md rounded-xl"
+              className="w-full rounded-xl border border-secondary p-3 shadow-md"
               placeholder="Ex.: ENTRELIVROS"
               value={clubCode}
               onChange={handleCodeChange}
             />
             <Button
-              className="w-full font-semibold rounded-xl bg-background border border-secondary shadow-md text-foreground hover:bg-cream hover:text-foreground cursor-pointer py-5"
+              className="w-full cursor-pointer rounded-xl border border-secondary bg-background py-5 font-semibold text-foreground shadow-md hover:bg-cream hover:text-foreground"
               onClick={() => setConfirmingClub(true)}
               disabled={clubCode.length === 0}
             >

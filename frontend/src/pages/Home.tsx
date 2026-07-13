@@ -40,7 +40,12 @@ export default function Home() {
         </>
       ) : (
         <>
-          <HomeUpcomingMeetings maxItems={3} className="mt-6 md:hidden" />
+          <HomeOnboardingCards variant="compact" className="mt-5 md:hidden" />
+          <div
+            className="my-5 h-px w-full bg-foreground/15 md:hidden"
+            aria-hidden
+          />
+          <HomeUpcomingMeetings maxItems={3} className="md:hidden" />
 
           <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8">
             <FeedSection />
@@ -48,8 +53,6 @@ export default function Home() {
               <HomeSidebar />
             </StickySidebarColumn>
           </div>
-
-          <HomeOnboardingCards variant="compact" className="mt-8 md:hidden" />
         </>
       )}
     </div>
