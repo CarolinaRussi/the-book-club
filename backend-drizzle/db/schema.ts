@@ -163,8 +163,8 @@ export const meetingRecap = pgTable(
       .defaultNow()
       .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
       .notNull()
-      .$defaultFn(() => new Date())
       .$onUpdateFn(() => new Date()),
     deletedAt: timestamp("deleted_at", { withTimezone: true, precision: 6 }),
   },

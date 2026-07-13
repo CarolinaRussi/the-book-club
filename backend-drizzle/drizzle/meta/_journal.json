@@ -57,6 +57,13 @@
       "when": 1783945694890,
       "tag": "0007_meeting_recap",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783948413626,
+      "tag": "0008_meeting_recap_updated_at_default",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import * as meetingRecapRepository from "../repositories/meetingRecapRepository"
 
 const MEETING_RECAP_FOLDER = "meeting_recaps";
 const MAX_RECAP_TEXT_LENGTH = 4000;
+export const MAX_RECAP_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export class MeetingRecapValidationError extends Error {
   constructor(message: string) {
@@ -45,6 +46,37 @@ function assertTextOrImage(text: string | null, hasImage: boolean) {
     throw new MeetingRecapValidationError(
       `O texto pode ter no máximo ${MAX_RECAP_TEXT_LENGTH} caracteres.`,
     );
+  }
+}
+
+function assertRecapImageFile(file: Express.Multer.File) {
+  if (file.size > MAX_RECAP_IMAGE_BYTES) {
+    throw new MeetingRecapValidationError(
+      "A foto deve ter no máximo 10 MB. Escolha outra imagem ou comprima o arquivo.",
+    );
+  }
+}
+
+async function uploadRecapImage(file: Express.Multer.File) {
+  assertRecapImageFile(file);
+  try {
+    const uploadResult = await uploadToCloudinary(
+      file.buffer,
+      MEETING_RECAP_FOLDER,
+    );
+    return {
+      imageUrl: uploadResult.secure_url as string,
+      imagePublicId: uploadResult.public_id as string,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : String(error ?? "");
+    if (/file size too large/i.test(message)) {
+      throw new MeetingRecapValidationError(
+        "A foto deve ter no máximo 10 MB. Escolha outra imagem ou comprima o arquivo.",
+      );
+    }
+    throw error;
   }
 }
 
@@ -103,12 +135,9 @@ export async function createMeetingRecap(input: {
   let imageUrl: string | null = null;
   let imagePublicId: string | null = null;
   if (input.file) {
-    const uploadResult = await uploadToCloudinary(
-      input.file.buffer,
-      MEETING_RECAP_FOLDER,
-    );
-    imageUrl = uploadResult.secure_url;
-    imagePublicId = uploadResult.public_id;
+    const uploadResult = await uploadRecapImage(input.file);
+    imageUrl = uploadResult.imageUrl;
+    imagePublicId = uploadResult.imagePublicId;
   }
 
   const created = await meetingRecapRepository.insertMeetingRecap({
@@ -118,6 +147,7 @@ export async function createMeetingRecap(input: {
     text,
     imageUrl,
     imagePublicId,
+    updatedAt: new Date(),
   });
 
   if (!created) {
@@ -156,12 +186,9 @@ export async function updateMeetingRecap(input: {
     imageUrl = null;
     imagePublicId = null;
   } else if (input.file) {
-    const uploadResult = await uploadToCloudinary(
-      input.file.buffer,
-      MEETING_RECAP_FOLDER,
-    );
-    imageUrl = uploadResult.secure_url;
-    imagePublicId = uploadResult.public_id;
+    const uploadResult = await uploadRecapImage(input.file);
+    imageUrl = uploadResult.imageUrl;
+    imagePublicId = uploadResult.imagePublicId;
   }
 
   assertTextOrImage(text, Boolean(imageUrl));

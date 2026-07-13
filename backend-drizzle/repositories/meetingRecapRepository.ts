@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, notExists, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { book, club, meeting, meetingRecap } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
@@ -88,7 +88,22 @@ export async function dismissMeetingRecapPrompt(meetingId: string) {
   return row ?? null;
 }
 
-export async function findPendingMeetingRecapForOwner(ownerUserId: string) {
+export async function findPendingMeetingRecapForOwner(
+  ownerUserId: string,
+  options?: { maxAgeDays?: number },
+) {
+  const maxAgeDays = options?.maxAgeDays ?? 14;
+  const todayYmd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const cutoffDate = new Date(`${todayYmd}T12:00:00`);
+  cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+  const cutoffYmd = cutoffDate.toISOString().slice(0, 10);
+
   const activeRecapExists = db
     .select({ one: sql`1` })
     .from(meetingRecap)
@@ -121,6 +136,7 @@ export async function findPendingMeetingRecapForOwner(ownerUserId: string) {
         eq(club.ownerId, ownerUserId),
         eq(meeting.status, MeetingStatus.COMPLETED),
         isNull(meeting.recapPromptDismissedAt),
+        gte(meeting.meetingDate, cutoffYmd),
         notExists(activeRecapExists),
       ),
     )
