@@ -29,8 +29,8 @@ export default function ProfileReadingComment({
       <p
         className={cn(
           "text-sm text-muted-foreground whitespace-pre-wrap wrap-break-word",
-          mode === "fixed-clamp" && "line-clamp-4",
-          needsExpand && !expanded && "line-clamp-3",
+          mode === "fixed-clamp" && "line-clamp-2 md:line-clamp-4",
+          needsExpand && !expanded && "line-clamp-2 md:line-clamp-3",
         )}
       >
         &ldquo;{text}&rdquo;
