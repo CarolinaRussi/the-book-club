@@ -1,6 +1,7 @@
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { db } from "../db/client";
 import { club, member, user } from "../db/schema";
+import { ClubStatus } from "../enums/clubStatus";
 import { ReadingMode } from "../enums/readingMode";
 
 export async function findClubIdsByUserId(userId: string) {
@@ -24,9 +25,32 @@ export async function findClubsByIds(clubIds: string[]) {
 
 export async function findClubByInvitationCode(code: string) {
   const [row] = await db
-    .select()
+    .select({
+      id: club.id,
+      name: club.name,
+      description: club.description,
+      ownerId: club.ownerId,
+    })
     .from(club)
-    .where(eq(club.invitationCode, code))
+    .where(
+      and(
+        eq(club.invitationCode, code),
+        eq(club.status, ClubStatus.ACTIVE)
+      )
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findActiveClubById(clubId: string) {
+  const [row] = await db
+    .select({
+      id: club.id,
+      name: club.name,
+      status: club.status,
+    })
+    .from(club)
+    .where(and(eq(club.id, clubId), eq(club.status, ClubStatus.ACTIVE)))
     .limit(1);
   return row ?? null;
 }

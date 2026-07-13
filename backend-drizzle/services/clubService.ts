@@ -25,7 +25,9 @@ export async function getClubByInvitationCode(invitationCode: string) {
 
   const ownerName = await clubRepository.findUserNameById(clubRow.ownerId);
   return {
-    ...clubRow,
+    id: clubRow.id,
+    name: clubRow.name,
+    description: clubRow.description,
     user: ownerName !== null ? { name: ownerName } : null,
   };
 }

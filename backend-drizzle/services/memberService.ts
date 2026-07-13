@@ -1,10 +1,18 @@
 import { createId } from "../utils/id";
+import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
 
 export class DuplicateMemberJoinError extends Error {
   constructor() {
-    super("JoinClub já realizado");
+    super("Você já é membro deste clube");
     this.name = "DuplicateMemberJoinError";
+  }
+}
+
+export class ClubNotJoinableError extends Error {
+  constructor() {
+    super("Clube não encontrado ou não está aceitando novos membros.");
+    this.name = "ClubNotJoinableError";
   }
 }
 
@@ -38,6 +46,11 @@ export async function getMembersFromClub(
 }
 
 export async function joinClub(userId: string, clubId: string) {
+  const activeClub = await clubRepository.findActiveClubById(clubId);
+  if (!activeClub) {
+    throw new ClubNotJoinableError();
+  }
+
   try {
     const newMember = await memberRepository.insertMember({
       id: createId(),
@@ -49,12 +62,10 @@ export async function joinClub(userId: string, clubId: string) {
       throw new Error("insert_member_failed");
     }
 
-    const clubName = await memberRepository.findClubNameById(clubId);
-
     return {
       member: {
         ...newMember,
-        club: clubName !== null ? { name: clubName } : null,
+        club: { name: activeClub.name },
       },
     };
   } catch (error: any) {

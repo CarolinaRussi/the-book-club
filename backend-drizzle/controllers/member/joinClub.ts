@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   joinClub as joinClubService,
   DuplicateMemberJoinError,
+  ClubNotJoinableError,
 } from "../../services/memberService";
 
 export const joinClub = async (req: Request, res: Response) => {
@@ -22,6 +23,9 @@ export const joinClub = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof DuplicateMemberJoinError) {
       return res.status(400).json({ message: error.message });
+    }
+    if (error instanceof ClubNotJoinableError) {
+      return res.status(404).json({ message: error.message });
     }
     console.error(error);
     res.status(500).json({ message: "Erro ao criar membro do clube" });
