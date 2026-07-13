@@ -7,12 +7,17 @@ import StickySidebarColumn from "@/components/pages/home/StickySidebarColumn";
 import FeedSection from "@/components/pages/home/FeedSection";
 import HomeEmptyState from "@/components/pages/home/HomeEmptyState";
 import PendingMeetingRecapPrompt from "@/components/pages/home/PendingMeetingRecapPrompt";
+import BrandLoadingScreen from "@/components/BrandLoadingScreen";
 import { TbBooks } from "react-icons/tb";
 
 export default function Home() {
   const { user } = useAuth();
-  const { clubs } = useClub();
+  const { clubs, isLoadingClubs } = useClub();
   const hasClubs = clubs.length > 0;
+
+  if (isLoadingClubs) {
+    return <BrandLoadingScreen />;
+  }
 
   return (
     <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-15">

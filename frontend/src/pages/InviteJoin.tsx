@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router";
 import { GiBookCover } from "react-icons/gi";
 import JoinClubPanel from "@/components/pages/home/JoinClubPanel";
 import { useAuth } from "@/contexts/AuthContext";
-import SkeletonHome from "@/components/private/SkeletonHome";
+import BrandLoadingScreen from "@/components/BrandLoadingScreen";
 
 export default function InviteJoin() {
   const { code } = useParams<{ code: string }>();
@@ -10,7 +10,7 @@ export default function InviteJoin() {
   const { isLoggedIn, isLoadingUser } = useAuth();
 
   if (isLoadingUser) {
-    return <SkeletonHome />;
+    return <BrandLoadingScreen />;
   }
 
   if (!code) {

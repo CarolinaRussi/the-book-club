@@ -1,0 +1,35 @@
+---
+description: Formato das mensagens de commit (scope frontend/backend, inglês)
+alwaysApply: true
+---
+
+# Mensagens de commit
+
+Ao sugerir ou criar commits neste repositório:
+
+- A mensagem é **sempre em inglês**.
+- O scope entre parênteses é **somente** `frontend` ou `backend` — nunca domínio (`feed`, `home`, `auth`, etc.).
+
+Formato:
+
+```text
+feat(frontend): short summary in English
+feat(backend): short summary in English
+fix(frontend): ...
+fix(backend): ...
+```
+
+Exemplos corretos:
+
+```text
+feat(backend): filter GET /me/feed by clubIds
+feat(frontend): add multi-club filter on the feed
+```
+
+Exemplos incorretos:
+
+```text
+feat(feed): ...
+feat(home): ...
+feat(backend): filtrar GET /me/feed por clubIds
+```

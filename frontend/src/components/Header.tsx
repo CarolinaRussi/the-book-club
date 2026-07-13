@@ -38,7 +38,6 @@ const generalNavItems: NavItem[] = [
     Icon: FiHome,
     requiresClub: false,
     requiresClubAdmin: false,
-    iconOnlyOnDesktop: true,
   },
   {
     to: "/me",
@@ -46,7 +45,6 @@ const generalNavItems: NavItem[] = [
     Icon: MdOutlinePerson,
     requiresClub: false,
     requiresClubAdmin: false,
-    iconOnlyOnDesktop: true,
   },
 ];
 

@@ -7,6 +7,7 @@ import { fetchMyFeed } from "@/api/queries/fetchFeed";
 import type { IFeedActivity } from "@/types/IFeed";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import BrandLoadingScreen from "@/components/BrandLoadingScreen";
 import FeedActivityCard from "./FeedActivityCard";
 import FeedClubFilter from "./FeedClubFilter";
 import HomeEmptyState from "./HomeEmptyState";
@@ -98,10 +99,10 @@ export default function FeedSection() {
       </div>
 
       {isInitialLoading ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-40 w-full rounded-xl" />
-          <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
+        <BrandLoadingScreen
+          className="min-h-[16rem] py-10"
+          label="Carregando atualizações…"
+        />
       ) : isError && items.length === 0 ? (
         <HomeEmptyState
           icon={<BookOpen className="h-8 w-8" />}

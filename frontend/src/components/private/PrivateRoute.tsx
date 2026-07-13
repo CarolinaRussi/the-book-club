@@ -1,13 +1,13 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
-import SkeletonHome from "./SkeletonHome";
+import BrandLoadingScreen from "../BrandLoadingScreen";
 import { GoogleOAuthReturnHandler } from "../GoogleOAuthReturnHandler";
 
 export const PrivateRoute = () => {
   const { isLoggedIn, isLoadingUser } = useAuth();
 
   if (isLoadingUser) {
-    return <SkeletonHome />;
+    return <BrandLoadingScreen />;
   }
 
   if (!isLoggedIn) {

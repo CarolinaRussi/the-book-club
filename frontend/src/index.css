@@ -210,3 +210,48 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes brand-loading-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes brand-loading-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.brand-loading-icon {
+  animation: brand-loading-float 2.2s ease-in-out infinite;
+}
+
+.brand-loading-title {
+  animation: brand-loading-fade-up 0.65s ease-out both;
+}
+
+.brand-loading-subtitle {
+  animation: brand-loading-fade-up 0.65s ease-out 0.12s both,
+    brand-loading-pulse 1.8s ease-in-out 0.7s infinite;
+}
+
