@@ -3,6 +3,7 @@ import { BookStatus } from "../enums/bookStatus";
 import { ReadingMode } from "../enums/readingMode";
 import { createId } from "../utils/id";
 import * as meetingRepository from "../repositories/meetingRepository";
+import * as meetingRecapRepository from "../repositories/meetingRecapRepository";
 import * as bookRepository from "../repositories/bookRepository";
 import * as clubRepository from "../repositories/clubRepository";
 import * as googleCalendarSyncService from "./googleCalendarSyncService";
@@ -66,19 +67,38 @@ export async function getPastMeetingsFromClub(
     meetingRepository.countPastMeetingsByClubId(clubId),
   ]);
 
+  const meetingIds = meetingsList.map((meetingRow) => meetingRow.id);
+  const activeRecaps =
+    await meetingRecapRepository.findActiveRecapsByMeetingIds(meetingIds);
+  const recapByMeetingId = new Map(
+    activeRecaps.map((recapRow) => [recapRow.meetingId, recapRow]),
+  );
+
   const totalPages = Math.ceil(totalItems / limit);
-  const data = meetingsList.map((meeting) => ({
-    id: meeting.id,
-    status: meeting.status,
-    location: meeting.location,
-    description: meeting.description,
-    meetingDate: meeting.meetingDate,
-    meetingTime: meeting.meetingTime,
-    createdAt: meeting.createdAt,
-    chapterStart: meeting.chapterStart,
-    chapterEnd: meeting.chapterEnd,
-    book: formatMeetingBook(meeting as any),
-  }));
+  const data = meetingsList.map((meetingRow) => {
+    const recapRow = recapByMeetingId.get(meetingRow.id);
+    return {
+      id: meetingRow.id,
+      status: meetingRow.status,
+      location: meetingRow.location,
+      description: meetingRow.description,
+      meetingDate: meetingRow.meetingDate,
+      meetingTime: meetingRow.meetingTime,
+      createdAt: meetingRow.createdAt,
+      chapterStart: meetingRow.chapterStart,
+      chapterEnd: meetingRow.chapterEnd,
+      book: formatMeetingBook(meetingRow as any),
+      recap: recapRow
+        ? {
+            id: recapRow.id,
+            text: recapRow.text,
+            imageUrl: recapRow.imageUrl,
+            createdAt: recapRow.createdAt,
+            updatedAt: recapRow.updatedAt,
+          }
+        : null,
+    };
+  });
 
   return { data, totalPages, currentPage: page, totalItems };
 }

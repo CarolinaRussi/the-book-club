@@ -161,6 +161,8 @@ export async function findMeetingById(meetingId: string) {
     .select({
       id: meeting.id,
       clubId: meeting.clubId,
+      status: meeting.status,
+      recapPromptDismissedAt: meeting.recapPromptDismissedAt,
     })
     .from(meeting)
     .where(eq(meeting.id, meetingId))
