@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 text-foreground sm:px-6 sm:py-14">
       <p className="text-sm text-muted-foreground">
-        Última atualização: maio de 2026
+        Última atualização: julho de 2026
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
         Política de privacidade
@@ -68,6 +68,13 @@ export default function PrivacyPolicy() {
             necessários para criar e atualizar eventos de calendário em nome da
             sua conta, conforme a seção 4.
           </li>
+          <li>
+            <strong className="text-foreground">Feedback do produto:</strong> se
+            enviar uma mensagem pelo botão de feedback (disponível quando está
+            autenticada), tratamos o tipo escolhido (bug, ideia ou outro), o
+            texto da mensagem, a URL da página em que se encontrava e a
+            identificação da sua conta, para melhorar o serviço.
+          </li>
         </ul>
       </section>
 
@@ -77,8 +84,9 @@ export default function PrivacyPolicy() {
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           Tratamos os dados para prestar o serviço (criar sessão, mostrar perfil,
-          gerir clubes e encontros), melhorar a segurança da conta e cumprir
-          obrigações legais aplicáveis. A conexão ao Google Calendar assenta no{" "}
+          gerir clubes e encontros), melhorar o produto com base em feedback
+          voluntário, melhorar a segurança da conta e cumprir obrigações legais
+          aplicáveis. A conexão ao Google Calendar assenta no{" "}
           <strong className="text-foreground">consentimento</strong>, que pode
           retirar a qualquer momento na área de perfil da aplicação e revogando o
           acesso na sua Conta Google.
