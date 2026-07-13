@@ -63,6 +63,22 @@ export async function removeMember(memberId: string): Promise<unknown> {
   }
 }
 
+export async function leaveClub(clubId: string): Promise<unknown> {
+  if (!clubId) {
+    throw { message: "ID do clube é obrigatório." };
+  }
+
+  try {
+    const response = await api.delete(`/leave-club/${clubId}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    }
+    throw { message: "Erro desconhecido ao sair do clube." };
+  }
+}
+
 export async function joinClub(data: IMembersPayload): Promise<any> {
   try {
     const response = await api.post("/join-club", data);

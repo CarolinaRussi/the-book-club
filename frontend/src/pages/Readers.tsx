@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import { fetchReadersByClubId } from "../api/queries/fetchReaders";
-import { removeMember } from "../api/mutations/clubMutate";
+import { leaveClub, removeMember } from "../api/mutations/clubMutate";
 import { formatDayMonthYear, getInitials } from "../utils/formatters";
 import {
   Card,
@@ -14,6 +14,7 @@ import {
 } from "../components/ui/card";
 import SkeletonReaders from "../components/pages/readers/Skeleton";
 import RemoveMemberButton from "../components/pages/readers/RemoveMemberButton";
+import LeaveClubButton from "../components/pages/readers/LeaveClubButton";
 import { useEffect, useState } from "react";
 import Pagination from "../components/ui/pagination";
 import { toast } from "react-toastify";
@@ -64,6 +65,25 @@ export default function Readers() {
       },
     });
 
+  const { mutate: leaveClubMutate, isPending: isLeavingClub } = useMutation<
+    unknown,
+    IApiError,
+    string
+  >({
+    mutationFn: leaveClub,
+    onSuccess: async () => {
+      toast.success("Você saiu do clube.");
+      await queryClient.invalidateQueries({ queryKey: ["userClubs"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["readers", selectedClubId],
+      });
+      navigate("/home");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao sair do clube.");
+    },
+  });
+
   const readers = readersData?.data || [];
   const totalPages = readersData?.totalPages || 1;
 
@@ -77,13 +97,22 @@ export default function Readers() {
 
   return (
     <div className="flex flex-col w-full max-w-7xl p-5 md:p-20">
-      <div className="flex flex-col items-start">
-        <h1 className="text-4xl font-bold text-foreground ">
-          Leitores do Clube
-        </h1>
-        <h2 className="text-md mt-3 w-full text-warm-brown">
-          Conheça os leitores apaixonados que fazem parte do nosso clube!
-        </h2>
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col items-start">
+          <h1 className="text-4xl font-bold text-foreground ">
+            Leitores do Clube
+          </h1>
+          <h2 className="text-md mt-3 w-full text-warm-brown">
+            Conheça os leitores apaixonados que fazem parte do nosso clube!
+          </h2>
+        </div>
+        {selectedClub && !isAdminOfSelectedClub ? (
+          <LeaveClubButton
+            clubName={selectedClub.name}
+            disabled={isLeavingClub}
+            onConfirm={() => leaveClubMutate(selectedClub.id)}
+          />
+        ) : null}
       </div>
       {isFetching ? (
         <SkeletonReaders />
