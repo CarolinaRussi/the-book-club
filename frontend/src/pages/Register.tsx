@@ -3,7 +3,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
 import { registerUser } from "../api/mutations/authMutate";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import type { IFormInput, IRegisterData } from "../types/IRegister";
 import type { IApiError, IApiReturnData } from "../types/IApi";
@@ -12,9 +12,12 @@ import {
   passwordFieldRules,
 } from "../utils/passwordPolicy";
 import { PasswordInput } from "@/components/ui/password-input";
+import { redirectSearch, safeRedirect } from "@/utils/safeRedirect";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = safeRedirect(searchParams.get("redirect"));
   const { login } = useAuth();
   const {
     register,
@@ -33,7 +36,7 @@ export default function Register() {
     onSuccess: (result) => {
       toast.success("Conta criada com sucesso!");
       login(result.token, result.user);
-      navigate("/home");
+      navigate(redirectPath);
     },
     onError: (error) => toast.error(error.message || "Erro ao criar conta"),
   });
@@ -120,16 +123,19 @@ export default function Register() {
       </form>
       <h3 className="text-warm-brown mt-4">
         Já tem uma conta?{" "}
-        <a href="/login" className="text-primary font-semibold hover:underline">
+        <Link
+          to={`/login${redirectSearch(searchParams.get("redirect"))}`}
+          className="text-primary font-semibold hover:underline"
+        >
           Entrar
-        </a>
+        </Link>
       </h3>
-      <a
-        href="/"
+      <Link
+        to="/"
         className="text-warm-brown mt-2 text-sm hover:text-primary hover:underline"
       >
         Voltar para página inicial
-      </a>
+      </Link>
     </div>
   );
 }

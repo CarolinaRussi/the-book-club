@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { GiBookCover } from "react-icons/gi";
 import { toast } from "react-toastify";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link, useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import type { IApiError, IApiReturnData } from "../types/IApi";
 import type { ILoginData } from "../types/ILogin";
@@ -13,9 +13,12 @@ import {
   passwordRequiredMessage,
 } from "../utils/passwordPolicy";
 import { PasswordInput } from "@/components/ui/password-input";
+import { redirectSearch, safeRedirect } from "@/utils/safeRedirect";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = safeRedirect(searchParams.get("redirect"));
   const { login } = useAuth();
   const {
     register,
@@ -32,7 +35,7 @@ export default function Login() {
     onSuccess: async (result) => {
       toast.success("Login efetuado com sucesso!");
       login(result.token, result.user);
-      navigate("/home");
+      navigate(redirectPath);
     },
     onError: (error) => {
       toast.error(error.message || "Email ou senha incorretos");
@@ -100,7 +103,10 @@ export default function Login() {
 
       <p className="mt-6 text-sm text-warm-brown">
         Não tem uma conta?{" "}
-        <Link to="/register" className="font-semibold text-primary hover:underline">
+        <Link
+          to={`/register${redirectSearch(searchParams.get("redirect"))}`}
+          className="font-semibold text-primary hover:underline"
+        >
           Cadastre-se
         </Link>
       </p>
