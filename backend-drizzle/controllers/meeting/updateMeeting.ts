@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import * as meetingService from "../../services/meetingService";
 import * as meetingRepository from "../../repositories/meetingRepository";
-import { respondIfNotClubMember } from "../../utils/clubAccess";
+import {
+  respondIfNotClubMember,
+  respondIfNotClubOwner,
+} from "../../utils/clubAccess";
+import { MeetingStatus } from "../../enums/meetingStatus";
 
 export const updateMeeting = async (req: Request, res: Response) => {
   const {
@@ -40,7 +44,14 @@ export const updateMeeting = async (req: Request, res: Response) => {
   if (clubId !== existing.clubId) {
     return res.status(400).json({ message: "Dados do encontro inválidos." });
   }
-  if (!(await respondIfNotClubMember(req.userId, existing.clubId, res))) {
+
+  const isCompleting = status === MeetingStatus.COMPLETED;
+  const isAlreadyCompleted = existing.status === MeetingStatus.COMPLETED;
+  if (isCompleting || isAlreadyCompleted) {
+    if (!(await respondIfNotClubOwner(req.userId, existing.clubId, res))) {
+      return;
+    }
+  } else if (!(await respondIfNotClubMember(req.userId, existing.clubId, res))) {
     return;
   }
 
