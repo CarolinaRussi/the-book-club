@@ -79,3 +79,41 @@ export async function joinClub(userId: string, clubId: string) {
 export async function deleteMember(memberId: string) {
   return memberRepository.deleteMemberById(memberId);
 }
+
+export class NotClubMemberError extends Error {
+  constructor() {
+    super("Membro não encontrado");
+    this.name = "NotClubMemberError";
+  }
+}
+
+export class ClubOwnerCannotLeaveError extends Error {
+  constructor() {
+    super(
+      "O administrador não pode sair do clube sem transferir a propriedade."
+    );
+    this.name = "ClubOwnerCannotLeaveError";
+  }
+}
+
+export async function leaveClub(userId: string, clubId: string) {
+  const membership = await memberRepository.findMemberByUserAndClub(
+    userId,
+    clubId
+  );
+  if (!membership) {
+    throw new NotClubMemberError();
+  }
+
+  const ownerId = await clubRepository.findClubOwnerId(clubId);
+  if (ownerId === userId) {
+    throw new ClubOwnerCannotLeaveError();
+  }
+
+  const deleted = await memberRepository.deleteMemberById(membership.id);
+  if (!deleted) {
+    throw new NotClubMemberError();
+  }
+
+  return deleted;
+}
