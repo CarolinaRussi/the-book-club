@@ -16,7 +16,8 @@ import { Button } from "../../ui/button";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useClub } from "../../../contexts/ClubContext";
 import { useState } from "react";
-import { FaRegCopy, FaCheck } from "react-icons/fa6"; // Ícones para o botão de copiar
+import { FaRegCopy, FaCheck } from "react-icons/fa6";
+import { buildInviteUrl } from "@/utils/inviteUrl";
 
 interface CreateClubDialogProps {
   open: boolean;
@@ -25,7 +26,8 @@ interface CreateClubDialogProps {
 
 const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   const [createdCode, setCreatedCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const {
     register,
@@ -40,7 +42,8 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
 
   const handleClose = () => {
     setCreatedCode(null);
-    setCopied(false);
+    setCopiedCode(false);
+    setCopiedLink(false);
     reset();
     onOpenChange(false);
   };
@@ -70,12 +73,19 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   };
 
   const handleCopyCode = () => {
-    if (createdCode) {
-      navigator.clipboard.writeText(createdCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.info("Código copiado para a área de transferência!");
-    }
+    if (!createdCode) return;
+    navigator.clipboard.writeText(createdCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+    toast.info("Código copiado para a área de transferência!");
+  };
+
+  const handleCopyLink = () => {
+    if (!createdCode) return;
+    navigator.clipboard.writeText(buildInviteUrl(createdCode));
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+    toast.info("Link de convite copiado!");
   };
 
   return (
@@ -87,48 +97,69 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
           </DialogTitle>
           <DialogDescription className="text-1xl text-warm-brown">
             {createdCode
-              ? "Compartilhe este código com seus amigos para que entrem no clube."
+              ? "Compartilhe o link ou o código para que entrem no clube."
               : "Preencha as informações do seu clube do livro"}
           </DialogDescription>
         </DialogHeader>
 
         {createdCode ? (
-          <div className="flex flex-col items-center justify-center py-6 gap-6">
-            <div className="flex flex-col items-center gap-2 w-full">
-              <span className="text-sm text-muted-foreground uppercase tracking-wider">
+          <div className="flex flex-col items-center justify-center gap-6 py-6">
+            <div className="flex w-full flex-col items-center gap-2">
+              <span className="text-sm uppercase tracking-wider text-muted-foreground">
                 Código de Convite
               </span>
               <div
-                className="flex items-center gap-3 bg-secondary/20 border border-primary/20 p-4 rounded-xl w-full max-w-sm justify-between cursor-pointer hover:bg-secondary/30 transition-colors"
+                className="flex w-full max-w-sm cursor-pointer items-center justify-between gap-3 rounded-xl border border-primary/20 bg-secondary/20 p-4 transition-colors hover:bg-secondary/30"
                 onClick={handleCopyCode}
               >
-                <code className="text-3xl font-bold text-primary tracking-widest text-center flex-1">
+                <code className="flex-1 text-center text-3xl font-bold tracking-widest text-primary">
                   {createdCode}
                 </code>
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={(event) => {
+                    event.stopPropagation();
                     handleCopyCode();
                   }}
                 >
-                  {copied ? (
+                  {copiedCode ? (
                     <FaCheck className="text-green-600" />
                   ) : (
                     <FaRegCopy />
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Clique no código para copiar
               </p>
+            </div>
+
+            <div className="flex w-full max-w-sm flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleCopyLink}
+              >
+                {copiedLink ? (
+                  <>
+                    <FaCheck className="text-green-600" />
+                    Link copiado
+                  </>
+                ) : (
+                  <>
+                    <FaRegCopy />
+                    Copiar link de convite
+                  </>
+                )}
+              </Button>
             </div>
 
             <DialogFooter className="w-full sm:justify-center">
               <Button
                 onClick={handleClose}
-                className="w-full sm:w-1/2 py-6 text-base md:text-lg"
+                className="w-full py-6 text-base sm:w-1/2 md:text-lg"
               >
                 Fechar e Ir para o Clube
               </Button>
@@ -144,7 +175,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
                 <input
                   {...register("name", { required: true })}
                   placeholder="Ex.: Clube dos Clássicos"
-                  className="border-2 border-secondary rounded-lg p-2 w-full text-foreground bg-background"
+                  className="w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
                 />
                 {errors.name && (
                   <h3 className="text-xs text-primary">
@@ -159,7 +190,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
                 <textarea
                   {...register("description", { required: true })}
                   placeholder="Descreva o objetivo e tema do clube"
-                  className="border-2 border-secondary rounded-lg p-2 w-full h-40 text-foreground bg-background"
+                  className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
                 />
                 {errors.description && (
                   <h3 className="text-xs text-primary">

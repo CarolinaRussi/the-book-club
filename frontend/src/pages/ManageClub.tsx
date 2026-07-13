@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { FaCheck, FaRegCopy } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import { updateClub, deleteClub } from "@/api/mutations/clubMutate";
@@ -12,6 +13,7 @@ import {
   clubReadingModeLabels,
   type ClubReadingMode,
 } from "@/utils/constants/clubs";
+import { buildInviteUrl } from "@/utils/inviteUrl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +47,7 @@ export default function ManageClub() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { clubs, selectedClubId } = useClub();
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
 
@@ -53,6 +56,7 @@ export default function ManageClub() {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ManageClubFormValues>({
     defaultValues: {
@@ -62,6 +66,8 @@ export default function ManageClub() {
       readingMode: "book",
     },
   });
+
+  const invitationCodeValue = watch("invitationCode");
 
   useEffect(() => {
     if (!selectedClub) return;
@@ -114,6 +120,18 @@ export default function ManageClub() {
     updateClubMutate({ id: selectedClub.id, ...data });
   };
 
+  const handleCopyInviteLink = () => {
+    const code = invitationCodeValue?.trim();
+    if (!code) {
+      toast.error("Informe um código de convite antes de copiar o link.");
+      return;
+    }
+    navigator.clipboard.writeText(buildInviteUrl(code));
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+    toast.info("Link de convite copiado!");
+  };
+
   if (!user || !selectedClub) return null;
 
   return (
@@ -162,7 +180,34 @@ export default function ManageClub() {
               <label className="mb-1 block text-sm font-medium">
                 Código de convite
               </label>
-              <Input {...register("invitationCode")} placeholder="Código" />
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  {...register("invitationCode")}
+                  placeholder="Código"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyInviteLink}
+                  className="shrink-0"
+                >
+                  {copiedLink ? (
+                    <>
+                      <FaCheck className="text-green-600" />
+                      Link copiado
+                    </>
+                  ) : (
+                    <>
+                      <FaRegCopy />
+                      Copiar link
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Alterar o código invalida links de convite antigos.
+              </p>
             </div>
 
             <div>
