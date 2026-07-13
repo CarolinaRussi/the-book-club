@@ -93,7 +93,7 @@ export default function MeetingRecapForm({
             <img
               src={previewUrl}
               alt="Prévia da foto do encontro"
-              className="aspect-4/3 w-full object-cover sm:aspect-auto sm:max-h-56"
+              className="mx-auto h-auto w-full object-contain sm:max-h-56"
             />
             <Button
               type="button"

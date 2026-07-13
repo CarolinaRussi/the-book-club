@@ -101,11 +101,11 @@ export default function MeetingRecapDetailDialog({
           </div>
 
           {imageUrl ? (
-            <div className="border-y border-border/60 bg-muted/30 sm:mx-0">
+            <div className="border-y border-border/60 bg-muted/30">
               <img
                 src={imageUrl}
                 alt="Foto do encontro"
-                className="aspect-4/3 w-full object-cover sm:aspect-auto sm:max-h-[50vh] sm:object-contain"
+                className="mx-auto h-auto w-full object-contain sm:max-h-[50vh]"
               />
             </div>
           ) : null}
