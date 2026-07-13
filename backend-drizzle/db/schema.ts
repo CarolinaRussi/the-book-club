@@ -38,6 +38,11 @@ export const confirmationStatusEnum = pgEnum("ConfirmationStatusEnum", [
   "not_going",
   "maybe",
 ]);
+export const feedbackTypeEnum = pgEnum("FeedbackTypeEnum", [
+  "bug",
+  "idea",
+  "other",
+]);
 
 // Book
 export const book = pgTable("Book", {
@@ -247,6 +252,19 @@ export const meetingConfirmation = pgTable(
   ]
 );
 
+export const feedback = pgTable("Feedback", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: feedbackTypeEnum("type").notNull(),
+  message: text("message").notNull(),
+  pageUrl: text("page_url").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+    .defaultNow()
+    .notNull(),
+});
+
 // Relations (for query API - optional, used with db.query)
 export const bookRelations = relations(book, ({ many }) => ({
   clubBooks: many(clubBook),
@@ -260,6 +278,7 @@ export const userRelations = relations(user, ({ many }) => ({
   userBooks: many(userBook),
   reviews: many(review),
   meetingsCreated: many(meeting),
+  feedbacks: many(feedback),
 }));
 
 export const clubRelations = relations(club, ({ one, many }) => ({
@@ -350,3 +369,10 @@ export const meetingConfirmationRelations = relations(
     }),
   })
 );
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  user: one(user, {
+    fields: [feedback.userId],
+    references: [user.id],
+  }),
+}));

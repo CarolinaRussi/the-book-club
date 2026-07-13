@@ -43,6 +43,13 @@
       "when": 1783534967142,
       "tag": "0005_heavy_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783904764261,
+      "tag": "0006_feedback_table",
+      "breakpoints": true
     }
   ]
 }
