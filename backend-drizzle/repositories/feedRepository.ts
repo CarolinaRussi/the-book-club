@@ -26,7 +26,10 @@ import { UserStatus } from "../enums/userStatus";
 const mViewer = alias(member, "m_viewer");
 const mActor = alias(member, "m_actor");
 
-function sharedClubBookExists(viewerUserId: string) {
+function sharedClubBookExists(
+  viewerUserId: string,
+  filterClubIds?: string[]
+) {
   return exists(
     db
       .select({ one: sql`1` })
@@ -43,27 +46,42 @@ function sharedClubBookExists(viewerUserId: string) {
         and(
           eq(mViewer.userId, viewerUserId),
           eq(mActor.userId, userBook.userId),
-          isNull(clubBook.deletedAt)
+          isNull(clubBook.deletedAt),
+          filterClubIds?.length
+            ? inArray(mViewer.clubId, filterClubIds)
+            : undefined
         )
       )
   );
 }
 
-const finishedFeedFilter = (viewerUserId: string) =>
+const finishedFeedFilter = (
+  viewerUserId: string,
+  filterClubIds?: string[]
+) =>
   and(
     eq(userBook.readingStatus, ReadingStatus.FINISHED),
     eq(user.status, UserStatus.ACTIVE),
-    sharedClubBookExists(viewerUserId)
+    sharedClubBookExists(viewerUserId, filterClubIds)
   );
 
-const meetingRecapFeedFilter = (viewerUserId: string) =>
+const meetingRecapFeedFilter = (
+  viewerUserId: string,
+  filterClubIds?: string[]
+) =>
   and(
     isNull(meetingRecap.deletedAt),
     eq(user.status, UserStatus.ACTIVE),
-    eq(member.userId, viewerUserId)
+    eq(member.userId, viewerUserId),
+    filterClubIds?.length
+      ? inArray(meeting.clubId, filterClubIds)
+      : undefined
   );
 
-export async function findFinishedFeedSortKeys(viewerUserId: string) {
+export async function findFinishedFeedSortKeys(
+  viewerUserId: string,
+  filterClubIds?: string[]
+) {
   return db
     .select({
       id: userBook.id,
@@ -71,10 +89,13 @@ export async function findFinishedFeedSortKeys(viewerUserId: string) {
     })
     .from(userBook)
     .innerJoin(user, eq(userBook.userId, user.id))
-    .where(finishedFeedFilter(viewerUserId));
+    .where(finishedFeedFilter(viewerUserId, filterClubIds));
 }
 
-export async function findMeetingRecapFeedSortKeys(viewerUserId: string) {
+export async function findMeetingRecapFeedSortKeys(
+  viewerUserId: string,
+  filterClubIds?: string[]
+) {
   return db
     .select({
       id: meetingRecap.id,
@@ -84,12 +105,13 @@ export async function findMeetingRecapFeedSortKeys(viewerUserId: string) {
     .innerJoin(meeting, eq(meetingRecap.meetingId, meeting.id))
     .innerJoin(member, eq(member.clubId, meeting.clubId))
     .innerJoin(user, eq(meetingRecap.createdByUserId, user.id))
-    .where(meetingRecapFeedFilter(viewerUserId));
+    .where(meetingRecapFeedFilter(viewerUserId, filterClubIds));
 }
 
 export async function findFinishedBooksFeedByIds(
   viewerUserId: string,
-  userBookIds: string[]
+  userBookIds: string[],
+  filterClubIds?: string[]
 ) {
   if (userBookIds.length === 0) return [];
 
@@ -117,13 +139,17 @@ export async function findFinishedBooksFeedByIds(
       and(eq(review.userId, userBook.userId), eq(review.bookId, userBook.bookId))
     )
     .where(
-      and(finishedFeedFilter(viewerUserId), inArray(userBook.id, userBookIds))
+      and(
+        finishedFeedFilter(viewerUserId, filterClubIds),
+        inArray(userBook.id, userBookIds)
+      )
     );
 }
 
 export async function findMeetingRecapsFeedByIds(
   viewerUserId: string,
-  recapIds: string[]
+  recapIds: string[],
+  filterClubIds?: string[]
 ) {
   if (recapIds.length === 0) return [];
 
@@ -157,7 +183,7 @@ export async function findMeetingRecapsFeedByIds(
     .leftJoin(book, eq(meeting.bookId, book.id))
     .where(
       and(
-        meetingRecapFeedFilter(viewerUserId),
+        meetingRecapFeedFilter(viewerUserId, filterClubIds),
         inArray(meetingRecap.id, recapIds)
       )
     );

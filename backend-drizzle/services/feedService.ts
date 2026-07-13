@@ -11,13 +11,37 @@ function sortAtTime(value: Date | string) {
   return value instanceof Date ? value.getTime() : new Date(value).getTime();
 }
 
+function resolveFilterClubIds(
+  membershipClubIds: string[],
+  requestedClubIds?: string[]
+): string[] | undefined {
+  if (!requestedClubIds?.length) {
+    return undefined;
+  }
+
+  const membershipSet = new Set(membershipClubIds);
+  const validClubIds = [
+    ...new Set(
+      requestedClubIds.filter((clubId) => membershipSet.has(clubId))
+    ),
+  ];
+
+  if (validClubIds.length === 0) {
+    return undefined;
+  }
+
+  return validClubIds;
+}
+
 export async function getMyFeedPaginated(
   viewerUserId: string,
   page: number,
-  limit: number
+  limit: number,
+  requestedClubIds?: string[]
 ) {
-  const clubIds = await clubRepository.findClubIdsByUserId(viewerUserId);
-  if (clubIds.length === 0) {
+  const membershipClubIds =
+    await clubRepository.findClubIdsByUserId(viewerUserId);
+  if (membershipClubIds.length === 0) {
     return {
       data: [],
       totalPages: 0,
@@ -26,9 +50,14 @@ export async function getMyFeedPaginated(
     };
   }
 
+  const filterClubIds = resolveFilterClubIds(
+    membershipClubIds,
+    requestedClubIds
+  );
+
   const [finishedKeys, recapKeys] = await Promise.all([
-    feedRepository.findFinishedFeedSortKeys(viewerUserId),
-    feedRepository.findMeetingRecapFeedSortKeys(viewerUserId),
+    feedRepository.findFinishedFeedSortKeys(viewerUserId, filterClubIds),
+    feedRepository.findMeetingRecapFeedSortKeys(viewerUserId, filterClubIds),
   ]);
 
   const mergedKeys: FeedSortKey[] = [
@@ -57,8 +86,16 @@ export async function getMyFeedPaginated(
     .map((key) => key.id);
 
   const [finishedRows, recapRows] = await Promise.all([
-    feedRepository.findFinishedBooksFeedByIds(viewerUserId, finishedIds),
-    feedRepository.findMeetingRecapsFeedByIds(viewerUserId, recapIds),
+    feedRepository.findFinishedBooksFeedByIds(
+      viewerUserId,
+      finishedIds,
+      filterClubIds
+    ),
+    feedRepository.findMeetingRecapsFeedByIds(
+      viewerUserId,
+      recapIds,
+      filterClubIds
+    ),
   ]);
 
   const bookIds = [...new Set(finishedRows.map((row) => row.bookId))];
