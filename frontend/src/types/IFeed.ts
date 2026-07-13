@@ -1,6 +1,6 @@
 import type { ReadingStatus } from "@/utils/constants/reading";
 
-export type FeedActivityType = "finished";
+export type FeedActivityType = "finished" | "meeting_recap";
 
 export interface IFeedActivityActor {
   id: string;
@@ -21,9 +21,9 @@ export interface IFeedActivityClub {
   name: string;
 }
 
-export interface IFeedActivity {
+export interface IFeedFinishedActivity {
   id: string;
-  type: FeedActivityType;
+  type: "finished";
   updatedAt: string;
   actor: IFeedActivityActor;
   isOwnActivity: boolean;
@@ -33,3 +33,24 @@ export interface IFeedActivity {
   rating: number | null;
   comment: string | null;
 }
+
+export interface IFeedMeetingRecapActivity {
+  id: string;
+  type: "meeting_recap";
+  createdAt: string;
+  updatedAt: string;
+  actor: IFeedActivityActor;
+  isOwnActivity: boolean;
+  club: IFeedActivityClub;
+  meeting: {
+    id: string;
+    meetingDate: string;
+    meetingTime: string;
+    location: string;
+  };
+  book: IFeedActivityBook | null;
+  text: string | null;
+  imageUrl: string | null;
+}
+
+export type IFeedActivity = IFeedFinishedActivity | IFeedMeetingRecapActivity;

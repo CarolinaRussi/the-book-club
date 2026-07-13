@@ -6,6 +6,7 @@ import HomeSidebar from "@/components/pages/home/HomeSidebar";
 import StickySidebarColumn from "@/components/pages/home/StickySidebarColumn";
 import FeedSection from "@/components/pages/home/FeedSection";
 import HomeEmptyState from "@/components/pages/home/HomeEmptyState";
+import PendingMeetingRecapPrompt from "@/components/pages/home/PendingMeetingRecapPrompt";
 import { TbBooks } from "react-icons/tb";
 
 export default function Home() {
@@ -15,6 +16,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col w-full max-w-7xl mx-auto p-5 md:p-12 lg:p-15">
+      {hasClubs ? <PendingMeetingRecapPrompt /> : null}
+
       <div id="boas-vindas" className="flex flex-col items-start">
         <h1 className="text-3xl md:text-5xl font-bold text-foreground">
           Olá, {user?.nickname || "Bem-vindo de volta"}

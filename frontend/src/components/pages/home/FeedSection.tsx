@@ -103,7 +103,7 @@ export default function FeedSection() {
       ) : (
         <HomeEmptyState
           icon={<BookOpen className="h-8 w-8" />}
-          message="Ninguém finalizou um livro ainda nos seus clubes — incluindo você. Marque o seu na Biblioteca!"
+          message="Ainda não há atualizações nos seus clubes. Finalize um livro ou registre um encontro!"
           actionLabel="Ir para a Biblioteca"
           actionTo="/library"
         />

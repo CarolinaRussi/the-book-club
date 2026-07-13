@@ -10,15 +10,18 @@ import {
 } from "@/utils/constants/meeting";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import EditMeetingDialog from "./EditMeetingDialog";
+import { cn } from "@/lib/utils";
 
 interface MeetingHistoryListProps {
   pastMeetings: IMeeting[] | undefined;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  focusMeetingId?: string | null;
+  onFocusHandled?: () => void;
 }
 
 const MeetingHistoryList = ({
@@ -26,6 +29,8 @@ const MeetingHistoryList = ({
   currentPage,
   totalPages,
   onPageChange,
+  focusMeetingId = null,
+  onFocusHandled,
 }: MeetingHistoryListProps) => {
   const { user } = useAuth();
   const { clubs, selectedClubId } = useClub();
@@ -39,19 +44,63 @@ const MeetingHistoryList = ({
   const [editOpen, setEditOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<IMeeting | undefined>();
   const [initialRecapExpanded, setInitialRecapExpanded] = useState(false);
+  const [highlightedMeetingId, setHighlightedMeetingId] = useState<
+    string | null
+  >(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const handledFocusIdRef = useRef<string | null>(null);
 
   const handlePageChange = (page: number) => {
     onPageChange(page);
   };
 
-  const openCompletedEditor = (
-    meeting: IMeeting,
-    expandRecap: boolean,
-  ) => {
+  const openCompletedEditor = (meeting: IMeeting, expandRecap: boolean) => {
     setMeetingToEdit(meeting);
     setInitialRecapExpanded(expandRecap);
     setEditOpen(true);
   };
+
+  useEffect(() => {
+    if (!focusMeetingId || !pastMeetings?.length) return;
+    if (handledFocusIdRef.current === focusMeetingId) return;
+
+    const focusedMeeting = pastMeetings.find(
+      (meetingRow) => meetingRow.id === focusMeetingId,
+    );
+    if (!focusedMeeting) return;
+
+    handledFocusIdRef.current = focusMeetingId;
+    setHighlightedMeetingId(focusMeetingId);
+
+    requestAnimationFrame(() => {
+      cardRefs.current[focusMeetingId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+
+    if (
+      isAdminOfSelectedClub &&
+      focusedMeeting.status === MEETING_STATUS_COMPLETED
+    ) {
+      openCompletedEditor(focusedMeeting, !focusedMeeting.recap);
+    }
+
+    onFocusHandled?.();
+  }, [
+    focusMeetingId,
+    pastMeetings,
+    isAdminOfSelectedClub,
+    onFocusHandled,
+  ]);
+
+  useEffect(() => {
+    if (!highlightedMeetingId) return;
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedMeetingId(null);
+    }, 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, [highlightedMeetingId]);
 
   return (
     <>
@@ -62,9 +111,19 @@ const MeetingHistoryList = ({
             pastMeetings.map((meeting) => {
               const isCompleted = meeting.status === MEETING_STATUS_COMPLETED;
               const recapPreview = meeting.recap?.text?.trim();
+              const isHighlighted = highlightedMeetingId === meeting.id;
 
               return (
-                <Card key={meeting.id} className="shadow-(--shadow-soft) py-3">
+                <Card
+                  key={meeting.id}
+                  ref={(element) => {
+                    cardRefs.current[meeting.id] = element;
+                  }}
+                  className={cn(
+                    "shadow-(--shadow-soft) py-3 transition-shadow",
+                    isHighlighted && "ring-2 ring-primary shadow-md",
+                  )}
+                >
                   <CardContent className="flex flex-col gap-4 px-4 sm:flex-row sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex gap-3 mb-2">

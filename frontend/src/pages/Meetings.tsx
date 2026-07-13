@@ -9,6 +9,7 @@ import {
 } from "../api/queries/fetchMeetings";
 import type { IMeeting } from "../types/IMeetings";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import CreateMeetingDialog from "../components/pages/meetings/CreateMeetingDialog";
 import MeetingHistoryList from "../components/pages/meetings/meetingHistoryList";
 import NextMeetingList from "../components/pages/meetings/nextMeetingList";
@@ -20,6 +21,8 @@ import SkeletonMeetingHistory from "../components/pages/meetings/skeletons/Skele
 
 export default function Meetings() {
   const { selectedClubId } = useClub();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusMeetingId = searchParams.get("meetingId");
   const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
   const [pastMeetingsPage, setPastMeetingsPage] = useState(1);
   const itemsPerPage = 4;
@@ -32,7 +35,7 @@ export default function Meetings() {
   });
 
   const scheduledMeetings = meetings?.filter(
-    (meeting) => meeting.status === MEETING_STATUS_SCHEDULED,
+    (meetingRow) => meetingRow.status === MEETING_STATUS_SCHEDULED,
   );
 
   const veryNextMeeting = scheduledMeetings?.[0];
@@ -57,6 +60,38 @@ export default function Meetings() {
   useEffect(() => {
     setPastMeetingsPage(1);
   }, [selectedClubId]);
+
+  useEffect(() => {
+    if (!focusMeetingId || !pastMeetingsData || isPendingPastMeetings) return;
+
+    const meetingOnPage = pastMeetingsData.data.some(
+      (meetingRow) => meetingRow.id === focusMeetingId,
+    );
+    if (meetingOnPage) return;
+
+    if (pastMeetingsPage < pastMeetingsData.totalPages) {
+      setPastMeetingsPage((page) => page + 1);
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("meetingId");
+    setSearchParams(nextParams, { replace: true });
+  }, [
+    focusMeetingId,
+    pastMeetingsData,
+    pastMeetingsPage,
+    isPendingPastMeetings,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  const clearFocusMeetingId = () => {
+    if (!focusMeetingId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("meetingId");
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-cream w-full">
@@ -93,7 +128,6 @@ export default function Meetings() {
               </div>
             </div>
 
-            {/* Componente que lista os próximos encontros agendados */}
             {isPending ? (
               <SkeletonNextMeetingList />
             ) : (
@@ -101,7 +135,6 @@ export default function Meetings() {
             )}
           </div>
 
-          {/* Componente que lista o histórico de encontros concluídos ou cancelados */}
           {isPendingPastMeetings ? (
             <SkeletonMeetingHistory />
           ) : (
@@ -110,16 +143,21 @@ export default function Meetings() {
               currentPage={pastMeetingsPage}
               totalPages={pastMeetingsData?.totalPages ?? 1}
               onPageChange={setPastMeetingsPage}
+              focusMeetingId={focusMeetingId}
+              onFocusHandled={clearFocusMeetingId}
             />
           )}
         </div>
 
-        {/* Componente que mostra o livro da vez*/}
         <div className="h-full">
           {isPending ? (
             <SkeletonNextMeetingBook />
           ) : (
-            <NextMeetingBook nextBook={nextBook} chapterStart={chapterStart} chapterEnd={chapterEnd} />
+            <NextMeetingBook
+              nextBook={nextBook}
+              chapterStart={chapterStart}
+              chapterEnd={chapterEnd}
+            />
           )}
         </div>
       </div>
