@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { Check, ChevronsUpDown, MessageSquarePlus } from "lucide-react";
@@ -39,6 +39,8 @@ import {
 } from "@/utils/constants/feedback";
 import { cn } from "@/lib/utils";
 
+const OPEN_FEEDBACK_EVENT = "entrelivros:open-feedback";
+
 const BUG_PLACEHOLDER =
   "O que aconteceu?\nO que você esperava?\nComo reproduzir?";
 
@@ -50,10 +52,22 @@ type FeedbackFormValues = {
   message: string;
 };
 
+export function openFeedbackDialog() {
+  window.dispatchEvent(new Event(OPEN_FEEDBACK_EVENT));
+}
+
 export function FeedbackWidget() {
   const { isLoggedIn } = useAuth();
   const [open, setOpen] = useState(false);
   const [typeComboboxOpen, setTypeComboboxOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenFeedback = () => setOpen(true);
+    window.addEventListener(OPEN_FEEDBACK_EVENT, handleOpenFeedback);
+    return () => {
+      window.removeEventListener(OPEN_FEEDBACK_EVENT, handleOpenFeedback);
+    };
+  }, []);
 
   const {
     register,
@@ -121,7 +135,7 @@ export function FeedbackWidget() {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed z-40 gap-2 shadow-md",
+          "fixed z-40 hidden gap-2 shadow-md lg:inline-flex",
           "bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))]",
         )}
         aria-label="Enviar feedback"

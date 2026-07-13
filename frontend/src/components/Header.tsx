@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useClub } from "../contexts/ClubContext";
 import HeaderClubSwitcher from "./HeaderClubSwitcher";
+import { openFeedbackDialog } from "./FeedbackWidget";
 import { FiHome, FiMenu } from "react-icons/fi";
 import { TbBooks, TbCoffee } from "react-icons/tb";
 import {
@@ -10,6 +11,7 @@ import {
   MdOutlinePerson,
   MdOutlineSettings,
 } from "react-icons/md";
+import { MessageSquarePlus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -228,6 +230,18 @@ export default function Header() {
               ) : null}
 
               {filteredClubNavItems.map((item) => renderNavItem(item, true))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeMobileMenu();
+                  window.setTimeout(() => openFeedbackDialog(), 150);
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-3 text-lg font-medium text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+              >
+                <MessageSquarePlus size={24} />
+                Feedback
+              </button>
 
               <button
                 type="button"
