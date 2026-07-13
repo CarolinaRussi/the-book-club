@@ -20,12 +20,14 @@ interface CompleteMeetingDialogProps {
   openDialog: boolean;
   onOpenChange: (open: boolean) => void;
   meeting: IMeeting | undefined;
+  onCompleted?: (meeting: IMeeting) => void;
 }
 
 const CompleteMeetingDialog = ({
   openDialog,
   onOpenChange,
   meeting,
+  onCompleted,
 }: CompleteMeetingDialogProps) => {
   const { selectedClubId } = useClub();
   const queryClient = useQueryClient();
@@ -50,8 +52,17 @@ const CompleteMeetingDialog = ({
         queryKey: ["myUpcomingMeetings"],
         refetchType: "all",
       });
+      queryClient.invalidateQueries({
+        queryKey: ["pendingMeetingRecap"],
+      });
+      const completedMeeting = meeting
+        ? { ...meeting, status: MEETING_STATUS_COMPLETED, recap: null }
+        : undefined;
       onOpenChange(false);
       toast.success("Encontro concluído.");
+      if (completedMeeting) {
+        onCompleted?.(completedMeeting);
+      }
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao concluir o encontro.");

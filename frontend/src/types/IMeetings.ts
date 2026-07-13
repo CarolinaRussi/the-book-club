@@ -1,6 +1,14 @@
 import type { MeetingStatus } from "../utils/constants/meeting";
 import type { IBook } from "./IBooks";
 
+export interface IMeetingRecap {
+  id: string;
+  text: string | null;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IMeeting {
   id: string;
   location: string;
@@ -14,6 +22,20 @@ export interface IMeeting {
   book: IBook | null;
   googleEventId?: string | null;
   googleSyncError?: string | null;
+  recap?: IMeetingRecap | null;
+}
+
+export interface IPendingMeetingRecap {
+  id: string;
+  meetingDate: string;
+  meetingTime: string;
+  location: string;
+  description: string | null;
+  club: {
+    id: string;
+    name: string;
+  };
+  book: IBook | null;
 }
 
 export interface IMeetingCreatePayload {

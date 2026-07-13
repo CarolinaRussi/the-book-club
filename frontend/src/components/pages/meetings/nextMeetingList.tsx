@@ -8,6 +8,7 @@ import { formatDayMonthYear, formatTime } from "@/utils/formatters";
 import { LuCalendarX2 } from "react-icons/lu";
 import CancelMeetingDialog from "./CancelMeetingDialog";
 import CompleteMeetingDialog from "./CompleteMeetingDialog";
+import MeetingRecapDialog from "./MeetingRecapDialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { resyncMeetingGoogleCalendar } from "@/api/mutations/meetingMutate";
 import { toast } from "react-toastify";
@@ -36,6 +37,8 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
   );
   const [cancelMeetingOpen, setCancelMeetingOpen] = useState(false);
   const [completeMeetingOpen, setCompleteMeetingOpen] = useState(false);
+  const [recapDialogOpen, setRecapDialogOpen] = useState(false);
+  const [meetingForRecap, setMeetingForRecap] = useState<IMeeting | null>(null);
   const [resyncingId, setResyncingId] = useState<string | null>(null);
 
   const { mutate: resync } = useMutation({
@@ -210,8 +213,18 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
           openDialog={completeMeetingOpen}
           onOpenChange={setCompleteMeetingOpen}
           meeting={meetingToUpdate}
+          onCompleted={(completedMeeting) => {
+            setMeetingForRecap(completedMeeting);
+            setRecapDialogOpen(true);
+          }}
         />
       ) : null}
+      <MeetingRecapDialog
+        openDialog={recapDialogOpen}
+        onOpenChange={setRecapDialogOpen}
+        meeting={meetingForRecap}
+        showDismissButton
+      />
       <CancelMeetingDialog
         key={meetingToUpdate?.id}
         openDialog={cancelMeetingOpen}
