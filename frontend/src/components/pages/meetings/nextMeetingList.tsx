@@ -23,7 +23,13 @@ interface NextMeetingListProps {
 const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { selectedClubId } = useClub();
+  const { selectedClubId, clubs } = useClub();
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+  const isAdminOfSelectedClub = !!(
+    user &&
+    selectedClub &&
+    selectedClub.ownerId === user.id
+  );
   const [editMeetingOpen, setEditMeetingOpen] = useState(false);
   const [meetingToUpdate, setMeetingToUpdate] = useState<IMeeting | undefined>(
     undefined
@@ -151,18 +157,20 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                     Editar
                   </Button>
 
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setMeetingToUpdate(meeting);
-                      setCompleteMeetingOpen(true);
-                    }}
-                    className="w-full md:w-auto"
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                    Concluir encontro
-                  </Button>
+                  {isAdminOfSelectedClub ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setMeetingToUpdate(meeting);
+                        setCompleteMeetingOpen(true);
+                      }}
+                      className="w-full md:w-auto"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Concluir encontro
+                    </Button>
+                  ) : null}
 
                   <Button
                     variant="default"
@@ -196,12 +204,14 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
         onOpenChange={setEditMeetingOpen}
         meeting={meetingToUpdate}
       />
-      <CompleteMeetingDialog
-        key={meetingToUpdate?.id}
-        openDialog={completeMeetingOpen}
-        onOpenChange={setCompleteMeetingOpen}
-        meeting={meetingToUpdate}
-      />
+      {isAdminOfSelectedClub ? (
+        <CompleteMeetingDialog
+          key={meetingToUpdate?.id}
+          openDialog={completeMeetingOpen}
+          onOpenChange={setCompleteMeetingOpen}
+          meeting={meetingToUpdate}
+        />
+      ) : null}
       <CancelMeetingDialog
         key={meetingToUpdate?.id}
         openDialog={cancelMeetingOpen}
