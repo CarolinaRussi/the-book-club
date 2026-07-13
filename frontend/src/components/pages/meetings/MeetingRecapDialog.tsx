@@ -124,11 +124,11 @@ const MeetingRecapDialog = ({
   return (
     <Dialog open={openDialog} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-xl">
-        <DialogHeader className="gap-0 mb-2">
-          <DialogTitle className="text-3xl text-primary">
+        <DialogHeader className="mb-2 gap-0 text-left">
+          <DialogTitle className="text-left text-3xl text-primary">
             Registrar encontro
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="text-left text-sm text-muted-foreground">
             {meeting
               ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}${
                   bookTitle ? ` · ${bookTitle}` : ""

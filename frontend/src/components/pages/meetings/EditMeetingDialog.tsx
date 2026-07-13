@@ -292,8 +292,8 @@ const EditMeetingDialog = ({
     <Dialog open={openDialog} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader className="gap-0 mb-4">
-            <DialogTitle className="text-3xl text-primary">
+          <DialogHeader className="mb-4 gap-0 text-left">
+            <DialogTitle className="text-left text-3xl text-primary">
               {isCompletedMeeting ? "Registro do encontro" : "Editar encontro"}
             </DialogTitle>
             <DialogDescription></DialogDescription>

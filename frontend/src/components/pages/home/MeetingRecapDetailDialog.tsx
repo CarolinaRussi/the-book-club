@@ -60,13 +60,13 @@ export default function MeetingRecapDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto p-0 gap-0 sm:max-w-lg md:max-w-xl">
-        <DialogHeader className="flex flex-row items-start justify-between gap-3 space-y-0 px-5 pt-5 pb-3 pr-12 sm:px-6 sm:pr-14">
-          <div className="min-w-0 flex-1">
-            <DialogTitle className="text-lg font-semibold text-foreground sm:text-xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-0.75rem)] max-w-none overflow-y-auto p-0 gap-0 sm:w-full sm:max-w-lg md:max-w-xl">
+        <DialogHeader className="flex flex-row items-start justify-between gap-3 space-y-0 px-5 pt-5 pb-3 pr-12 text-left sm:px-6 sm:pr-14">
+          <div className="min-w-0 flex-1 text-left">
+            <DialogTitle className="text-left text-lg font-semibold text-foreground sm:text-xl">
               Registro do encontro
             </DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-muted-foreground leading-snug">
+            <DialogDescription className="mt-1 text-left text-sm leading-snug text-muted-foreground">
               {metaLine}
             </DialogDescription>
           </div>
@@ -92,8 +92,8 @@ export default function MeetingRecapDetailDialog({
               />
               <AvatarFallback>{getInitials(actor.name)}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{displayName}</p>
+            <div className="min-w-0 text-left">
+              <p className="truncate text-sm font-medium">{displayName}</p>
               <p className="text-xs text-muted-foreground">
                 {formatRelativeTime(createdAt)}
               </p>
@@ -101,16 +101,16 @@ export default function MeetingRecapDetailDialog({
           </div>
 
           {imageUrl ? (
-            <div className="bg-muted/30 border-y border-border/60">
+            <div className="border-y border-border/60 bg-muted/30 sm:mx-0">
               <img
                 src={imageUrl}
                 alt="Foto do encontro"
-                className="mx-auto max-h-[50vh] w-full object-contain"
+                className="aspect-4/3 w-full object-cover sm:aspect-auto sm:max-h-[50vh] sm:object-contain"
               />
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-4 px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 px-5 py-4 text-left sm:px-6">
             {book ? (
               <div className="flex items-center gap-3">
                 {book.coverUrl ? (
@@ -122,7 +122,7 @@ export default function MeetingRecapDetailDialog({
                 ) : null}
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Livro da vez</p>
-                  <p className="font-medium text-foreground leading-snug">
+                  <p className="font-medium leading-snug text-foreground">
                     {book.title}
                   </p>
                   {book.author ? (

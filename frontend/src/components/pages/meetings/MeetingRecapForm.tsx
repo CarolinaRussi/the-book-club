@@ -89,11 +89,11 @@ export default function MeetingRecapForm({
       <div>
         <h3 className="text-lg font-medium mb-1">Foto (opcional)</h3>
         {previewUrl ? (
-          <div className="relative overflow-hidden rounded-md border border-secondary">
+          <div className="relative -mx-1 overflow-hidden rounded-md border border-secondary sm:mx-0">
             <img
               src={previewUrl}
               alt="Prévia da foto do encontro"
-              className="max-h-56 w-full object-cover"
+              className="aspect-4/3 w-full object-cover sm:aspect-auto sm:max-h-56"
             />
             <Button
               type="button"
@@ -109,7 +109,7 @@ export default function MeetingRecapForm({
                 })
               }
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="mr-1 h-4 w-4" />
               Remover foto
             </Button>
           </div>
