@@ -51,71 +51,90 @@ export default function Register() {
       <GiBookCover size={100} className="text-primary" />
       <h1 className="text-4xl font-bold text-foreground">Criar conta</h1>
       <h2 className="text-warm-brown mb-4 w-80">
-        Junte-se ao Entrelivros e comece sua jornada literária!
+        Junte-se ao Entrelivros e comece
+        <br />
+        sua jornada literária!
       </h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          {...register("name", { required: true })}
-          placeholder="Nome"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.name && (
-          <h3 className="text-xs text-primary">
-            Nome de usuário é obrigatório
-          </h3>
-        )}
-        <input
-          {...register("lastName", { required: true })}
-          placeholder="Sobrenome"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.lastName && (
-          <h3 className="text-xs text-primary">Sobrenome é obrigatório</h3>
-        )}
-        <input
-          {...register("nickname", { required: true })}
-          placeholder="Apelido"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.lastName && (
-          <h3 className="text-xs text-primary">Apelido é obrigatório</h3>
-        )}
-        <input
-          {...register("email", { required: true })}
-          placeholder="Email"
-          className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
-        />
-        {errors.email && (
-          <h3 className="text-xs text-primary">E-mail é obrigatório</h3>
-        )}
-        <PasswordInput
-          {...register("password", passwordFieldRules())}
-          placeholder="Senha"
-          containerClassName="mt-4 w-80"
-        />
-        {errors.password && (
-          <h3 className="text-xs text-primary">{errors.password.message}</h3>
-        )}
-        <PasswordInput
-          {...register(
-            "confirmPassword",
-            confirmPasswordFieldRules(() => password),
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mt-2 flex w-full max-w-80 flex-col items-center gap-4"
+      >
+        <div className="w-full space-y-1">
+          <input
+            {...register("name", { required: true })}
+            placeholder="Nome"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.name && (
+            <p className="text-left text-xs text-primary">
+              Nome de usuário é obrigatório
+            </p>
           )}
-          placeholder="Confirmar Senha"
-          containerClassName="mt-4 w-80"
-        />
-        {errors.confirmPassword && (
-          <h3 className="text-xs text-primary">
-            {errors.confirmPassword.message}
-          </h3>
-        )}
+        </div>
+        <div className="w-full space-y-1">
+          <input
+            {...register("lastName", { required: true })}
+            placeholder="Sobrenome"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.lastName && (
+            <p className="text-left text-xs text-primary">
+              Sobrenome é obrigatório
+            </p>
+          )}
+        </div>
+        <div className="w-full space-y-1">
+          <input
+            {...register("nickname", { required: true })}
+            placeholder="Apelido"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.nickname && (
+            <p className="text-left text-xs text-primary">Apelido é obrigatório</p>
+          )}
+        </div>
+        <div className="w-full space-y-1">
+          <input
+            {...register("email", { required: true })}
+            placeholder="Email"
+            className="w-full rounded-lg border-2 border-secondary bg-background p-2.5 text-foreground"
+          />
+          {errors.email && (
+            <p className="text-left text-xs text-primary">E-mail é obrigatório</p>
+          )}
+        </div>
+        <div className="w-full space-y-1">
+          <PasswordInput
+            {...register("password", passwordFieldRules())}
+            placeholder="Senha"
+          />
+          {errors.password && (
+            <p className="text-left text-xs text-primary">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
+        <div className="w-full space-y-1">
+          <PasswordInput
+            {...register(
+              "confirmPassword",
+              confirmPasswordFieldRules(() => password),
+            )}
+            placeholder="Confirmar Senha"
+          />
+          {errors.confirmPassword && (
+            <p className="text-left text-xs text-primary">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
           disabled={isPending}
-          className={`bg-primary text-background font-semibold rounded-lg p-2 w-80 mt-6 transition-colors ${
+          className={`mt-2 w-full rounded-lg bg-primary p-2.5 font-semibold text-background transition-colors ${
             isPending
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-foreground cursor-pointer"
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:bg-foreground"
           }`}
         >
           {isPending ? "Registrando..." : "Registrar"}
