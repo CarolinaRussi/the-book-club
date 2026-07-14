@@ -173,7 +173,7 @@ export default function Header() {
 
         <div className="flex min-w-0 flex-1 flex-row items-center justify-end gap-1 overflow-hidden">
           {hasClubs ? (
-            <div className="mr-1 min-w-0 max-w-[11rem] shrink xl:max-w-[14rem]">
+            <div className="mr-1 min-w-0 max-w-44 shrink xl:max-w-56">
               <HeaderClubSwitcher align="end" />
             </div>
           ) : null}
