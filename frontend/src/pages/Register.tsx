@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { registerUser } from "../api/mutations/authMutate";
 import { toast } from "react-toastify";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -48,7 +48,7 @@ export default function Register() {
 
   return (
     <div className="p-8 border-2 text-foreground border-secondary rounded-lg w-120 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
-      <GiBookCover size={100} className="text-primary" />
+      <LogoEntrelivros size={150} className="shrink-0" aria-hidden />
       <h1 className="text-4xl font-bold text-foreground">Criar conta</h1>
       <h2 className="text-warm-brown mb-4 w-80">
         Junte-se ao Entrelivros e comece

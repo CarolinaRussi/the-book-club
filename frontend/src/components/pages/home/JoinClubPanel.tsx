@@ -171,7 +171,13 @@ export default function JoinClubPanel({
 
     if (isAlreadyMember) {
       return (
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-end">
+        <div
+          className={
+            variant === "page"
+              ? "flex w-full flex-col items-center gap-3"
+              : "flex w-full flex-col gap-3 sm:flex-row sm:justify-end"
+          }
+        >
           {variant === "dialog" ? (
             <Button type="button" variant="outline" onClick={onCancel}>
               Fechar

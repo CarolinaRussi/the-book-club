@@ -1,4 +1,4 @@
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { cn } from "@/lib/utils";
 
 type BrandLoadingScreenProps = {
@@ -20,8 +20,9 @@ export default function BrandLoadingScreen({
         className,
       )}
     >
-      <GiBookCover
-        className="brand-loading-icon h-16 w-16 text-primary sm:h-20 sm:w-20"
+      <LogoEntrelivros
+        size={80}
+        className="brand-loading-icon h-16 w-16 shrink-0 sm:h-20 sm:w-20"
         aria-hidden
       />
       <p className="brand-loading-title text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

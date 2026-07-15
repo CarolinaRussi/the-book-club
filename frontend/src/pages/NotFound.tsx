@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { TbArrowBackUp } from "react-icons/tb";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,13 @@ export default function NotFound() {
   return (
     <div className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-xl flex-col items-center justify-center px-4 py-12 text-center sm:py-16">
       <div className="relative w-full max-w-md rounded-lg border-2 border-secondary bg-background p-8 shadow-md sm:p-10">
-        <GiBookCover
-          className="mx-auto h-16 w-16 text-primary sm:h-20 sm:w-20"
+        <LogoEntrelivros
+          size={180}
+          className="mx-auto"
           aria-hidden
         />
 
-        <p
-          className="mt-6 bg-clip-text text-7xl font-bold tracking-tight text-transparent sm:text-8xl"
-          style={{ backgroundImage: "var(--gradient-warm)" }}
-        >
+        <p className="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-6xl">
           404
         </p>
 

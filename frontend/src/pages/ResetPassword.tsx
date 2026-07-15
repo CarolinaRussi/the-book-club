@@ -1,6 +1,6 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { resetPassword } from "@/api/mutations/authMutate";
@@ -52,7 +52,7 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 min-h-160 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-4 text-center">
-        <GiBookCover size={100} className="text-primary" />
+        <LogoEntrelivros size={100} className="shrink-0" aria-hidden />
         <h1 className="text-3xl font-bold text-foreground">Link inválido</h1>
         <p className="text-warm-brown w-80">
           Este link de redefinição de senha não é válido. Solicite um novo na
@@ -70,7 +70,7 @@ export default function ResetPassword() {
 
   return (
     <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 min-h-160 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
-      <GiBookCover size={100} className="text-primary" />
+      <LogoEntrelivros size={100} className="shrink-0" aria-hidden />
       <h1 className="text-4xl font-bold text-foreground">Nova senha</h1>
       <h2 className="text-warm-brown mb-4 w-80">
         Crie uma nova senha para acessar o Entrelivros.

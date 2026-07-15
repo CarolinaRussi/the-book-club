@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { Link } from "react-router";
 import { toast } from "react-toastify";
 import { forgotPassword } from "@/api/mutations/authMutate";
@@ -36,7 +36,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="border-2 text-foreground border-secondary rounded-lg p-6 w-120 min-h-160 mt-20 shadow-md bg-background flex flex-col items-center justify-center gap-2 text-center">
-      <GiBookCover size={100} className="text-primary" />
+      <LogoEntrelivros size={150} className="shrink-0" aria-hidden />
       <h1 className="text-4xl font-bold text-foreground">Esqueci a senha</h1>
       <h2 className="text-warm-brown mb-4 w-80">
         Informe o e-mail da sua conta. Se existir, enviaremos um link para criar

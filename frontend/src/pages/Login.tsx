@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { GiBookCover } from "react-icons/gi";
 import { toast } from "react-toastify";
 import { useNavigate, Link, useSearchParams } from "react-router";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import { useAuth } from "../contexts/AuthContext";
 import type { IApiError, IApiReturnData } from "../types/IApi";
 import type { ILoginData } from "../types/ILogin";
@@ -48,7 +48,7 @@ export default function Login() {
 
   return (
     <div className="mt-20 flex w-120 flex-col items-center rounded-lg border-2 border-secondary bg-background p-8 text-center text-foreground shadow-md">
-      <GiBookCover size={72} className="text-primary" />
+      <LogoEntrelivros size={150} className="shrink-0" aria-hidden />
       <h1 className="mt-4 text-3xl font-bold">Entrar</h1>
       <p className="mt-1 text-sm text-warm-brown">Entre com sua conta para acessar o Entrelivros</p>
 

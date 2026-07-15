@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router";
-import { GiBookCover } from "react-icons/gi";
+import LogoEntrelivros from "@/components/LogoEntrelivros";
 import JoinClubPanel from "@/components/pages/home/JoinClubPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import BrandLoadingScreen from "@/components/BrandLoadingScreen";
@@ -24,10 +24,10 @@ export default function InviteJoin() {
   }
 
   return (
-    <div className="mx-auto mt-12 flex w-full max-w-md flex-col items-center gap-6 px-4 pb-16">
-      <GiBookCover size={72} className="text-primary" />
-      <div className="w-full rounded-lg border-2 border-secondary bg-background p-6 shadow-md">
-        <h1 className="mb-4 text-center text-3xl font-bold text-primary">
+    <div className="mx-auto mt-12 flex w-full max-w-md flex-col items-center px-4 pb-16">
+      <div className="flex w-full flex-col items-center rounded-lg border-2 border-secondary bg-background p-6 shadow-md">
+        <LogoEntrelivros size={150} className="shrink-0" aria-hidden />
+        <h1 className="mb-4 mt-2 text-center text-3xl font-bold text-primary">
           Convite para o clube
         </h1>
         <JoinClubPanel
