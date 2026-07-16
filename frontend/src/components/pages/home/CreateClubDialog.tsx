@@ -97,17 +97,6 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
 
   const onSubmit: SubmitHandler<CreateClubFormValues> = (data) => {
     if (!data.meetingFormat || data.stateId == null || data.cityId == null) {
-      toast.error("Preencha formato, estado e cidade.");
-      return;
-    }
-
-    if (
-      data.visibility === CLUB_VISIBILITY_PUBLIC &&
-      data.description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
-    ) {
-      toast.error(
-        `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
-      );
       return;
     }
 
