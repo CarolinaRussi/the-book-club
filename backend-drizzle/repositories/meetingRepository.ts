@@ -53,6 +53,7 @@ export async function findPastMeetingsWithBookPaginated(
     orderBy: (meetingRow, { desc }) => [
       desc(meetingRow.meetingDate),
       desc(meetingRow.meetingTime),
+      desc(meetingRow.createdAt),
     ],
     offset,
     limit,
