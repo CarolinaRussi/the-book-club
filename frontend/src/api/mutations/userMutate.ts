@@ -1,7 +1,15 @@
 import axios from "axios";
 import { api } from "../index";
+import type { IUser } from "@/types/IUser";
 
-export async function updateUser(data: FormData): Promise<any> {
+type UpdatePersonalListPayload = {
+  bookId: string;
+  userId: string;
+};
+
+export async function updateUser(
+  data: FormData,
+): Promise<{ message: string; user: IUser }> {
   try {
     const response = await api.put("/update-user", data);
     return response.data;
@@ -13,7 +21,9 @@ export async function updateUser(data: FormData): Promise<any> {
   }
 }
 
-export async function updateUserPersonalList(payload: any): Promise<any> {
+export async function updateUserPersonalList(
+  payload: UpdatePersonalListPayload,
+): Promise<{ action: string }> {
   try {
     const response = await api.post("/update-personal-library", payload);
     return response.data;

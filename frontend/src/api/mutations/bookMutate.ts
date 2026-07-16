@@ -6,7 +6,7 @@ import type {
   IBookTotalChaptersPayload,
 } from "../../types/IBooks";
 
-export async function createBook(data: IBookPayload): Promise<any> {
+export async function createBook(data: IBookPayload): Promise<unknown> {
   try {
     const formData = new FormData();
 
@@ -35,7 +35,7 @@ export async function createBook(data: IBookPayload): Promise<any> {
   }
 }
 
-export async function saveReview(data: IBookReviewPayload): Promise<any> {
+export async function saveReview(data: IBookReviewPayload): Promise<unknown> {
   try {
     const response = await api.post("/save-review", data);
     return response.data;
@@ -50,7 +50,7 @@ export async function saveReview(data: IBookReviewPayload): Promise<any> {
 export async function deleteClubBook(data: {
   clubId: string;
   bookId: string;
-}): Promise<any> {
+}): Promise<unknown> {
   try {
     const response = await api.delete(
       `/club-books/${data.clubId}/${data.bookId}`,
@@ -66,7 +66,7 @@ export async function deleteClubBook(data: {
 
 export async function updateBookTotalChapters(
   data: IBookTotalChaptersPayload,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const response = await api.patch(
       `/club-books/${data.clubId}/${data.bookId}/total-chapters`,

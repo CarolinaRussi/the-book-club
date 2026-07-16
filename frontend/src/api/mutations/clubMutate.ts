@@ -1,9 +1,15 @@
 import axios from "axios";
 import { api } from "../index";
-import type { IClubPayload, IEditClubPayload } from "../../types/IClubs";
+import type {
+  IClub,
+  IClubPayload,
+  IEditClubPayload,
+} from "../../types/IClubs";
 import type { IMembersPayload } from "../../types/IMember";
 
-export async function createClub(data: IClubPayload): Promise<any> {
+export async function createClub(
+  data: IClubPayload,
+): Promise<{ club: IClub }> {
   try {
     const response = await api.post("/create-club", data);
     return response.data;
@@ -15,7 +21,9 @@ export async function createClub(data: IClubPayload): Promise<any> {
   }
 }
 
-export async function updateClub(payload: IEditClubPayload): Promise<any> {
+export async function updateClub(
+  payload: IEditClubPayload,
+): Promise<unknown> {
   const { id, ...data } = payload;
 
   if (!id) {
@@ -32,7 +40,7 @@ export async function updateClub(payload: IEditClubPayload): Promise<any> {
   }
 }
 
-export async function deleteClub(id: string): Promise<any> {
+export async function deleteClub(id: string): Promise<unknown> {
   if (!id) {
     throw { message: "ID do clube é obrigatório para excluir." };
   }
@@ -79,7 +87,9 @@ export async function leaveClub(clubId: string): Promise<unknown> {
   }
 }
 
-export async function joinClub(data: IMembersPayload): Promise<any> {
+export async function joinClub(
+  data: IMembersPayload,
+): Promise<{ member: { club: { name: string } | null } }> {
   try {
     const response = await api.post("/join-club", data);
     return response.data;

@@ -91,7 +91,7 @@ export default function MyProfileHero() {
   ]);
 
   const { mutate: saveProfile, isPending } = useMutation<
-    IUser,
+    { message: string; user: IUser },
     IApiError,
     FormData
   >({

@@ -58,19 +58,13 @@ export default function ForgotPassword() {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)}>
           <input
-            {...register("email", {
-              required: "E-mail é obrigatório",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Informe um e-mail válido",
-              },
-            })}
+            {...register("email", { required: true })}
             type="email"
             placeholder="E-mail"
             className="border-2 border-secondary rounded-lg p-2 w-80 mt-4 text-foreground bg-background"
           />
           {errors.email && (
-            <h3 className="text-xs text-primary">{errors.email.message}</h3>
+            <h3 className="text-xs text-primary">E-mail é obrigatório</h3>
           )}
           <button
             type="submit"

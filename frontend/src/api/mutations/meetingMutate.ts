@@ -3,9 +3,11 @@ import { api } from "../index";
 import type {
   IMeetingCreatePayload,
   IMeetingUpdatePayload,
-} from "@//types/IMeetings";
+} from "@/types/IMeetings";
 
-export async function createMeeting(data: IMeetingCreatePayload): Promise<any> {
+export async function createMeeting(
+  data: IMeetingCreatePayload,
+): Promise<unknown> {
   try {
     const response = await api.post("/create-meeting", data);
     return response.data;
@@ -18,8 +20,8 @@ export async function createMeeting(data: IMeetingCreatePayload): Promise<any> {
 }
 
 export async function updateMeeting(
-  payload: IMeetingUpdatePayload
-): Promise<any> {
+  payload: IMeetingUpdatePayload,
+): Promise<unknown> {
   const { id, ...data } = payload;
 
   if (!id) {
@@ -36,7 +38,9 @@ export async function updateMeeting(
   }
 }
 
-export async function cancelMeeting(id: string | undefined): Promise<any> {
+export async function cancelMeeting(
+  id: string | undefined,
+): Promise<unknown> {
   if (!id) {
     throw { message: "ID do encontro é obrigatório para cancelar." };
   }

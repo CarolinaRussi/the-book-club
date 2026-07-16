@@ -34,7 +34,7 @@ export default function Account() {
     !!watch("oldPassword") || !!watch("password") || !!watch("confirmPassword");
 
   const { mutate: updateUserMutate, isPending } = useMutation<
-    IUser,
+    { message: string; user: IUser },
     IApiError,
     FormData
   >({
