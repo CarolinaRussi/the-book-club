@@ -90,3 +90,50 @@ export async function joinClub(data: IMembersPayload): Promise<any> {
     throw { message: "Erro desconhecido" };
   }
 }
+
+function throwApiMessage(error: unknown, fallback: string): never {
+  if (axios.isAxiosError(error) && error.response?.data?.message) {
+    throw { message: error.response.data.message };
+  }
+  throw { message: fallback };
+}
+
+export async function joinPublicClub(clubId: string): Promise<unknown> {
+  try {
+    const response = await api.post(`/clubs/${clubId}/join`);
+    return response.data;
+  } catch (error: unknown) {
+    throwApiMessage(error, "Erro ao entrar no clube");
+  }
+}
+
+export async function createJoinRequest(clubId: string): Promise<unknown> {
+  try {
+    const response = await api.post(`/clubs/${clubId}/join-request`);
+    return response.data;
+  } catch (error: unknown) {
+    throwApiMessage(error, "Erro ao enviar pedido de entrada");
+  }
+}
+
+export async function approveJoinRequest(requestId: string): Promise<unknown> {
+  try {
+    const response = await api.post(
+      `/clubs/join-requests/${requestId}/approve`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throwApiMessage(error, "Erro ao aprovar pedido");
+  }
+}
+
+export async function rejectJoinRequest(requestId: string): Promise<unknown> {
+  try {
+    const response = await api.post(
+      `/clubs/join-requests/${requestId}/reject`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throwApiMessage(error, "Erro ao recusar pedido");
+  }
+}

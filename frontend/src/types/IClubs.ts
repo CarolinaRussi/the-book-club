@@ -107,6 +107,7 @@ export interface IDiscoverClub {
   createdAt: string;
   memberCount: number;
   isMember: boolean;
+  hasPendingRequest: boolean;
   state: {
     id: number;
     code: string;
@@ -116,6 +117,20 @@ export interface IDiscoverClub {
     id: number;
     name: string;
   } | null;
+}
+
+export interface IJoinRequest {
+  id: string;
+  clubId: string;
+  userId: string;
+  status: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    nickname: string;
+    profilePicture: string | null;
+  };
 }
 
 export interface IDiscoverClubsResponse {

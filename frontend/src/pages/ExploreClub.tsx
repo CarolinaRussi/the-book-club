@@ -1,9 +1,15 @@
 import { Link, useNavigate, useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { fetchPublicClubPreview } from "@/api/queries/fetchDiscoverClubs";
+import {
+  createJoinRequest,
+  joinPublicClub,
+} from "@/api/mutations/clubMutate";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
+import type { IApiError } from "@/types/IApi";
 import {
   CLUB_JOIN_POLICY_OPEN,
   clubJoinPolicyLabels,
@@ -13,12 +19,54 @@ import {
 export default function ExploreClub() {
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { setSelectedClubId } = useClub();
 
   const { data: club, isLoading, isError } = useQuery({
     queryKey: ["publicClubPreview", clubId],
     queryFn: () => fetchPublicClubPreview(clubId as string),
     enabled: !!clubId,
+  });
+
+  const invalidateExplore = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["publicClubPreview", clubId] });
+    await queryClient.invalidateQueries({ queryKey: ["discoverClubs"] });
+    await queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
+  };
+
+  const { mutate: joinMutate, isPending: isJoining } = useMutation<
+    unknown,
+    IApiError,
+    string
+  >({
+    mutationFn: joinPublicClub,
+    onSuccess: async () => {
+      toast.success("Você entrou no clube!");
+      await invalidateExplore();
+      if (clubId) {
+        setSelectedClubId(clubId);
+        navigate("/home");
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao entrar no clube");
+    },
+  });
+
+  const { mutate: requestMutate, isPending: isRequesting } = useMutation<
+    unknown,
+    IApiError,
+    string
+  >({
+    mutationFn: createJoinRequest,
+    onSuccess: async () => {
+      toast.success("Pedido de entrada enviado");
+      await invalidateExplore();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao enviar pedido");
+    },
   });
 
   if (isLoading) {
@@ -45,17 +93,17 @@ export default function ExploreClub() {
       ? `${club.city.name}, ${club.state.code}`
       : "Local não informado";
 
-  const handleJoinCta = () => {
-    if (club.joinPolicy === CLUB_JOIN_POLICY_OPEN) {
-      toast.info("A entrada direta por Explorar chega na próxima etapa.");
-      return;
-    }
-    toast.info("Os pedidos de entrada chegam na próxima etapa.");
-  };
-
   const handleGoToClub = () => {
     setSelectedClubId(club.id);
     navigate("/home");
+  };
+
+  const handleJoinCta = () => {
+    if (club.joinPolicy === CLUB_JOIN_POLICY_OPEN) {
+      joinMutate(club.id);
+      return;
+    }
+    requestMutate(club.id);
   };
 
   return (
@@ -103,11 +151,21 @@ export default function ExploreClub() {
           <Button type="button" onClick={handleGoToClub}>
             Ir ao clube
           </Button>
+        ) : club.hasPendingRequest ? (
+          <Button type="button" variant="outline" disabled>
+            Aguardando aprovação
+          </Button>
         ) : (
-          <Button type="button" onClick={handleJoinCta}>
-            {club.joinPolicy === CLUB_JOIN_POLICY_OPEN
-              ? "Entrar"
-              : "Pedir entrada"}
+          <Button
+            type="button"
+            onClick={handleJoinCta}
+            disabled={isJoining || isRequesting}
+          >
+            {isJoining || isRequesting
+              ? "Enviando…"
+              : club.joinPolicy === CLUB_JOIN_POLICY_OPEN
+                ? "Entrar"
+                : "Pedir entrada"}
           </Button>
         )}
       </div>

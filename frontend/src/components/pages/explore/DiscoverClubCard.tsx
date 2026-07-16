@@ -41,6 +41,10 @@ export function DiscoverClubCard({ club }: DiscoverClubCardProps) {
           <span className="shrink-0 rounded-md bg-secondary/40 px-2 py-0.5 text-xs font-medium text-foreground">
             Seu clube
           </span>
+        ) : club.hasPendingRequest ? (
+          <span className="shrink-0 rounded-md bg-secondary/40 px-2 py-0.5 text-xs font-medium text-foreground">
+            Aguardando
+          </span>
         ) : null}
       </div>
       <p className="line-clamp-3 text-sm text-muted-foreground">
