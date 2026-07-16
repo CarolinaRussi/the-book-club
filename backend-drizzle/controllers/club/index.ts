@@ -4,3 +4,5 @@ export { createClub } from "./createClub";
 export { getUserClubs } from "./getUserClubs";
 export { updateClub } from "./updateClub";
 export { deleteClub } from "./deleteClub";
+export { discoverClubs } from "./discoverClubs";
+export { getPublicClubPreview } from "./getPublicClubPreview";

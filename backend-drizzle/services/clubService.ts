@@ -1,5 +1,6 @@
 import { db } from "../db/client";
 import { ClubStatus } from "../enums/clubStatus";
+import { MeetingFormat } from "../enums/meetingFormat";
 import { ReadingMode } from "../enums/readingMode";
 import { generateUniqueInvitationCode } from "../utils/codeGenerator";
 import { createId } from "../utils/id";
@@ -10,6 +11,38 @@ import {
 } from "../utils/clubMetadata";
 import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
+
+type DiscoverRow = Awaited<
+  ReturnType<typeof clubRepository.findPublicClubsForDiscover>
+>["rows"][number];
+
+function mapDiscoverClub(row: DiscoverRow, isMember: boolean) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    joinPolicy: row.joinPolicy,
+    meetingFormat: row.meetingFormat,
+    createdAt: row.createdAt,
+    memberCount: Number(row.memberCount ?? 0),
+    isMember,
+    state:
+      row.stateId != null && row.stateCode && row.stateName
+        ? {
+            id: row.stateId,
+            code: row.stateCode,
+            name: row.stateName,
+          }
+        : null,
+    city:
+      row.cityId != null && row.cityName
+        ? {
+            id: row.cityId,
+            name: row.cityName,
+          }
+        : null,
+  };
+}
 
 export class ClubInvitationCodeConflictError extends Error {
   constructor() {
@@ -178,4 +211,65 @@ export async function updateClub(
 
 export async function deleteClubById(id: string) {
   return clubRepository.deleteClubById(id);
+}
+
+export async function discoverClubs(
+  userId: string,
+  input: {
+    page: number;
+    limit: number;
+    meetingFormat?: string;
+    stateId?: number;
+    cityId?: number;
+    q?: string;
+  },
+) {
+  const meetingFormat =
+    input.meetingFormat === MeetingFormat.IN_PERSON ||
+    input.meetingFormat === MeetingFormat.REMOTE ||
+    input.meetingFormat === MeetingFormat.HYBRID
+      ? input.meetingFormat
+      : undefined;
+
+  const offset = (input.page - 1) * input.limit;
+  const { rows, totalItems } =
+    await clubRepository.findPublicClubsForDiscover({
+      meetingFormat,
+      stateId: input.stateId,
+      cityId: input.cityId,
+      q: input.q,
+      offset,
+      limit: input.limit,
+    });
+
+  const memberClubIds = await clubRepository.findMemberClubIdsAmong(
+    userId,
+    rows.map((row) => row.id),
+  );
+
+  const data = rows.map((row) =>
+    mapDiscoverClub(row, memberClubIds.has(row.id)),
+  );
+  const totalPages = Math.ceil(totalItems / input.limit) || 0;
+
+  return {
+    data,
+    totalPages,
+    currentPage: input.page,
+    totalItems,
+  };
+}
+
+export async function getPublicClubPreview(userId: string, clubId: string) {
+  const row = await clubRepository.findPublicClubDiscoverRow(clubId);
+  if (!row) {
+    return null;
+  }
+
+  const membership = await memberRepository.findMemberByUserAndClub(
+    userId,
+    clubId,
+  );
+
+  return mapDiscoverClub(row, membership !== null);
 }

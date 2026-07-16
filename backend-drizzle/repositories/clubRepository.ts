@@ -1,8 +1,19 @@
-import { and, eq, count } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "../db/client";
-import { club, member, user } from "../db/schema";
+import { city, club, member, state, user } from "../db/schema";
 import { ClubStatus } from "../enums/clubStatus";
+import { ClubVisibility } from "../enums/clubVisibility";
+import { MeetingFormat } from "../enums/meetingFormat";
 import { ReadingMode } from "../enums/readingMode";
+
+export type DiscoverClubsFilters = {
+  meetingFormat?: (typeof MeetingFormat)[keyof typeof MeetingFormat];
+  stateId?: number;
+  cityId?: number;
+  q?: string;
+  offset: number;
+  limit: number;
+};
 
 export async function findClubIdsByUserId(userId: string) {
   const memberships = await db
@@ -71,6 +82,105 @@ export async function findClubById(clubId: string) {
     .where(eq(club.id, clubId))
     .limit(1);
   return row ?? null;
+}
+
+function buildDiscoverWhere(filters: DiscoverClubsFilters) {
+  const conditions = [
+    eq(club.visibility, ClubVisibility.PUBLIC),
+    eq(club.status, ClubStatus.ACTIVE),
+  ];
+
+  if (filters.meetingFormat) {
+    conditions.push(eq(club.meetingFormat, filters.meetingFormat));
+  }
+  if (filters.stateId !== undefined) {
+    conditions.push(eq(club.stateId, filters.stateId));
+  }
+  if (filters.cityId !== undefined) {
+    conditions.push(eq(club.cityId, filters.cityId));
+  }
+  if (filters.q?.trim()) {
+    const pattern = `%${filters.q.trim()}%`;
+    conditions.push(
+      or(ilike(club.name, pattern), ilike(club.description, pattern))!,
+    );
+  }
+
+  return and(...conditions);
+}
+
+const discoverSelect = {
+  id: club.id,
+  name: club.name,
+  description: club.description,
+  joinPolicy: club.joinPolicy,
+  meetingFormat: club.meetingFormat,
+  createdAt: club.createdAt,
+  stateId: state.id,
+  stateCode: state.code,
+  stateName: state.name,
+  cityId: city.id,
+  cityName: city.name,
+  memberCount: sql<number>`(
+    select count(*)::int from "Member" as membership
+    where membership.club_id = ${club.id}
+  )`,
+};
+
+export async function findPublicClubsForDiscover(
+  filters: DiscoverClubsFilters,
+) {
+  const whereClause = buildDiscoverWhere(filters);
+
+  const [rows, totalRow] = await Promise.all([
+    db
+      .select(discoverSelect)
+      .from(club)
+      .leftJoin(state, eq(club.stateId, state.id))
+      .leftJoin(city, eq(club.cityId, city.id))
+      .where(whereClause)
+      .orderBy(desc(club.createdAt))
+      .limit(filters.limit)
+      .offset(filters.offset),
+    db.select({ value: count() }).from(club).where(whereClause),
+  ]);
+
+  return {
+    rows,
+    totalItems: Number(totalRow[0]?.value ?? 0),
+  };
+}
+
+export async function findPublicClubDiscoverRow(clubId: string) {
+  const [row] = await db
+    .select(discoverSelect)
+    .from(club)
+    .leftJoin(state, eq(club.stateId, state.id))
+    .leftJoin(city, eq(club.cityId, city.id))
+    .where(
+      and(
+        eq(club.id, clubId),
+        eq(club.visibility, ClubVisibility.PUBLIC),
+        eq(club.status, ClubStatus.ACTIVE),
+      ),
+    )
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function findMemberClubIdsAmong(
+  userId: string,
+  clubIds: string[],
+) {
+  if (clubIds.length === 0) return new Set<string>();
+
+  const rows = await db
+    .select({ clubId: member.clubId })
+    .from(member)
+    .where(and(eq(member.userId, userId), inArray(member.clubId, clubIds)));
+
+  return new Set(rows.map((row) => row.clubId));
 }
 
 export async function findUserNameById(userId: string) {
