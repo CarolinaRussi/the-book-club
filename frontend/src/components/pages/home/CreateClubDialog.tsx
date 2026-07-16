@@ -1,4 +1,4 @@
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import type { IClub, IClubPayload } from "../../../types/IClubs";
 import type { IApiError } from "../../../types/IApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,19 +27,11 @@ import {
   CLUB_VISIBILITY_PRIVATE,
   CLUB_VISIBILITY_PUBLIC,
   PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH,
-  type ClubJoinPolicy,
-  type ClubVisibility,
-  type MeetingFormat,
 } from "@/utils/constants/clubs";
 
 type CreateClubFormValues = ClubMetadataFormValues & {
   name: string;
   description: string;
-  visibility: ClubVisibility;
-  joinPolicy: ClubJoinPolicy;
-  meetingFormat: MeetingFormat | "";
-  stateId: number | null;
-  cityId: number | null;
 };
 
 interface CreateClubDialogProps {
@@ -52,15 +44,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const {
-    register,
-    control,
-    reset,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<CreateClubFormValues>({
+  const form = useForm<CreateClubFormValues>({
     defaultValues: {
       name: "",
       description: "",
@@ -72,6 +56,14 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
       publicListingAcknowledged: false,
     },
   });
+
+  const {
+    register,
+    reset,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = form;
 
   const { user } = useAuth();
   const { setSelectedClubId } = useClub();
@@ -95,7 +87,6 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
     onSuccess: async (result) => {
       setCreatedCode(result.club.invitationCode);
       setSelectedClubId(result.club.id);
-
       toast.success("Clube criado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["userClubs", user?.id] });
     },
@@ -229,66 +220,61 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
             </DialogFooter>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <label htmlFor="name" className="text-warm-brown">
-                  Nome do Clube:
-                </label>
-                <input
-                  {...register("name", { required: true })}
-                  placeholder="Ex.: Clube dos Clássicos"
-                  className="w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
-                />
-                {errors.name && (
-                  <h3 className="text-xs text-primary">
-                    Um clube precisa de um nome!
-                  </h3>
-                )}
-              </div>
-              <div className="grid gap-1">
-                <label htmlFor="description" className="text-warm-brown">
-                  Descrição:
-                </label>
-                <textarea
-                  {...register("description", {
-                    required: true,
-                    validate: (value) =>
-                      visibility !== CLUB_VISIBILITY_PUBLIC ||
-                      value.trim().length >= PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
-                        ? true
-                        : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
-                  })}
-                  placeholder="Descreva o objetivo e tema do clube"
-                  className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
-                />
-                {errors.description && (
-                  <h3 className="text-xs text-primary">
-                    {typeof errors.description.message === "string"
-                      ? errors.description.message
-                      : "Deixe os leitores saberem mais sobre o clube"}
-                  </h3>
-                )}
-              </div>
+          <FormProvider {...form}>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <label htmlFor="name" className="text-warm-brown">
+                    Nome do Clube:
+                  </label>
+                  <input
+                    {...register("name", { required: true })}
+                    placeholder="Ex.: Clube dos Clássicos"
+                    className="w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
+                  />
+                  {errors.name ? (
+                    <h3 className="text-xs text-primary">
+                      Um clube precisa de um nome!
+                    </h3>
+                  ) : null}
+                </div>
+                <div className="grid gap-1">
+                  <label htmlFor="description" className="text-warm-brown">
+                    Descrição:
+                  </label>
+                  <textarea
+                    {...register("description", {
+                      required: true,
+                      validate: (value) =>
+                        visibility !== CLUB_VISIBILITY_PUBLIC ||
+                        value.trim().length >=
+                          PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+                          ? true
+                          : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
+                    })}
+                    placeholder="Descreva o objetivo e tema do clube"
+                    className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
+                  />
+                  {errors.description ? (
+                    <h3 className="text-xs text-primary">
+                      {errors.description.message ||
+                        "Deixe os leitores saberem mais sobre o clube"}
+                    </h3>
+                  ) : null}
+                </div>
 
-              <ClubMetadataFields
-                control={control}
-                register={register}
-                watch={watch}
-                setValue={setValue}
-                errors={errors}
-                requireLocation
-              />
-            </div>
-            <DialogFooter className=" mt-5 ">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Criando…" : "Criar Clube"}
-              </Button>
-            </DialogFooter>
-          </form>
+                <ClubMetadataFields requireLocation />
+              </div>
+              <DialogFooter className=" mt-5 ">
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Criando…" : "Criar Clube"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </FormProvider>
         )}
       </DialogContent>
     </Dialog>

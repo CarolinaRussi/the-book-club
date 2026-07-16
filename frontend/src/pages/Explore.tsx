@@ -3,22 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchDiscoverClubs } from "@/api/queries/fetchDiscoverClubs";
 import { fetchCitiesByStateId, fetchStates } from "@/api/queries/fetchLocations";
 import { DiscoverClubCard } from "@/components/pages/explore/DiscoverClubCard";
+import { ExploreFilters } from "@/components/pages/explore/ExploreFilters";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  MEETING_FORMAT_VALUES,
-  meetingFormatLabels,
-  type MeetingFormat,
-} from "@/utils/constants/clubs";
-
-const ALL_VALUE = "all";
+import type { MeetingFormat } from "@/utils/constants/clubs";
 
 export default function Explore() {
   const [page, setPage] = useState(1);
@@ -39,7 +26,7 @@ export default function Explore() {
     enabled: stateId != null,
   });
 
-  const filters = useMemo(
+  const queryFilters = useMemo(
     () => ({
       page,
       limit: 12,
@@ -52,18 +39,13 @@ export default function Explore() {
   );
 
   const { data, isLoading, isFetching, isError } = useQuery({
-    queryKey: ["discoverClubs", filters],
-    queryFn: () => fetchDiscoverClubs(filters),
+    queryKey: ["discoverClubs", queryFilters],
+    queryFn: () => fetchDiscoverClubs(queryFilters),
     placeholderData: (previous) => previous,
   });
 
   const clubs = data?.data ?? [];
   const totalPages = data?.totalPages ?? 0;
-
-  const applySearch = () => {
-    setPage(1);
-    setAppliedSearch(searchInput.trim());
-  };
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-5 md:py-10">
@@ -76,104 +58,29 @@ export default function Explore() {
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border p-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="lg:col-span-2">
-          <label className="mb-1 block text-sm font-medium">Busca</label>
-          <div className="flex gap-2">
-            <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  applySearch();
-                }
-              }}
-              placeholder="Nome ou descrição"
-            />
-            <Button type="button" variant="outline" onClick={applySearch}>
-              Buscar
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">Formato</label>
-          <Select
-            value={meetingFormat || ALL_VALUE}
-            onValueChange={(value) => {
-              setPage(1);
-              setMeetingFormat(value === ALL_VALUE ? "" : (value as MeetingFormat));
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
-              {MEETING_FORMAT_VALUES.map((format) => (
-                <SelectItem key={format} value={format}>
-                  {meetingFormatLabels[format]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">Estado</label>
-          <Select
-            value={stateId != null ? String(stateId) : ALL_VALUE}
-            onValueChange={(value) => {
-              setPage(1);
-              setCityId(null);
-              setStateId(value === ALL_VALUE ? null : Number(value));
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
-              {states.map((stateRow) => (
-                <SelectItem key={stateRow.id} value={String(stateRow.id)}>
-                  {stateRow.code} — {stateRow.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="md:col-span-2 lg:col-span-4">
-          <label className="mb-1 block text-sm font-medium">Cidade</label>
-          <Select
-            value={cityId != null ? String(cityId) : ALL_VALUE}
-            onValueChange={(value) => {
-              setPage(1);
-              setCityId(value === ALL_VALUE ? null : Number(value));
-            }}
-            disabled={stateId == null}
-          >
-            <SelectTrigger className="w-full md:max-w-md">
-              <SelectValue
-                placeholder={
-                  stateId == null
-                    ? "Selecione um estado primeiro"
-                    : "Todas as cidades"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todas</SelectItem>
-              {cities.map((cityRow) => (
-                <SelectItem key={cityRow.id} value={String(cityRow.id)}>
-                  {cityRow.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <ExploreFilters
+        filters={{ searchInput, meetingFormat, stateId, cityId }}
+        states={states}
+        cities={cities}
+        onSearchInputChange={setSearchInput}
+        onApplySearch={() => {
+          setPage(1);
+          setAppliedSearch(searchInput.trim());
+        }}
+        onMeetingFormatChange={(value) => {
+          setPage(1);
+          setMeetingFormat(value);
+        }}
+        onStateIdChange={(value) => {
+          setPage(1);
+          setCityId(null);
+          setStateId(value);
+        }}
+        onCityIdChange={(value) => {
+          setPage(1);
+          setCityId(value);
+        }}
+      />
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando clubes…</p>

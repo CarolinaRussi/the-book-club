@@ -1,30 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Controller,
-  type Control,
-  type FieldErrors,
-  type FieldPath,
-  type UseFormRegister,
-  type UseFormSetValue,
-  type UseFormWatch,
-} from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { fetchCitiesByStateId, fetchStates } from "@/api/queries/fetchLocations";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { fetchStates } from "@/api/queries/fetchLocations";
+import { CitySelect } from "@/components/pages/club/CitySelect";
 import {
   Select,
   SelectContent,
@@ -32,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import {
+  CLUB_JOIN_POLICY_APPROVAL,
   CLUB_JOIN_POLICY_VALUES,
   CLUB_VISIBILITY_PUBLIC,
   CLUB_VISIBILITY_VALUES,
@@ -56,58 +33,30 @@ export type ClubMetadataFormValues = {
   publicListingAcknowledged: boolean;
 };
 
-type ClubMetadataFieldsProps<TFieldValues extends ClubMetadataFormValues> = {
-  control: Control<TFieldValues>;
-  register: UseFormRegister<TFieldValues>;
-  watch: UseFormWatch<TFieldValues>;
-  setValue: UseFormSetValue<TFieldValues>;
-  errors: FieldErrors<TFieldValues>;
-  requireLocation: boolean;
+type ClubMetadataFieldsProps = {
+  requireLocation?: boolean;
 };
 
-export function ClubMetadataFields<
-  TFieldValues extends ClubMetadataFormValues,
->({
-  control,
-  register,
-  watch,
-  setValue,
-  errors,
-  requireLocation,
-}: ClubMetadataFieldsProps<TFieldValues>) {
-  const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
-  const visibility = watch("visibility" as FieldPath<TFieldValues>);
-  const stateId = watch("stateId" as FieldPath<TFieldValues>);
-  const cityId = watch("cityId" as FieldPath<TFieldValues>);
+export function ClubMetadataFields({
+  requireLocation = false,
+}: ClubMetadataFieldsProps) {
+  const {
+    control,
+    register,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useFormContext<ClubMetadataFormValues>();
+
+  const visibility = watch("visibility");
+  const stateId = watch("stateId");
   const isPublic = visibility === CLUB_VISIBILITY_PUBLIC;
+  const locationRequired = requireLocation || isPublic;
 
   const { data: states = [], isLoading: isLoadingStates } = useQuery({
     queryKey: ["locations", "states"],
     queryFn: fetchStates,
   });
-
-  const numericStateId =
-    typeof stateId === "number" && stateId > 0 ? stateId : null;
-
-  const { data: cities = [], isLoading: isLoadingCities } = useQuery({
-    queryKey: ["locations", "cities", numericStateId],
-    queryFn: () => fetchCitiesByStateId(numericStateId as number),
-    enabled: numericStateId != null,
-  });
-
-  useEffect(() => {
-    if (!isPublic) {
-      setValue(
-        "publicListingAcknowledged" as FieldPath<TFieldValues>,
-        false as never,
-      );
-    }
-  }, [isPublic, setValue]);
-
-  const selectedCityName = useMemo(() => {
-    if (typeof cityId !== "number") return null;
-    return cities.find((cityRow) => cityRow.id === cityId)?.name ?? null;
-  }, [cities, cityId]);
 
   return (
     <div className="grid gap-4">
@@ -115,18 +64,14 @@ export function ClubMetadataFields<
         <label className="mb-1 block text-sm font-medium">Visibilidade</label>
         <Controller
           control={control}
-          name={"visibility" as FieldPath<TFieldValues>}
-          rules={{ required: true }}
+          name="visibility"
           render={({ field }) => (
             <Select
-              value={String(field.value)}
-              onValueChange={(value) => {
+              value={field.value}
+              onValueChange={(value: ClubVisibility) => {
                 field.onChange(value);
                 if (value === CLUB_VISIBILITY_PUBLIC) {
-                  setValue(
-                    "joinPolicy" as FieldPath<TFieldValues>,
-                    "approval" as never,
-                  );
+                  setValue("joinPolicy", CLUB_JOIN_POLICY_APPROVAL);
                 }
               }}
             >
@@ -152,13 +97,9 @@ export function ClubMetadataFields<
           </label>
           <Controller
             control={control}
-            name={"joinPolicy" as FieldPath<TFieldValues>}
-            rules={{ required: isPublic }}
+            name="joinPolicy"
             render={({ field }) => (
-              <Select
-                value={String(field.value)}
-                onValueChange={field.onChange}
-              >
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -181,18 +122,11 @@ export function ClubMetadataFields<
         </label>
         <Controller
           control={control}
-          name={"meetingFormat" as FieldPath<TFieldValues>}
-          rules={{
-            validate: (value) =>
-              !requireLocation && !isPublic
-                ? true
-                : value
-                  ? true
-                  : "Obrigatório",
-          }}
+          name="meetingFormat"
+          rules={{ required: locationRequired ? "Obrigatório" : false }}
           render={({ field }) => (
             <Select
-              value={field.value ? String(field.value) : undefined}
+              value={field.value || undefined}
               onValueChange={field.onChange}
             >
               <SelectTrigger className="w-full">
@@ -217,23 +151,14 @@ export function ClubMetadataFields<
         <label className="mb-1 block text-sm font-medium">Estado (UF)</label>
         <Controller
           control={control}
-          name={"stateId" as FieldPath<TFieldValues>}
-          rules={{
-            validate: (value) =>
-              !requireLocation && !isPublic
-                ? true
-                : value
-                  ? true
-                  : "Obrigatório",
-          }}
+          name="stateId"
+          rules={{ required: locationRequired ? "Obrigatório" : false }}
           render={({ field }) => (
             <Select
-              value={
-                typeof field.value === "number" ? String(field.value) : undefined
-              }
+              value={field.value != null ? String(field.value) : undefined}
               onValueChange={(value) => {
                 field.onChange(Number(value));
-                setValue("cityId" as FieldPath<TFieldValues>, null as never);
+                setValue("cityId", null);
               }}
               disabled={isLoadingStates}
             >
@@ -263,68 +188,14 @@ export function ClubMetadataFields<
         <label className="mb-1 block text-sm font-medium">Cidade</label>
         <Controller
           control={control}
-          name={"cityId" as FieldPath<TFieldValues>}
-          rules={{
-            validate: (value) =>
-              !requireLocation && !isPublic
-                ? true
-                : value
-                  ? true
-                  : "Obrigatório",
-          }}
+          name="cityId"
+          rules={{ required: locationRequired ? "Obrigatório" : false }}
           render={({ field }) => (
-            <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  disabled={numericStateId == null || isLoadingCities}
-                  className="w-full justify-between font-normal"
-                >
-                  {selectedCityName ??
-                    (isLoadingCities
-                      ? "Carregando cidades…"
-                      : numericStateId
-                        ? "Buscar cidade"
-                        : "Selecione o estado primeiro")}
-                  <ChevronsUpDown className="opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-(--radix-popover-trigger-width) p-0"
-                align="start"
-              >
-                <Command>
-                  <CommandInput placeholder="Digite o nome da cidade…" />
-                  <CommandList>
-                    <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
-                    <CommandGroup>
-                      {cities.map((cityRow) => (
-                        <CommandItem
-                          key={cityRow.id}
-                          value={cityRow.name}
-                          onSelect={() => {
-                            field.onChange(cityRow.id);
-                            setCityPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 size-4",
-                              field.value === cityRow.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {cityRow.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <CitySelect
+              stateId={stateId}
+              value={field.value}
+              onChange={field.onChange}
+            />
           )}
         />
         {errors.cityId ? (
@@ -337,14 +208,9 @@ export function ClubMetadataFields<
           <input
             type="checkbox"
             className="mt-1 accent-primary"
-            {...register(
-              "publicListingAcknowledged" as FieldPath<TFieldValues>,
-              {
-                required: isPublic
-                  ? "Confirme que o perfil ficará público"
-                  : false,
-              },
-            )}
+            {...register("publicListingAcknowledged", {
+              required: "Confirme que o perfil ficará público",
+            })}
           />
           <span>
             Entendo que o nome, a descrição, o formato e a cidade/UF deste clube
