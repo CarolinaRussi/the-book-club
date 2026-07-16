@@ -50,6 +50,7 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 | `pnpm db:migrate`  | Aplica migrações                   |
 | `pnpm db:push`     | Sincroniza schema com o banco      |
 | `pnpm db:studio`   | Abre o Drizzle Studio no navegador |
+| `pnpm run db:seed-ibge` | Popula `State`/`City` com UFs e municípios do IBGE (upsert) |
 | `pnpm meetings:auto-complete` | Conclui encontros com `meetingDate` anterior a hoje (SP); útil sem esperar o cron |
 
 ## Detalhes úteis

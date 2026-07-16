@@ -64,6 +64,13 @@
       "when": 1783948413626,
       "tag": "0008_meeting_recap_updated_at_default",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784161287017,
+      "tag": "0009_ibge_states_cities",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import {
   real,
   pgEnum,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -43,6 +44,32 @@ export const feedbackTypeEnum = pgEnum("FeedbackTypeEnum", [
   "idea",
   "other",
 ]);
+
+// State / City (IBGE — PK = código IBGE)
+export const state = pgTable(
+  "State",
+  {
+    id: integer("id").primaryKey(),
+    code: varchar("code", { length: 2 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+  },
+  (table) => [uniqueIndex("State_code_key").on(table.code)]
+);
+
+export const city = pgTable(
+  "City",
+  {
+    id: integer("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    stateId: integer("state_id")
+      .notNull()
+      .references(() => state.id, { onDelete: "restrict" }),
+  },
+  (table) => [
+    index("City_state_id_idx").on(table.stateId),
+    uniqueIndex("City_state_id_name_key").on(table.stateId, table.name),
+  ]
+);
 
 // Book
 export const book = pgTable("Book", {
@@ -300,6 +327,17 @@ export const feedback = pgTable("Feedback", {
 });
 
 // Relations (for query API - optional, used with db.query)
+export const stateRelations = relations(state, ({ many }) => ({
+  cities: many(city),
+}));
+
+export const cityRelations = relations(city, ({ one }) => ({
+  state: one(state, {
+    fields: [city.stateId],
+    references: [state.id],
+  }),
+}));
+
 export const bookRelations = relations(book, ({ many }) => ({
   clubBooks: many(clubBook),
   userBooks: many(userBook),

@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:reset-schema": "tsx scripts/reset-public-schema.ts",
     "db:studio": "drizzle-kit studio",
+    "db:seed-ibge": "tsx scripts/seedIbgeLocations.ts",
     "calendar:create-event": "tsx scripts/googleCalendarCreateMeetingEvent.ts",
     "meetings:auto-complete": "tsx scripts/autoCompleteMeetings.ts",
     "email:test": "tsx scripts/sendTestEmail.ts"
