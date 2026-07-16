@@ -57,6 +57,10 @@ export const meetingFormatEnum = pgEnum("MeetingFormatEnum", [
   "remote",
   "hybrid",
 ]);
+export const membershipRequestStatusEnum = pgEnum(
+  "MembershipRequestStatusEnum",
+  ["pending", "approved", "rejected", "cancelled"],
+);
 
 // State / City (IBGE — PK = código IBGE)
 export const state = pgTable(
@@ -240,6 +244,37 @@ export const member = pgTable("Member", {
     .notNull(),
 });
 
+// MembershipRequest
+export const membershipRequest = pgTable(
+  "MembershipRequest",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    clubId: varchar("club_id", { length: 255 })
+      .notNull()
+      .references(() => club.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: membershipRequestStatusEnum("status").default("pending").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    resolvedAt: timestamp("resolved_at", {
+      withTimezone: true,
+      precision: 6,
+    }),
+  },
+  (table) => [
+    uniqueIndex("MembershipRequest_club_id_user_id_pending_key")
+      .on(table.clubId, table.userId)
+      .where(sql`${table.status} = 'pending'`),
+    index("MembershipRequest_club_id_status_idx").on(
+      table.clubId,
+      table.status,
+    ),
+  ],
+);
+
 // Review
 export const review = pgTable("Review", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -394,7 +429,22 @@ export const clubRelations = relations(club, ({ one, many }) => ({
   meetings: many(meeting),
   members: many(member),
   clubBooks: many(clubBook),
+  membershipRequests: many(membershipRequest),
 }));
+
+export const membershipRequestRelations = relations(
+  membershipRequest,
+  ({ one }) => ({
+    club: one(club, {
+      fields: [membershipRequest.clubId],
+      references: [club.id],
+    }),
+    user: one(user, {
+      fields: [membershipRequest.userId],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const meetingRelations = relations(meeting, ({ one, many }) => ({
   book: one(book, {

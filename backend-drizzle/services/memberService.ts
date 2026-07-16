@@ -1,6 +1,9 @@
 import { createId } from "../utils/id";
+import { ClubJoinPolicy } from "../enums/clubJoinPolicy";
+import { ClubVisibility } from "../enums/clubVisibility";
 import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
+import * as membershipRequestRepository from "../repositories/membershipRequestRepository";
 
 export class DuplicateMemberJoinError extends Error {
   constructor() {
@@ -16,10 +19,17 @@ export class ClubNotJoinableError extends Error {
   }
 }
 
+export class ClubJoinNotAllowedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ClubJoinNotAllowedError";
+  }
+}
+
 export async function getMembersFromClub(
   clubId: string,
   page: number,
-  limit: number
+  limit: number,
 ) {
   const skip = (page - 1) * limit;
   const [membersRows, totalItems] = await Promise.all([
@@ -45,10 +55,35 @@ export async function getMembersFromClub(
   return { data, totalPages, currentPage: page, totalItems };
 }
 
-export async function joinClub(userId: string, clubId: string) {
+export type JoinClubSource = "invitation" | "open_public";
+
+export async function joinClub(
+  userId: string,
+  clubId: string,
+  source: JoinClubSource = "invitation",
+) {
   const activeClub = await clubRepository.findActiveClubById(clubId);
   if (!activeClub) {
     throw new ClubNotJoinableError();
+  }
+
+  if (source === "open_public") {
+    if (
+      activeClub.visibility !== ClubVisibility.PUBLIC ||
+      activeClub.joinPolicy !== ClubJoinPolicy.OPEN
+    ) {
+      throw new ClubJoinNotAllowedError(
+        "Este clube não aceita entrada direta. Peça aprovação ou use um convite.",
+      );
+    }
+  }
+
+  const existingMember = await memberRepository.findMemberByUserAndClub(
+    userId,
+    clubId,
+  );
+  if (existingMember) {
+    throw new DuplicateMemberJoinError();
   }
 
   try {
@@ -61,6 +96,11 @@ export async function joinClub(userId: string, clubId: string) {
     if (!newMember) {
       throw new Error("insert_member_failed");
     }
+
+    await membershipRequestRepository.approvePendingByClubAndUser(
+      clubId,
+      userId,
+    );
 
     return {
       member: {
@@ -90,7 +130,7 @@ export class NotClubMemberError extends Error {
 export class ClubOwnerCannotLeaveError extends Error {
   constructor() {
     super(
-      "O administrador não pode sair do clube sem transferir a propriedade."
+      "O administrador não pode sair do clube sem transferir a propriedade.",
     );
     this.name = "ClubOwnerCannotLeaveError";
   }
@@ -99,7 +139,7 @@ export class ClubOwnerCannotLeaveError extends Error {
 export async function leaveClub(userId: string, clubId: string) {
   const membership = await memberRepository.findMemberByUserAndClub(
     userId,
-    clubId
+    clubId,
   );
   if (!membership) {
     throw new NotClubMemberError();

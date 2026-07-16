@@ -9,14 +9,25 @@ import {
   resolveClubMetadataForCreate,
   resolveClubMetadataForUpdate,
 } from "../utils/clubMetadata";
+import { ClubJoinPolicy } from "../enums/clubJoinPolicy";
+import { ClubVisibility } from "../enums/clubVisibility";
 import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
+import * as membershipRequestRepository from "../repositories/membershipRequestRepository";
+import {
+  autoApprovePendingRequestsForClub,
+  cancelPendingRequestsForClub,
+} from "./membershipRequestService";
 
 type DiscoverRow = Awaited<
   ReturnType<typeof clubRepository.findPublicClubsForDiscover>
 >["rows"][number];
 
-function mapDiscoverClub(row: DiscoverRow, isMember: boolean) {
+function mapDiscoverClub(
+  row: DiscoverRow,
+  isMember: boolean,
+  hasPendingRequest: boolean,
+) {
   return {
     id: row.id,
     name: row.name,
@@ -26,6 +37,7 @@ function mapDiscoverClub(row: DiscoverRow, isMember: boolean) {
     createdAt: row.createdAt,
     memberCount: Number(row.memberCount ?? 0),
     isMember,
+    hasPendingRequest,
     state:
       row.stateId != null && row.stateCode && row.stateName
         ? {
@@ -190,7 +202,7 @@ export async function updateClub(
   });
 
   try {
-    return await clubRepository.updateClubById(id, {
+    const updatedClub = await clubRepository.updateClubById(id, {
       name: input.name,
       description: metadata.description,
       invitationCode: input.invitationCode,
@@ -201,6 +213,26 @@ export async function updateClub(
       stateId: metadata.stateId,
       cityId: metadata.cityId,
     });
+
+    if (!updatedClub) {
+      return null;
+    }
+
+    const becamePrivate =
+      currentClub.visibility !== ClubVisibility.PRIVATE &&
+      metadata.visibility === ClubVisibility.PRIVATE;
+    const becameOpen =
+      currentClub.joinPolicy !== ClubJoinPolicy.OPEN &&
+      metadata.joinPolicy === ClubJoinPolicy.OPEN &&
+      metadata.visibility === ClubVisibility.PUBLIC;
+
+    if (becamePrivate) {
+      await cancelPendingRequestsForClub(id);
+    } else if (becameOpen) {
+      await autoApprovePendingRequestsForClub(id);
+    }
+
+    return updatedClub;
   } catch (error: any) {
     if (error?.code === "23503") {
       return null;
@@ -242,13 +274,18 @@ export async function discoverClubs(
       limit: input.limit,
     });
 
-  const memberClubIds = await clubRepository.findMemberClubIdsAmong(
-    userId,
-    rows.map((row) => row.id),
-  );
+  const clubIds = rows.map((row) => row.id);
+  const [memberClubIds, pendingClubIds] = await Promise.all([
+    clubRepository.findMemberClubIdsAmong(userId, clubIds),
+    membershipRequestRepository.findPendingClubIdsAmong(userId, clubIds),
+  ]);
 
   const data = rows.map((row) =>
-    mapDiscoverClub(row, memberClubIds.has(row.id)),
+    mapDiscoverClub(
+      row,
+      memberClubIds.has(row.id),
+      pendingClubIds.has(row.id),
+    ),
   );
   const totalPages = Math.ceil(totalItems / input.limit) || 0;
 
@@ -266,10 +303,10 @@ export async function getPublicClubPreview(userId: string, clubId: string) {
     return null;
   }
 
-  const membership = await memberRepository.findMemberByUserAndClub(
-    userId,
-    clubId,
-  );
+  const [membership, pendingRequest] = await Promise.all([
+    memberRepository.findMemberByUserAndClub(userId, clubId),
+    membershipRequestRepository.findPendingByClubAndUser(clubId, userId),
+  ]);
 
-  return mapDiscoverClub(row, membership !== null);
+  return mapDiscoverClub(row, membership !== null, pendingRequest !== null);
 }

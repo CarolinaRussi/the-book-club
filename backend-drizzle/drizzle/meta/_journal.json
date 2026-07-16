@@ -78,6 +78,13 @@
       "when": 1784161671729,
       "tag": "0010_club_visibility_location_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784162824081,
+      "tag": "0011_membership_request",
+      "breakpoints": true
     }
   ]
 }

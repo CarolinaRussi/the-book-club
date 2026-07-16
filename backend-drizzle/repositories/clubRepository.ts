@@ -59,6 +59,9 @@ export async function findActiveClubById(clubId: string) {
       id: club.id,
       name: club.name,
       status: club.status,
+      visibility: club.visibility,
+      joinPolicy: club.joinPolicy,
+      ownerId: club.ownerId,
     })
     .from(club)
     .where(and(eq(club.id, clubId), eq(club.status, ClubStatus.ACTIVE)))

@@ -107,6 +107,49 @@ export type FeedbackNotificationInput = {
   pageUrl: string;
 };
 
+export async function sendJoinRequestAdminEmail(input: {
+  to: string;
+  clubName: string;
+  requesterName: string;
+  manageUrl: string;
+}): Promise<{ id: string }> {
+  return sendEmail({
+    to: input.to.trim(),
+    subject: `Entrelivros — novo pedido de entrada em ${input.clubName}`,
+    html: `
+      <p>Olá!</p>
+      <p><strong>${escapeHtml(input.requesterName)}</strong> pediu para entrar no clube <strong>${escapeHtml(input.clubName)}</strong>.</p>
+      <p><a href="${escapeHtml(input.manageUrl)}">Abrir Gerenciar clube</a> para aprovar ou recusar.</p>
+    `,
+    text: [
+      "Olá!",
+      `${input.requesterName} pediu para entrar no clube ${input.clubName}.`,
+      `Abra Gerenciar clube: ${input.manageUrl}`,
+    ].join("\n\n"),
+  });
+}
+
+export async function sendJoinApprovedEmail(input: {
+  to: string;
+  clubName: string;
+  clubHomeUrl: string;
+}): Promise<{ id: string }> {
+  return sendEmail({
+    to: input.to.trim(),
+    subject: `Entrelivros — você entrou em ${input.clubName}`,
+    html: `
+      <p>Olá!</p>
+      <p>Seu pedido para entrar no clube <strong>${escapeHtml(input.clubName)}</strong> foi aprovado.</p>
+      <p><a href="${escapeHtml(input.clubHomeUrl)}">Abrir o Entrelivros</a></p>
+    `,
+    text: [
+      "Olá!",
+      `Seu pedido para entrar no clube ${input.clubName} foi aprovado.`,
+      `Acesse: ${input.clubHomeUrl}`,
+    ].join("\n\n"),
+  });
+}
+
 export async function sendFeedbackNotificationEmail(
   input: FeedbackNotificationInput,
 ): Promise<{ id: string }> {

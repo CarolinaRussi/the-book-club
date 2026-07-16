@@ -1,24 +1,24 @@
 import { Request, Response } from "express";
 import {
-  joinClub as joinClubService,
-  DuplicateMemberJoinError,
-  ClubNotJoinableError,
   ClubJoinNotAllowedError,
+  ClubNotJoinableError,
+  DuplicateMemberJoinError,
+  joinClub,
 } from "../../services/memberService";
 
-export const joinClub = async (req: Request, res: Response) => {
-  const { clubId } = req.body;
+export const joinPublicClub = async (req: Request, res: Response) => {
   const userId = req.userId;
+  const { id } = req.params;
 
-  if (!clubId || !userId) {
+  if (!userId || !id) {
     res.status(400).json({ message: "Id do clube ou de usuário inválido!" });
     return;
   }
 
   try {
-    const { member } = await joinClubService(userId, clubId, "invitation");
+    const { member } = await joinClub(userId, id, "open_public");
     res.status(201).json({
-      message: "Membro adicionado ao clube com sucesso",
+      message: "Você entrou no clube",
       member,
     });
   } catch (error) {
@@ -32,6 +32,6 @@ export const joinClub = async (req: Request, res: Response) => {
       return res.status(404).json({ message: error.message });
     }
     console.error(error);
-    res.status(500).json({ message: "Erro ao criar membro do clube" });
+    res.status(500).json({ message: "Erro ao entrar no clube" });
   }
 };

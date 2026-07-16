@@ -6,3 +6,8 @@ export { updateClub } from "./updateClub";
 export { deleteClub } from "./deleteClub";
 export { discoverClubs } from "./discoverClubs";
 export { getPublicClubPreview } from "./getPublicClubPreview";
+export { joinPublicClub } from "./joinPublicClub";
+export { createJoinRequest } from "./createJoinRequest";
+export { listJoinRequests } from "./listJoinRequests";
+export { approveJoinRequest } from "./approveJoinRequest";
+export { rejectJoinRequest } from "./rejectJoinRequest";
