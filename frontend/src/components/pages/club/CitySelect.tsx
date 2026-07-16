@@ -63,7 +63,7 @@ export function CitySelect({ stateId, value, onChange }: CitySelectProps) {
       >
         <Command>
           <CommandInput placeholder="Digite o nome da cidade…" />
-          <CommandList>
+          <CommandList onWheel={(event) => event.stopPropagation()}>
             <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
             <CommandGroup>
               {cities.map((cityRow) => (

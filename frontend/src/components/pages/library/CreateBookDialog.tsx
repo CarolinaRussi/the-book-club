@@ -290,7 +290,10 @@ const CreateBookDialog = ({ open, onOpenChange }: CreateBookDialogProps) => {
                     value={inputValue}
                     onValueChange={setInputValue}
                   />
-                  <CommandList className="max-h-[min(300px,45svh)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+                  <CommandList
+                    className="max-h-[min(300px,45svh)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+                    onWheel={(event) => event.stopPropagation()}
+                  >
                     <CommandEmpty>
                       {isSearching ? (
                         <span className="flex items-center justify-center gap-2">
