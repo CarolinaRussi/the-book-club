@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateUser } from "@/api/mutations/userMutate";
 import type { IApiError } from "@/types/IApi";
 import type { IUser } from "@/types/IUser";
 import ProfileHero from "@/components/pages/profile/ProfileHero";
+import { MyProfileEditForm } from "@/components/pages/me/MyProfileEditForm";
 import ProfileAvatarCropDialog from "@/components/pages/me/profile/ProfileAvatarCropDialog";
 import {
   AlertDialog,
@@ -19,11 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { getInitials } from "@/utils/formatters";
 
 function appendGenres(formData: FormData, genres: string[]) {
   if (genres.length === 0) {
@@ -33,9 +29,9 @@ function appendGenres(formData: FormData, genres: string[]) {
   genres.forEach((tag) => formData.append("favoritesGenres", tag));
 }
 
-function genresEqual(a: string[], b: string[]) {
-  if (a.length !== b.length) return false;
-  return a.every((tag, index) => tag === b[index]);
+function genresEqual(left: string[], right: string[]) {
+  if (left.length !== right.length) return false;
+  return left.every((tag, index) => tag === right[index]);
 }
 
 export default function MyProfileHero() {
@@ -61,8 +57,8 @@ export default function MyProfileHero() {
     setDraftBio(user.bio ?? "");
     setTags(user.favoritesGenres ?? []);
     setGenreInput("");
-    setPreviewUrl((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+    setPreviewUrl((previous) => {
+      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
       return undefined;
     });
     setPendingAvatarFile(null);
@@ -177,15 +173,15 @@ export default function MyProfileHero() {
   const handleCroppedAvatar = (file: File) => {
     setPendingAvatarFile(file);
     setRemoveProfilePicture(false);
-    setPreviewUrl((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+    setPreviewUrl((previous) => {
+      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
       return URL.createObjectURL(file);
     });
   };
 
   const handleRemoveImage = () => {
-    setPreviewUrl((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+    setPreviewUrl((previous) => {
+      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
       return undefined;
     });
     setPendingAvatarFile(null);
@@ -195,12 +191,8 @@ export default function MyProfileHero() {
   const addTag = () => {
     const trimmed = genreInput.trim();
     if (!trimmed || tags.includes(trimmed)) return;
-    setTags((prev) => [...prev, trimmed]);
+    setTags((previous) => [...previous, trimmed]);
     setGenreInput("");
-  };
-
-  const removeTag = (tag: string) => {
-    setTags((prev) => prev.filter((t) => t !== tag));
   };
 
   if (!user) return null;
@@ -239,158 +231,27 @@ export default function MyProfileHero() {
 
   return (
     <>
-      <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-        <div className="flex flex-col items-center gap-2">
-          <label className="group relative block cursor-pointer">
-            <Avatar className="size-28 shrink-0 sm:size-32 md:size-36">
-              <AvatarImage
-                src={displayPicture || undefined}
-                alt={draftNickname || user.name}
-              />
-              <AvatarFallback className="text-3xl text-primary" delayMs={600}>
-                {getInitials(draftNickname || user.name || "")}
-              </AvatarFallback>
-            </Avatar>
-            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60 opacity-0 transition-opacity group-hover:opacity-100">
-              <Camera className="h-8 w-8 text-foreground" />
-            </span>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (file) handlePickImageFile(file);
-              }}
-            />
-          </label>
-          {displayPicture ? (
-            <button
-              type="button"
-              onClick={handleRemoveImage}
-              className="text-sm text-primary hover:underline cursor-pointer"
-            >
-              Remover foto
-            </button>
-          ) : null}
-        </div>
-
-        <div className="min-w-0 w-full flex-1 space-y-5 sm:w-auto">
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="profile-nickname"
-              className="text-sm font-medium text-foreground"
-            >
-              Apelido
-            </label>
-            <p className="text-sm text-muted-foreground">
-              Como você aparece no clube (feed, leitores, comentários).
-            </p>
-            <Input
-              id="profile-nickname"
-              disabled={isPending}
-              value={draftNickname}
-              onChange={(e) => setDraftNickname(e.target.value)}
-              className="max-w-md text-lg font-semibold"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="profile-name"
-              className="text-sm font-medium text-foreground"
-            >
-              Nome completo
-            </label>
-            <p className="text-sm text-muted-foreground">
-              Opcional; aparece abaixo do apelido no seu perfil.
-            </p>
-            <Input
-              id="profile-name"
-              disabled={isPending}
-              value={draftName}
-              onChange={(e) => setDraftName(e.target.value)}
-              placeholder="Fulana de tal"
-              className="max-w-md"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="profile-bio"
-              className="text-sm font-medium text-foreground"
-            >
-              Bio
-            </label>
-            <textarea
-              id="profile-bio"
-              disabled={isPending}
-              value={draftBio}
-              onChange={(e) => setDraftBio(e.target.value)}
-              rows={4}
-              placeholder="Conte um pouco sobre você e suas preferências literárias..."
-              className="w-full max-w-2xl rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:opacity-50"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-foreground">
-              Gêneros preferidos
-            </p>
-            <div className="flex max-w-2xl gap-2">
-              <Input
-                value={genreInput}
-                disabled={isPending}
-                onChange={(e) => setGenreInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                placeholder="Ex.: Ficção, Romance..."
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={addTag}
-                disabled={isPending}
-              >
-                Adicionar
-              </Button>
-            </div>
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => removeTag(tag)}
-                  >
-                    {tag} ✕
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancelEditing}
-              disabled={isPending}
-            >
-              Cancelar
-            </Button>
-            <Button type="button" onClick={handleSave} disabled={isPending}>
-              {isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <MyProfileEditForm
+        isPending={isPending}
+        displayPicture={displayPicture}
+        draftName={draftName}
+        draftNickname={draftNickname}
+        draftBio={draftBio}
+        tags={tags}
+        genreInput={genreInput}
+        onDraftNameChange={setDraftName}
+        onDraftNicknameChange={setDraftNickname}
+        onDraftBioChange={setDraftBio}
+        onGenreInputChange={setGenreInput}
+        onAddTag={addTag}
+        onRemoveTag={(tag) =>
+          setTags((previous) => previous.filter((item) => item !== tag))
+        }
+        onPickImageFile={handlePickImageFile}
+        onRemoveImage={handleRemoveImage}
+        onCancel={handleCancelEditing}
+        onSave={handleSave}
+      />
 
       <ProfileAvatarCropDialog
         open={!!cropImageSrc}
