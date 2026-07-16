@@ -18,6 +18,29 @@ import { useClub } from "../../../contexts/ClubContext";
 import { useState } from "react";
 import { FaRegCopy, FaCheck } from "react-icons/fa6";
 import { buildInviteUrl } from "@/utils/inviteUrl";
+import {
+  ClubMetadataFields,
+  type ClubMetadataFormValues,
+} from "@/components/pages/club/ClubMetadataFields";
+import {
+  CLUB_JOIN_POLICY_APPROVAL,
+  CLUB_VISIBILITY_PRIVATE,
+  CLUB_VISIBILITY_PUBLIC,
+  PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH,
+  type ClubJoinPolicy,
+  type ClubVisibility,
+  type MeetingFormat,
+} from "@/utils/constants/clubs";
+
+type CreateClubFormValues = ClubMetadataFormValues & {
+  name: string;
+  description: string;
+  visibility: ClubVisibility;
+  joinPolicy: ClubJoinPolicy;
+  meetingFormat: MeetingFormat | "";
+  stateId: number | null;
+  cityId: number | null;
+};
 
 interface CreateClubDialogProps {
   open: boolean;
@@ -31,14 +54,29 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
 
   const {
     register,
+    control,
     reset,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<IClubPayload>();
+  } = useForm<CreateClubFormValues>({
+    defaultValues: {
+      name: "",
+      description: "",
+      visibility: CLUB_VISIBILITY_PRIVATE,
+      joinPolicy: CLUB_JOIN_POLICY_APPROVAL,
+      meetingFormat: "",
+      stateId: null,
+      cityId: null,
+      publicListingAcknowledged: false,
+    },
+  });
 
   const { user } = useAuth();
   const { setSelectedClubId } = useClub();
   const queryClient = useQueryClient();
+  const visibility = watch("visibility");
 
   const handleClose = () => {
     setCreatedCode(null);
@@ -48,7 +86,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
     onOpenChange(false);
   };
 
-  const { mutate: createClubMutate } = useMutation<
+  const { mutate: createClubMutate, isPending } = useMutation<
     { club: IClub },
     IApiError,
     IClubPayload
@@ -66,10 +104,35 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<IClubPayload> = (data) => {
-    const { name, description } = data;
-    const ownerId = user?.id;
-    createClubMutate({ name, description, ownerId });
+  const onSubmit: SubmitHandler<CreateClubFormValues> = (data) => {
+    if (!data.meetingFormat || data.stateId == null || data.cityId == null) {
+      toast.error("Preencha formato, estado e cidade.");
+      return;
+    }
+
+    if (
+      data.visibility === CLUB_VISIBILITY_PUBLIC &&
+      data.description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+    ) {
+      toast.error(
+        `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
+      );
+      return;
+    }
+
+    createClubMutate({
+      name: data.name,
+      description: data.description,
+      ownerId: user?.id,
+      visibility: data.visibility,
+      joinPolicy:
+        data.visibility === CLUB_VISIBILITY_PUBLIC
+          ? data.joinPolicy
+          : undefined,
+      meetingFormat: data.meetingFormat,
+      stateId: data.stateId,
+      cityId: data.cityId,
+    });
   };
 
   const handleCopyCode = () => {
@@ -90,7 +153,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-[425px] lg:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-2xl">
         <DialogHeader className="gap-0">
           <DialogTitle className="text-3xl text-primary">
             {createdCode ? "Clube Criado!" : "Criar Novo Clube"}
@@ -167,7 +230,7 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-3">
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <label htmlFor="name" className="text-warm-brown">
                   Nome do Clube:
@@ -188,22 +251,42 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
                   Descrição:
                 </label>
                 <textarea
-                  {...register("description", { required: true })}
+                  {...register("description", {
+                    required: true,
+                    validate: (value) =>
+                      visibility !== CLUB_VISIBILITY_PUBLIC ||
+                      value.trim().length >= PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+                        ? true
+                        : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
+                  })}
                   placeholder="Descreva o objetivo e tema do clube"
                   className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
                 />
                 {errors.description && (
                   <h3 className="text-xs text-primary">
-                    Deixe os leitores saberem mais sobre o clube
+                    {typeof errors.description.message === "string"
+                      ? errors.description.message
+                      : "Deixe os leitores saberem mais sobre o clube"}
                   </h3>
                 )}
               </div>
+
+              <ClubMetadataFields
+                control={control}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+                errors={errors}
+                requireLocation
+              />
             </div>
             <DialogFooter className=" mt-5 ">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
-              <Button type="submit">Criar Clube</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Criando…" : "Criar Clube"}
+              </Button>
             </DialogFooter>
           </form>
         )}

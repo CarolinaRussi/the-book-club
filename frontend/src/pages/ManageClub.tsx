@@ -9,9 +9,17 @@ import { useClub } from "@/contexts/ClubContext";
 import { updateClub, deleteClub } from "@/api/mutations/clubMutate";
 import type { IApiError } from "@/types/IApi";
 import {
+  CLUB_JOIN_POLICY_APPROVAL,
+  CLUB_JOIN_POLICY_OPEN,
   CLUB_READING_MODE_VALUES,
+  CLUB_VISIBILITY_PRIVATE,
+  CLUB_VISIBILITY_PUBLIC,
+  PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH,
   clubReadingModeLabels,
+  type ClubJoinPolicy,
   type ClubReadingMode,
+  type ClubVisibility,
+  type MeetingFormat,
 } from "@/utils/constants/clubs";
 import { buildInviteUrl } from "@/utils/inviteUrl";
 import { Input } from "@/components/ui/input";
@@ -34,12 +42,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  ClubMetadataFields,
+  type ClubMetadataFormValues,
+} from "@/components/pages/club/ClubMetadataFields";
 
-interface ManageClubFormValues {
+interface ManageClubFormValues extends ClubMetadataFormValues {
   name: string;
   description: string;
   invitationCode: string;
   readingMode: ClubReadingMode;
+  meetingFormat: MeetingFormat | "";
 }
 
 export default function ManageClub() {
@@ -57,6 +70,7 @@ export default function ManageClub() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ManageClubFormValues>({
     defaultValues: {
@@ -64,25 +78,52 @@ export default function ManageClub() {
       description: "",
       invitationCode: "",
       readingMode: "book",
+      visibility: CLUB_VISIBILITY_PRIVATE,
+      joinPolicy: CLUB_JOIN_POLICY_APPROVAL,
+      meetingFormat: "",
+      stateId: null,
+      cityId: null,
+      publicListingAcknowledged: false,
     },
   });
 
   const invitationCodeValue = watch("invitationCode");
+  const visibility = watch("visibility");
 
   useEffect(() => {
     if (!selectedClub) return;
+    const wasAlreadyPublic = selectedClub.visibility === CLUB_VISIBILITY_PUBLIC;
     reset({
       name: selectedClub.name || "",
       description: selectedClub.description || "",
       invitationCode: selectedClub.invitationCode || "",
       readingMode: selectedClub.readingMode ?? "book",
+      visibility: (selectedClub.visibility ??
+        CLUB_VISIBILITY_PRIVATE) as ClubVisibility,
+      joinPolicy: (selectedClub.joinPolicy ??
+        CLUB_JOIN_POLICY_APPROVAL) as ClubJoinPolicy,
+      meetingFormat: (selectedClub.meetingFormat ?? "") as MeetingFormat | "",
+      stateId: selectedClub.stateId ?? null,
+      cityId: selectedClub.cityId ?? null,
+      publicListingAcknowledged: wasAlreadyPublic,
     });
   }, [selectedClub, reset]);
 
   const { mutate: updateClubMutate, isPending: isUpdating } = useMutation<
     unknown,
     IApiError,
-    { id: string } & ManageClubFormValues
+    {
+      id: string;
+      name: string;
+      description: string;
+      invitationCode: string;
+      readingMode: ClubReadingMode;
+      visibility: ClubVisibility;
+      joinPolicy: ClubJoinPolicy;
+      meetingFormat: MeetingFormat | null;
+      stateId: number | null;
+      cityId: number | null;
+    }
   >({
     mutationFn: updateClub,
     onSuccess: async () => {
@@ -117,7 +158,32 @@ export default function ManageClub() {
 
   const onSubmit: SubmitHandler<ManageClubFormValues> = (data) => {
     if (!selectedClub) return;
-    updateClubMutate({ id: selectedClub.id, ...data });
+
+    if (
+      data.visibility === CLUB_VISIBILITY_PUBLIC &&
+      data.description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+    ) {
+      toast.error(
+        `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
+      );
+      return;
+    }
+
+    updateClubMutate({
+      id: selectedClub.id,
+      name: data.name,
+      description: data.description,
+      invitationCode: data.invitationCode,
+      readingMode: data.readingMode,
+      visibility: data.visibility,
+      joinPolicy:
+        data.visibility === CLUB_VISIBILITY_PUBLIC
+          ? data.joinPolicy
+          : CLUB_JOIN_POLICY_OPEN,
+      meetingFormat: data.meetingFormat || null,
+      stateId: data.stateId,
+      cityId: data.cityId,
+    });
   };
 
   const handleCopyInviteLink = () => {
@@ -171,9 +237,22 @@ export default function ManageClub() {
                 Descrição
               </label>
               <Input
-                {...register("description")}
+                {...register("description", {
+                  validate: (value) =>
+                    visibility !== CLUB_VISIBILITY_PUBLIC ||
+                    value.trim().length >= PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+                      ? true
+                      : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
+                })}
                 placeholder="Descrição do clube"
               />
+              {errors.description ? (
+                <span className="text-xs text-red-500">
+                  {typeof errors.description.message === "string"
+                    ? errors.description.message
+                    : "Descrição inválida"}
+                </span>
+              ) : null}
             </div>
 
             <div>
@@ -233,6 +312,15 @@ export default function ManageClub() {
                 )}
               />
             </div>
+
+            <ClubMetadataFields
+              control={control}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+              requireLocation={false}
+            />
           </div>
 
           <Button

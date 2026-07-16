@@ -1,4 +1,10 @@
-import type { ClubReadingMode, ClubStatus } from "../utils/constants/clubs";
+import type {
+  ClubJoinPolicy,
+  ClubReadingMode,
+  ClubStatus,
+  ClubVisibility,
+  MeetingFormat,
+} from "../utils/constants/clubs";
 import type { IUser } from "./IUser";
 
 export interface IClub {
@@ -10,6 +16,11 @@ export interface IClub {
   createdAt: string;
   description?: string;
   readingMode: ClubReadingMode;
+  visibility: ClubVisibility;
+  joinPolicy: ClubJoinPolicy;
+  meetingFormat: MeetingFormat | null;
+  stateId: number | null;
+  cityId: number | null;
 }
 
 export interface IClubWithOwner extends IClub {
@@ -31,6 +42,11 @@ export interface IClubPayload {
   name: string;
   ownerId?: string;
   description: string;
+  visibility: ClubVisibility;
+  joinPolicy?: ClubJoinPolicy;
+  meetingFormat: MeetingFormat;
+  stateId: number;
+  cityId: number;
 }
 
 export interface IEditClubPayload {
@@ -39,6 +55,11 @@ export interface IEditClubPayload {
   description: string;
   invitationCode: string;
   readingMode: ClubReadingMode;
+  visibility: ClubVisibility;
+  joinPolicy: ClubJoinPolicy;
+  meetingFormat: MeetingFormat | null;
+  stateId: number | null;
+  cityId: number | null;
 }
 
 export interface IMembersClub {
@@ -57,5 +78,22 @@ export interface IUserClub {
   ownerId: string;
   status: ClubStatus;
   readingMode: ClubReadingMode;
+  visibility: ClubVisibility;
+  joinPolicy: ClubJoinPolicy;
+  meetingFormat: MeetingFormat | null;
+  stateId: number | null;
+  cityId: number | null;
   member: IMembersClub[];
+}
+
+export interface IState {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface ICity {
+  id: number;
+  name: string;
+  stateId: number;
 }
