@@ -21,37 +21,38 @@ export type ClubMetadataInput = {
   description: string;
 };
 
-function isClubVisibility(
-  value: unknown,
-): value is ClubMetadataInput["visibility"] {
-  return value === ClubVisibility.PRIVATE || value === ClubVisibility.PUBLIC;
+const MEETING_FORMATS = new Set<string>(Object.values(MeetingFormat));
+
+function asMeetingFormat(value: unknown) {
+  return typeof value === "string" && MEETING_FORMATS.has(value)
+    ? (value as ClubMetadataInput["meetingFormat"])
+    : null;
 }
 
-function isClubJoinPolicy(
-  value: unknown,
-): value is ClubMetadataInput["joinPolicy"] {
-  return value === ClubJoinPolicy.OPEN || value === ClubJoinPolicy.APPROVAL;
-}
-
-function isMeetingFormat(
-  value: unknown,
-): value is NonNullable<ClubMetadataInput["meetingFormat"]> {
-  return (
-    value === MeetingFormat.IN_PERSON ||
-    value === MeetingFormat.REMOTE ||
-    value === MeetingFormat.HYBRID
-  );
-}
-
-function parseOptionalPositiveInt(value: unknown): number | null {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
+function asId(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new ClubMetadataValidationError("Cidade ou estado inválido.");
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+async function assertCityInState(cityId: number, stateId: number) {
+  const cityRow = await locationRepository.findCityById(cityId);
+  if (!cityRow || cityRow.stateId !== stateId) {
+    throw new ClubMetadataValidationError(
+      "A cidade selecionada não pertence ao estado informado.",
+    );
   }
-  return parsed;
+}
+
+function assertPublicDescription(visibility: string, description: string) {
+  if (
+    visibility === ClubVisibility.PUBLIC &&
+    description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+  ) {
+    throw new ClubMetadataValidationError(
+      `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
+    );
+  }
 }
 
 export async function resolveClubMetadataForCreate(body: {
@@ -62,35 +63,36 @@ export async function resolveClubMetadataForCreate(body: {
   cityId?: unknown;
   description: string;
 }): Promise<ClubMetadataInput> {
-  const visibility = isClubVisibility(body.visibility)
-    ? body.visibility
-    : ClubVisibility.PRIVATE;
+  const visibility =
+    body.visibility === ClubVisibility.PUBLIC
+      ? ClubVisibility.PUBLIC
+      : ClubVisibility.PRIVATE;
 
-  const joinPolicy = isClubJoinPolicy(body.joinPolicy)
-    ? body.joinPolicy
-    : visibility === ClubVisibility.PUBLIC
-      ? ClubJoinPolicy.APPROVAL
-      : ClubJoinPolicy.OPEN;
+  const meetingFormat = asMeetingFormat(body.meetingFormat);
+  const stateId = asId(body.stateId);
+  const cityId = asId(body.cityId);
 
-  if (!isMeetingFormat(body.meetingFormat)) {
-    throw new ClubMetadataValidationError("Informe o formato dos encontros.");
+  if (!meetingFormat || stateId === null || cityId === null) {
+    throw new ClubMetadataValidationError(
+      "Informe formato, estado e cidade do clube.",
+    );
   }
 
-  const stateId = parseOptionalPositiveInt(body.stateId);
-  const cityId = parseOptionalPositiveInt(body.cityId);
+  await assertCityInState(cityId, stateId);
+  assertPublicDescription(visibility, body.description);
 
-  if (stateId === null || cityId === null) {
-    throw new ClubMetadataValidationError("Informe estado e cidade do clube.");
-  }
-
-  await assertCityBelongsToState(cityId, stateId);
-  assertPublicDescriptionIfNeeded(visibility, body.description);
+  const joinPolicy =
+    visibility === ClubVisibility.PUBLIC &&
+    body.joinPolicy === ClubJoinPolicy.OPEN
+      ? ClubJoinPolicy.OPEN
+      : visibility === ClubVisibility.PUBLIC
+        ? ClubJoinPolicy.APPROVAL
+        : ClubJoinPolicy.OPEN;
 
   return {
     visibility,
-    joinPolicy:
-      visibility === ClubVisibility.PRIVATE ? ClubJoinPolicy.OPEN : joinPolicy,
-    meetingFormat: body.meetingFormat,
+    joinPolicy,
+    meetingFormat,
     stateId,
     cityId,
     description: body.description,
@@ -104,106 +106,50 @@ export async function resolveClubMetadataForUpdate(input: {
   stateId?: unknown;
   cityId?: unknown;
   description?: string;
-  current: {
-    visibility: ClubMetadataInput["visibility"];
-    joinPolicy: ClubMetadataInput["joinPolicy"];
-    meetingFormat: ClubMetadataInput["meetingFormat"];
-    stateId: number | null;
-    cityId: number | null;
-    description: string;
-  };
+  current: ClubMetadataInput;
 }): Promise<ClubMetadataInput> {
-  const visibility = isClubVisibility(input.visibility)
-    ? input.visibility
-    : input.current.visibility;
-
-  const joinPolicy = isClubJoinPolicy(input.joinPolicy)
-    ? input.joinPolicy
-    : visibility === ClubVisibility.PUBLIC
-      ? input.current.joinPolicy === ClubJoinPolicy.OPEN
-        ? ClubJoinPolicy.OPEN
-        : ClubJoinPolicy.APPROVAL
-      : ClubJoinPolicy.OPEN;
-
-  if (input.meetingFormat !== undefined && input.meetingFormat !== null) {
-    if (!isMeetingFormat(input.meetingFormat)) {
-      throw new ClubMetadataValidationError("Formato dos encontros inválido.");
-    }
-  }
+  const visibility =
+    input.visibility === ClubVisibility.PUBLIC ||
+    input.visibility === ClubVisibility.PRIVATE
+      ? input.visibility
+      : input.current.visibility;
 
   const meetingFormat =
-    input.meetingFormat === undefined
-      ? input.current.meetingFormat
-      : input.meetingFormat === null
-        ? null
-        : input.meetingFormat;
-
+    asMeetingFormat(input.meetingFormat) ?? input.current.meetingFormat;
   const stateId =
-    input.stateId === undefined
-      ? input.current.stateId
-      : parseOptionalPositiveInt(input.stateId);
+    input.stateId === undefined ? input.current.stateId : asId(input.stateId) ?? input.current.stateId;
   const cityId =
-    input.cityId === undefined
-      ? input.current.cityId
-      : parseOptionalPositiveInt(input.cityId);
-
+    input.cityId === undefined ? input.current.cityId : asId(input.cityId) ?? input.current.cityId;
   const description = input.description ?? input.current.description;
 
   if (visibility === ClubVisibility.PUBLIC) {
-    if (!isMeetingFormat(meetingFormat)) {
+    if (!meetingFormat || stateId === null || cityId === null) {
       throw new ClubMetadataValidationError(
-        "Clubes públicos precisam do formato dos encontros.",
+        "Clubes públicos precisam de formato, estado e cidade.",
       );
     }
-    if (stateId === null || cityId === null) {
-      throw new ClubMetadataValidationError(
-        "Clubes públicos precisam de estado e cidade.",
-      );
-    }
-    await assertCityBelongsToState(cityId, stateId);
-    assertPublicDescriptionIfNeeded(visibility, description);
-  } else if (stateId !== null || cityId !== null) {
-    if (stateId === null || cityId === null) {
-      throw new ClubMetadataValidationError(
-        "Informe estado e cidade juntos, ou deixe ambos vazios.",
-      );
-    }
-    await assertCityBelongsToState(cityId, stateId);
-    if (meetingFormat !== null && !isMeetingFormat(meetingFormat)) {
-      throw new ClubMetadataValidationError("Formato dos encontros inválido.");
-    }
+    await assertCityInState(cityId, stateId);
+    assertPublicDescription(visibility, description);
+  } else if (stateId !== null && cityId !== null) {
+    await assertCityInState(cityId, stateId);
   }
+
+  const joinPolicy =
+    visibility === ClubVisibility.PRIVATE
+      ? ClubJoinPolicy.OPEN
+      : input.joinPolicy === ClubJoinPolicy.OPEN ||
+          input.joinPolicy === ClubJoinPolicy.APPROVAL
+        ? input.joinPolicy
+        : input.current.joinPolicy === ClubJoinPolicy.OPEN
+          ? ClubJoinPolicy.OPEN
+          : ClubJoinPolicy.APPROVAL;
 
   return {
     visibility,
-    joinPolicy:
-      visibility === ClubVisibility.PRIVATE ? ClubJoinPolicy.OPEN : joinPolicy,
-    meetingFormat: isMeetingFormat(meetingFormat) ? meetingFormat : null,
+    joinPolicy,
+    meetingFormat,
     stateId,
     cityId,
     description,
   };
-}
-
-async function assertCityBelongsToState(cityId: number, stateId: number) {
-  const cityRow = await locationRepository.findCityById(cityId);
-  if (!cityRow || cityRow.stateId !== stateId) {
-    throw new ClubMetadataValidationError(
-      "A cidade selecionada não pertence ao estado informado.",
-    );
-  }
-}
-
-function assertPublicDescriptionIfNeeded(
-  visibility: ClubMetadataInput["visibility"],
-  description: string,
-) {
-  if (visibility !== ClubVisibility.PUBLIC) {
-    return;
-  }
-  if (description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH) {
-    throw new ClubMetadataValidationError(
-      `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
-    );
-  }
 }
