@@ -3,6 +3,11 @@ import { ClubStatus } from "../enums/clubStatus";
 import { ReadingMode } from "../enums/readingMode";
 import { generateUniqueInvitationCode } from "../utils/codeGenerator";
 import { createId } from "../utils/id";
+import {
+  ClubMetadataValidationError,
+  resolveClubMetadataForCreate,
+  resolveClubMetadataForUpdate,
+} from "../utils/clubMetadata";
 import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
 
@@ -12,6 +17,8 @@ export class ClubInvitationCodeConflictError extends Error {
     this.name = "ClubInvitationCodeConflictError";
   }
 }
+
+export { ClubMetadataValidationError };
 
 export async function getMyClubs(userId: string) {
   const clubIds = await clubRepository.findClubIdsByUserId(userId);
@@ -37,7 +44,21 @@ export async function createClub(input: {
   description: string;
   ownerId: string;
   readingMode: (typeof ReadingMode)[keyof typeof ReadingMode];
+  visibility?: unknown;
+  joinPolicy?: unknown;
+  meetingFormat?: unknown;
+  stateId?: unknown;
+  cityId?: unknown;
 }) {
+  const metadata = await resolveClubMetadataForCreate({
+    visibility: input.visibility,
+    joinPolicy: input.joinPolicy,
+    meetingFormat: input.meetingFormat,
+    stateId: input.stateId,
+    cityId: input.cityId,
+    description: input.description,
+  });
+
   try {
     const generatedCode = await generateUniqueInvitationCode(input.name, db);
     const newClub = await clubRepository.insertClub({
@@ -48,6 +69,11 @@ export async function createClub(input: {
       ownerId: input.ownerId,
       status: ClubStatus.ACTIVE,
       readingMode: input.readingMode,
+      visibility: metadata.visibility,
+      joinPolicy: metadata.joinPolicy,
+      meetingFormat: metadata.meetingFormat,
+      stateId: metadata.stateId,
+      cityId: metadata.cityId,
     });
 
     if (!newClub) {
@@ -101,10 +127,47 @@ export async function updateClub(
     description?: string;
     invitationCode: string;
     readingMode?: (typeof ReadingMode)[keyof typeof ReadingMode];
+    visibility?: unknown;
+    joinPolicy?: unknown;
+    meetingFormat?: unknown;
+    stateId?: unknown;
+    cityId?: unknown;
   },
 ) {
+  const currentClub = await clubRepository.findClubById(id);
+  if (!currentClub) {
+    return null;
+  }
+
+  const metadata = await resolveClubMetadataForUpdate({
+    visibility: input.visibility,
+    joinPolicy: input.joinPolicy,
+    meetingFormat: input.meetingFormat,
+    stateId: input.stateId,
+    cityId: input.cityId,
+    description: input.description,
+    current: {
+      visibility: currentClub.visibility,
+      joinPolicy: currentClub.joinPolicy,
+      meetingFormat: currentClub.meetingFormat,
+      stateId: currentClub.stateId,
+      cityId: currentClub.cityId,
+      description: currentClub.description,
+    },
+  });
+
   try {
-    return await clubRepository.updateClubById(id, input);
+    return await clubRepository.updateClubById(id, {
+      name: input.name,
+      description: metadata.description,
+      invitationCode: input.invitationCode,
+      readingMode: input.readingMode,
+      visibility: metadata.visibility,
+      joinPolicy: metadata.joinPolicy,
+      meetingFormat: metadata.meetingFormat,
+      stateId: metadata.stateId,
+      cityId: metadata.cityId,
+    });
   } catch (error: any) {
     if (error?.code === "23503") {
       return null;

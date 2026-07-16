@@ -1,10 +1,21 @@
 import { Request, Response } from "express";
 import * as clubService from "../../services/clubService";
+import { ClubMetadataValidationError } from "../../services/clubService";
 import { respondIfNotClubOwner } from "../../utils/clubAccess";
 import { ReadingMode } from "../../enums/readingMode";
 
 export const updateClub = async (req: Request, res: Response) => {
-  const { name, description, invitationCode, readingMode } = req.body;
+  const {
+    name,
+    description,
+    invitationCode,
+    readingMode,
+    visibility,
+    joinPolicy,
+    meetingFormat,
+    stateId,
+    cityId,
+  } = req.body;
   const { id } = req.params;
 
   if (!id || !name || !invitationCode) {
@@ -31,6 +42,11 @@ export const updateClub = async (req: Request, res: Response) => {
       description,
       invitationCode,
       readingMode,
+      visibility,
+      joinPolicy,
+      meetingFormat,
+      stateId,
+      cityId,
     });
 
     if (!updatedClub) {
@@ -42,6 +58,9 @@ export const updateClub = async (req: Request, res: Response) => {
       club: updatedClub,
     });
   } catch (error: any) {
+    if (error instanceof ClubMetadataValidationError) {
+      return res.status(400).json({ message: error.message });
+    }
     if (error?.code === "23503") {
       return res.status(404).json({ message: "Clube não encontrado" });
     }

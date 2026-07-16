@@ -44,6 +44,19 @@ export const feedbackTypeEnum = pgEnum("FeedbackTypeEnum", [
   "idea",
   "other",
 ]);
+export const clubVisibilityEnum = pgEnum("ClubVisibilityEnum", [
+  "private",
+  "public",
+]);
+export const clubJoinPolicyEnum = pgEnum("ClubJoinPolicyEnum", [
+  "open",
+  "approval",
+]);
+export const meetingFormatEnum = pgEnum("MeetingFormatEnum", [
+  "in_person",
+  "remote",
+  "hybrid",
+]);
 
 // State / City (IBGE — PK = código IBGE)
 export const state = pgTable(
@@ -130,9 +143,20 @@ export const club = pgTable(
       .defaultNow()
       .notNull(),
     description: text("description").notNull(),
+    visibility: clubVisibilityEnum("visibility").default("private").notNull(),
+    joinPolicy: clubJoinPolicyEnum("join_policy").default("open").notNull(),
+    meetingFormat: meetingFormatEnum("meeting_format"),
+    stateId: integer("state_id").references(() => state.id, {
+      onDelete: "restrict",
+    }),
+    cityId: integer("city_id").references(() => city.id, {
+      onDelete: "restrict",
+    }),
   },
   (table) => [
     uniqueIndex("Club_invitation_code_key").on(table.invitationCode),
+    index("Club_visibility_idx").on(table.visibility),
+    index("Club_city_id_idx").on(table.cityId),
   ]
 );
 
@@ -358,6 +382,14 @@ export const clubRelations = relations(club, ({ one, many }) => ({
   owner: one(user, {
     fields: [club.ownerId],
     references: [user.id],
+  }),
+  state: one(state, {
+    fields: [club.stateId],
+    references: [state.id],
+  }),
+  city: one(city, {
+    fields: [club.cityId],
+    references: [city.id],
   }),
   meetings: many(meeting),
   members: many(member),

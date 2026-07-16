@@ -6,6 +6,7 @@ import cron from "node-cron";
 import authRoutes from "../routes/authRoutes";
 import userRoutes from "../routes/userRoutes";
 import clubRoutes from "../routes/clubRoutes";
+import locationRoutes from "../routes/locationRoutes";
 import memberRoutes from "../routes/memberRoutes";
 import bookRoutes from "../routes/bookRoutes";
 import meetingRoutes from "../routes/meetingRoutes";
@@ -28,6 +29,7 @@ app.use("/api", googleAuthRoutes);
 
 app.use(authRoutes);
 app.use(clubRoutes);
+app.use(locationRoutes);
 app.use(userRoutes);
 app.use(feedRoutes);
 app.use(feedbackRoutes);

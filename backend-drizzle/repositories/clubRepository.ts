@@ -64,6 +64,15 @@ export async function findClubOwnerId(clubId: string): Promise<string | null> {
   return row?.ownerId ?? null;
 }
 
+export async function findClubById(clubId: string) {
+  const [row] = await db
+    .select()
+    .from(club)
+    .where(eq(club.id, clubId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function findUserNameById(userId: string) {
   const [row] = await db
     .select({ name: user.name })
@@ -80,21 +89,14 @@ export async function insertClub(values: typeof club.$inferInsert) {
 
 export async function updateClubById(
   id: string,
-  data: {
+  data: Partial<typeof club.$inferInsert> & {
     name: string;
-    description?: string;
     invitationCode: string;
-    readingMode?: (typeof ReadingMode)[keyof typeof ReadingMode];
   }
 ) {
   const [row] = await db
     .update(club)
-    .set({
-      name: data.name,
-      description: data.description ?? undefined,
-      invitationCode: data.invitationCode,
-      readingMode: data.readingMode,
-    })
+    .set(data)
     .where(eq(club.id, id))
     .returning();
   return row ?? null;
@@ -142,6 +144,11 @@ export async function findOwnedClubsPaginated(
       readingMode: true,
       createdAt: true,
       description: true,
+      visibility: true,
+      joinPolicy: true,
+      meetingFormat: true,
+      stateId: true,
+      cityId: true,
     },
   });
 }
