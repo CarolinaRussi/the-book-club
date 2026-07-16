@@ -11,7 +11,7 @@ import {
   MdOutlinePerson,
   MdOutlineSettings,
 } from "react-icons/md";
-import { MessageSquarePlus } from "lucide-react";
+import { Compass, MessageSquarePlus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 type NavItem = {
   to: string;
   label: string;
-  Icon: ComponentType<{ size?: number }>;
+  Icon: ComponentType<{ size?: number; className?: string }>;
   requiresClub: boolean;
   requiresClubAdmin: boolean;
   iconOnlyOnDesktop?: boolean;
@@ -36,6 +36,13 @@ const generalNavItems: NavItem[] = [
     to: "/home",
     label: "Página inicial",
     Icon: FiHome,
+    requiresClub: false,
+    requiresClubAdmin: false,
+  },
+  {
+    to: "/explorar",
+    label: "Explorar",
+    Icon: Compass,
     requiresClub: false,
     requiresClubAdmin: false,
   },

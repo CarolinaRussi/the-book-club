@@ -97,3 +97,30 @@ export interface ICity {
   name: string;
   stateId: number;
 }
+
+export interface IDiscoverClub {
+  id: string;
+  name: string;
+  description: string;
+  joinPolicy: ClubJoinPolicy;
+  meetingFormat: MeetingFormat | null;
+  createdAt: string;
+  memberCount: number;
+  isMember: boolean;
+  state: {
+    id: number;
+    code: string;
+    name: string;
+  } | null;
+  city: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface IDiscoverClubsResponse {
+  data: IDiscoverClub[];
+  totalPages: number;
+  currentPage: number;
+  totalItems: number;
+}

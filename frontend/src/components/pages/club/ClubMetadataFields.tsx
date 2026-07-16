@@ -336,7 +336,7 @@ export function ClubMetadataFields<
         <label className="flex items-start gap-2 text-sm text-muted-foreground">
           <input
             type="checkbox"
-            className="mt-1"
+            className="mt-1 accent-primary"
             {...register(
               "publicListingAcknowledged" as FieldPath<TFieldValues>,
               {

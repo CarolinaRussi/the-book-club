@@ -21,6 +21,8 @@ import UserProfile from "./pages/UserProfile.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import InviteJoin from "./pages/InviteJoin.tsx";
+import Explore from "./pages/Explore.tsx";
+import ExploreClub from "./pages/ExploreClub.tsx";
 
 const router = createBrowserRouter([
   {
@@ -45,6 +47,14 @@ const router = createBrowserRouter([
           {
             path: "/home",
             element: <Home />,
+          },
+          {
+            path: "/explorar",
+            element: <Explore />,
+          },
+          {
+            path: "/explorar/:clubId",
+            element: <ExploreClub />,
           },
           {
             path: "/me",
