@@ -1,68 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import {
-  Controller,
-  FormProvider,
-  useForm,
-  type SubmitHandler,
-} from "react-hook-form";
+import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { FaCheck, FaRegCopy } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import { updateClub, deleteClub } from "@/api/mutations/clubMutate";
 import type { IApiError } from "@/types/IApi";
 import type { IClub } from "@/types/IClubs";
 import {
-  CLUB_JOIN_POLICY_APPROVAL,
   CLUB_JOIN_POLICY_OPEN,
-  CLUB_READING_MODE_VALUES,
-  CLUB_VISIBILITY_PRIVATE,
   CLUB_VISIBILITY_PUBLIC,
-  PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH,
-  clubReadingModeLabels,
-  type ClubReadingMode,
-  type MeetingFormat,
 } from "@/utils/constants/clubs";
 import { buildInviteUrl } from "@/utils/inviteUrl";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  ClubMetadataFields,
-  type ClubMetadataFormValues,
-} from "@/components/pages/club/ClubMetadataFields";
 import { JoinRequestsPanel } from "@/components/pages/club/JoinRequestsPanel";
 import { ManageClubDangerZone } from "@/components/pages/club/ManageClubDangerZone";
-
-type ManageClubFormValues = ClubMetadataFormValues & {
-  name: string;
-  description: string;
-  invitationCode: string;
-  readingMode: ClubReadingMode;
-};
-
-function toFormValues(club: IClub): ManageClubFormValues {
-  return {
-    name: club.name || "",
-    description: club.description || "",
-    invitationCode: club.invitationCode || "",
-    readingMode: club.readingMode ?? "book",
-    visibility: club.visibility ?? CLUB_VISIBILITY_PRIVATE,
-    joinPolicy: club.joinPolicy ?? CLUB_JOIN_POLICY_APPROVAL,
-    meetingFormat: (club.meetingFormat ?? "") as MeetingFormat | "",
-    stateId: club.stateId != null ? Number(club.stateId) : null,
-    cityId: club.cityId != null ? Number(club.cityId) : null,
-    publicListingAcknowledged: club.visibility === CLUB_VISIBILITY_PUBLIC,
-  };
-}
+import {
+  ManageClubDetailsForm,
+  toManageClubFormValues,
+  type ManageClubFormValues,
+} from "@/components/pages/club/ManageClubDetailsForm";
 
 export default function ManageClub() {
   const { user } = useAuth();
@@ -80,20 +37,12 @@ function ManageClubForm({ club }: { club: IClub }) {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const form = useForm<ManageClubFormValues>({
-    defaultValues: toFormValues(club),
-    values: toFormValues(club),
+    defaultValues: toManageClubFormValues(club),
+    values: toManageClubFormValues(club),
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = form;
-
+  const { handleSubmit, watch } = form;
   const invitationCodeValue = watch("invitationCode");
-  const visibility = watch("visibility");
 
   const { mutate: updateClubMutate, isPending: isUpdating } = useMutation({
     mutationFn: updateClub,
@@ -124,16 +73,6 @@ function ManageClubForm({ club }: { club: IClub }) {
   });
 
   const onSubmit: SubmitHandler<ManageClubFormValues> = (data) => {
-    if (
-      data.visibility === CLUB_VISIBILITY_PUBLIC &&
-      data.description.trim().length < PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
-    ) {
-      toast.error(
-        `Clubes públicos precisam de uma descrição com pelo menos ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres.`,
-      );
-      return;
-    }
-
     updateClubMutate({
       id: club.id,
       name: data.name,
@@ -177,112 +116,11 @@ function ManageClubForm({ club }: { club: IClub }) {
 
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Detalhes do clube
-            </h2>
-            <div className="grid gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Nome</label>
-                <Input
-                  {...register("name", { required: true })}
-                  placeholder="Nome do clube"
-                />
-                {errors.name ? (
-                  <span className="text-xs text-red-500">Obrigatório</span>
-                ) : null}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Descrição
-                </label>
-                <Input
-                  {...register("description", {
-                    validate: (value) =>
-                      visibility !== CLUB_VISIBILITY_PUBLIC ||
-                      value.trim().length >= PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
-                        ? true
-                        : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
-                  })}
-                  placeholder="Descrição do clube"
-                />
-                {errors.description?.message ? (
-                  <span className="text-xs text-red-500">
-                    {errors.description.message}
-                  </span>
-                ) : null}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Código de convite
-                </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    {...register("invitationCode")}
-                    placeholder="Código"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCopyInviteLink}
-                    className="shrink-0"
-                  >
-                    {copiedLink ? (
-                      <>
-                        <FaCheck className="text-green-600" />
-                        Link copiado
-                      </>
-                    ) : (
-                      <>
-                        <FaRegCopy />
-                        Copiar link
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Alterar o código invalida links de convite antigos.
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Modo de leitura
-                </label>
-                <Controller
-                  control={control}
-                  name="readingMode"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione o modo de leitura" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CLUB_READING_MODE_VALUES.map((readingMode) => (
-                          <SelectItem key={readingMode} value={readingMode}>
-                            {clubReadingModeLabels[readingMode]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <ClubMetadataFields />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isUpdating}
-              className="w-full sm:w-auto"
-            >
-              {isUpdating ? "Salvando..." : "Salvar dados"}
-            </Button>
-          </div>
+          <ManageClubDetailsForm
+            isUpdating={isUpdating}
+            copiedLink={copiedLink}
+            onCopyInviteLink={handleCopyInviteLink}
+          />
         </form>
       </FormProvider>
 
