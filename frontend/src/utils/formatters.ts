@@ -13,7 +13,9 @@ export const getInitials = (name: string) => {
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-function parseDate(value: string | Date | undefined): Date | null {
+export function parseLocalDate(
+  value: string | Date | undefined,
+): Date | null {
   if (value == null) return null;
   if (value instanceof Date)
     return Number.isNaN(value.getTime()) ? null : value;
@@ -27,7 +29,7 @@ const monthLongPt = (d: Date) =>
   capitalize(new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(d));
 
 export const formatMonthYear = (dateString: string): string => {
-  const date = parseDate(dateString);
+  const date = parseLocalDate(dateString);
   if (!date) return "";
   return `${monthLongPt(date)} ${date.getFullYear()}`;
 };
@@ -35,7 +37,7 @@ export const formatMonthYear = (dateString: string): string => {
 export const formatDayMonthYear = (
   dateValue: string | Date | undefined,
 ): string => {
-  const date = parseDate(dateValue);
+  const date = parseLocalDate(dateValue);
   if (!date) return "";
   const day = String(date.getDate()).padStart(2, "0");
   return `${day} de ${monthLongPt(date)} de ${date.getFullYear()}`;
@@ -66,7 +68,7 @@ export function formatMeetingTimeForApi(timeFromInput: string): string {
 export const formatRelativeTime = (
   dateValue: string | Date | undefined,
 ): string => {
-  const date = parseDate(
+  const date = parseLocalDate(
     dateValue instanceof Date ? dateValue.toISOString() : dateValue,
   );
   if (!date) return "";

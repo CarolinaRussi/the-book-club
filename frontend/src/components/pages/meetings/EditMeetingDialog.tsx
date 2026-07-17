@@ -31,6 +31,7 @@ import {
 } from "@/utils/constants/meeting";
 import {
   formatMeetingDateForApi,
+  parseLocalDate,
   formatMeetingTimeForApi,
   formatTime,
 } from "@/utils/formatters";
@@ -56,7 +57,7 @@ type EditMeetingDialogProps = {
 function toFormValues(meeting: IMeeting): MeetingFormValues {
   return {
     location: meeting.location || "",
-    meetingDate: new Date(meeting.meetingDate),
+    meetingDate: parseLocalDate(meeting.meetingDate) ?? undefined,
     meetingTime: meeting.meetingTime ? formatTime(meeting.meetingTime) : "",
     description: meeting.description || "",
     bookId: meeting.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
