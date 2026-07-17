@@ -2,6 +2,7 @@ import { MeetingStatus } from "../enums/meetingStatus";
 import { BookStatus } from "../enums/bookStatus";
 import { ReadingMode } from "../enums/readingMode";
 import { createId } from "../utils/id";
+import { toMeetingDateYmd } from "../utils/meetingDate";
 import * as meetingRepository from "../repositories/meetingRepository";
 import * as meetingRecapRepository from "../repositories/meetingRecapRepository";
 import * as bookRepository from "../repositories/bookRepository";
@@ -164,7 +165,7 @@ export async function createMeeting(input: {
     createdByUserId: input.createdByUserId,
     location: input.location,
     description: input.description ?? null,
-    meetingDate: new Date(input.meetingDate).toISOString().slice(0, 10),
+    meetingDate: toMeetingDateYmd(input.meetingDate),
     meetingTime: input.meetingTime,
     bookId,
     chapterStart,
@@ -232,7 +233,7 @@ export async function updateMeeting(
     {
       location: input.location,
       description: input.description ?? null,
-      meetingDate: new Date(input.meetingDate).toISOString().slice(0, 10),
+      meetingDate: toMeetingDateYmd(input.meetingDate),
       meetingTime: input.meetingTime,
       bookId,
       chapterStart,
@@ -328,10 +329,7 @@ export async function autoCompleteOverdueMeetings(limit = 100) {
 
   for (const meetingRow of overdueMeetings) {
     try {
-      const meetingDate =
-        typeof meetingRow.meetingDate === "string"
-          ? meetingRow.meetingDate.slice(0, 10)
-          : new Date(meetingRow.meetingDate).toISOString().slice(0, 10);
+      const meetingDate = toMeetingDateYmd(meetingRow.meetingDate);
 
       await updateMeeting(meetingRow.id, {
         clubId: meetingRow.clubId,

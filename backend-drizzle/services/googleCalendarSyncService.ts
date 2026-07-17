@@ -5,6 +5,7 @@ import {
   getCalendarClientForUserId,
   GoogleCalendarNotConnectedError,
 } from "../utils/googleCalendarClient";
+import { toMeetingDateYmd } from "../utils/meetingDate";
 
 const DEFAULT_DURATION_MIN = 120;
 const DEFAULT_TIMEZONE = "America/Sao_Paulo";
@@ -79,37 +80,50 @@ function formatGoogleCalendarFailure(error: unknown): string {
 }
 
 function normalizeTime(time: string): string {
-  const parts = time.split(":");
+  const parts = String(time).split(":");
   const hours = parts[0] ?? "00";
   const minutes = parts[1] ?? "00";
   const seconds = (parts[2] ?? "00").slice(0, 2);
   return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
 }
 
-function meetingDateToYmd(date: string | Date): string {
-  if (typeof date === "string") {
-    return date.slice(0, 10);
-  }
-  return date.toISOString().slice(0, 10);
+function addMinutesToWallClock(
+  dateStr: string,
+  timeStr: string,
+  minutesToAdd: number,
+): { dateStr: string; timeStr: string } {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes, rawSeconds] = timeStr.split(":").map(Number);
+  const seconds = rawSeconds || 0;
+  const totalMinutes = hours * 60 + minutes + minutesToAdd;
+  const dayDelta = Math.floor(totalMinutes / (24 * 60));
+  const minutesInDay = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const endHours = Math.floor(minutesInDay / 60);
+  const endMinutes = minutesInDay % 60;
+  const cursor = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  cursor.setUTCDate(cursor.getUTCDate() + dayDelta);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return {
+    dateStr: `${cursor.getUTCFullYear()}-${pad(cursor.getUTCMonth() + 1)}-${pad(cursor.getUTCDate())}`,
+    timeStr: `${pad(endHours)}:${pad(endMinutes)}:${pad(seconds)}`,
+  };
 }
 
 function buildStartEndDateTime(
   meetingDate: string | Date,
   meetingTime: string,
 ): { start: { dateTime: string; timeZone: string }; end: { dateTime: string; timeZone: string } } {
-  const dateStr = meetingDateToYmd(meetingDate);
+  const dateStr = toMeetingDateYmd(meetingDate);
   const timeStr = normalizeTime(meetingTime);
   const timeZone = calendarTimeZone();
-  const startLocal = new Date(`${dateStr}T${timeStr}`);
-  const endLocal = new Date(
-    startLocal.getTime() + meetingDurationMinutes() * 60_000,
+  const end = addMinutesToWallClock(
+    dateStr,
+    timeStr,
+    meetingDurationMinutes(),
   );
-  const pad = (value: number) => String(value).padStart(2, "0");
-  const formatLocalDateTime = (dateTime: Date) =>
-    `${dateTime.getFullYear()}-${pad(dateTime.getMonth() + 1)}-${pad(dateTime.getDate())}T${pad(dateTime.getHours())}:${pad(dateTime.getMinutes())}:${pad(dateTime.getSeconds())}`;
   return {
-    start: { dateTime: formatLocalDateTime(startLocal), timeZone },
-    end: { dateTime: formatLocalDateTime(endLocal), timeZone },
+    start: { dateTime: `${dateStr}T${timeStr}`, timeZone },
+    end: { dateTime: `${end.dateStr}T${end.timeStr}`, timeZone },
   };
 }
 
