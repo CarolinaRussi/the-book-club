@@ -170,17 +170,12 @@ export async function findMeetingRecapsFeedByIds(
       meetingDate: meeting.meetingDate,
       meetingTime: meeting.meetingTime,
       meetingLocation: meeting.location,
-      bookId: book.id,
-      bookTitle: book.title,
-      bookAuthor: book.author,
-      bookCoverUrl: book.coverUrl,
     })
     .from(meetingRecap)
     .innerJoin(meeting, eq(meetingRecap.meetingId, meeting.id))
     .innerJoin(club, eq(meeting.clubId, club.id))
     .innerJoin(member, eq(member.clubId, meeting.clubId))
     .innerJoin(user, eq(meetingRecap.createdByUserId, user.id))
-    .leftJoin(book, eq(meeting.bookId, book.id))
     .where(
       and(
         meetingRecapFeedFilter(viewerUserId, filterClubIds),

@@ -1,5 +1,6 @@
 import * as feedRepository from "../repositories/feedRepository";
 import * as clubRepository from "../repositories/clubRepository";
+import * as meetingRepository from "../repositories/meetingRepository";
 
 type FeedSortKey = {
   id: string;
@@ -98,6 +99,10 @@ export async function getMyFeedPaginated(
     ),
   ]);
 
+  const booksByMeetingId = await meetingRepository.findMeetingBooksByMeetingIds(
+    recapRows.map((row) => row.meetingId)
+  );
+
   const bookIds = [...new Set(finishedRows.map((row) => row.bookId))];
   const clubLinks = await feedRepository.findViewerClubsForBookIds(
     viewerUserId,
@@ -166,14 +171,7 @@ export async function getMyFeedPaginated(
           meetingTime: row.meetingTime,
           location: row.meetingLocation,
         },
-        book: row.bookId
-          ? {
-              id: row.bookId,
-              title: row.bookTitle,
-              author: row.bookAuthor,
-              coverUrl: row.bookCoverUrl,
-            }
-          : null,
+        books: booksByMeetingId.get(row.meetingId) ?? [],
         text: row.text,
         imageUrl: row.imageUrl,
       },

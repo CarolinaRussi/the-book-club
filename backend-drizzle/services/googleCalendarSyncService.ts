@@ -132,9 +132,14 @@ type MeetingForCal = NonNullable<
 >;
 
 function buildSummary(meeting: MeetingForCal): string {
-  const bookTitle = meeting.book?.title?.trim();
-  if (bookTitle) {
-    return `Encontro: ${bookTitle}`;
+  const bookTitles = (meeting.meetingBooks ?? [])
+    .map((meetingBookRow) => meetingBookRow.book?.title?.trim())
+    .filter((title): title is string => Boolean(title));
+
+  if (bookTitles.length > 0) {
+    const joined = `Encontro: ${bookTitles.join(" · ")}`;
+    if (joined.length <= 100) return joined;
+    return `${joined.slice(0, 97)}...`;
   }
   return `Encontro — ${meeting.club?.name ?? "Entrelivros"}`;
 }
@@ -144,8 +149,13 @@ function buildDescription(meeting: MeetingForCal): string {
   if (meeting.club?.name) {
     lines.push(`Clube: ${meeting.club.name}`);
   }
-  if (meeting.book?.title) {
-    lines.push(`Livro: ${meeting.book.title}`);
+  const bookTitles = (meeting.meetingBooks ?? [])
+    .map((meetingBookRow) => meetingBookRow.book?.title?.trim())
+    .filter((title): title is string => Boolean(title));
+  if (bookTitles.length === 1) {
+    lines.push(`Livro: ${bookTitles[0]}`);
+  } else if (bookTitles.length > 1) {
+    lines.push(`Livros:\n${bookTitles.map((title) => `- ${title}`).join("\n")}`);
   }
   if (meeting.chapterStart != null && meeting.chapterEnd != null) {
     lines.push(`Capítulos: ${meeting.chapterStart}–${meeting.chapterEnd}`);

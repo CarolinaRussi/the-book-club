@@ -9,6 +9,8 @@ import * as bookRepository from "../repositories/bookRepository";
 import * as clubRepository from "../repositories/clubRepository";
 import * as googleCalendarSyncService from "./googleCalendarSyncService";
 
+const MAX_MEETING_BOOKS = 4;
+
 export class InvalidMeetingChapterRangeError extends Error {
   constructor(message: string) {
     super(message);
@@ -16,40 +18,124 @@ export class InvalidMeetingChapterRangeError extends Error {
   }
 }
 
-function formatMeetingBook(meeting: {
+export class InvalidMeetingBooksError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidMeetingBooksError";
+  }
+}
+
+type MeetingBookLink = {
   book: {
     id: string;
     title: string;
     author: string | null;
     coverUrl: string | null;
   } | null;
+};
+
+function formatMeetingBooks(meetingBooks: MeetingBookLink[]) {
+  return meetingBooks
+    .map((meetingBookRow) => meetingBookRow.book)
+    .filter(
+      (
+        bookRow
+      ): bookRow is {
+        id: string;
+        title: string;
+        author: string | null;
+        coverUrl: string | null;
+      } => bookRow != null
+    );
+}
+
+function normalizeBookIds(bookIds?: string[] | null): string[] {
+  if (!bookIds || !Array.isArray(bookIds)) return [];
+  const uniqueBookIds: string[] = [];
+  for (const bookId of bookIds) {
+    if (typeof bookId !== "string" || bookId.length === 0) continue;
+    if (!uniqueBookIds.includes(bookId)) {
+      uniqueBookIds.push(bookId);
+    }
+  }
+  return uniqueBookIds;
+}
+
+async function validateAndResolveBookIds(input: {
+  clubId: string;
+  bookIds?: string[] | null;
 }) {
-  return meeting.book
-    ? {
-        id: meeting.book.id,
-        title: meeting.book.title,
-        author: meeting.book.author,
-        coverUrl: meeting.book.coverUrl,
-      }
-    : null;
+  const bookIds = normalizeBookIds(input.bookIds);
+
+  if (bookIds.length > MAX_MEETING_BOOKS) {
+    throw new InvalidMeetingBooksError(
+      `Um encontro pode ter no máximo ${MAX_MEETING_BOOKS} livros.`
+    );
+  }
+
+  if (bookIds.length === 0) {
+    return bookIds;
+  }
+
+  const readingMode = await meetingRepository.findClubReadingModeById(
+    input.clubId
+  );
+  if (readingMode === ReadingMode.CHAPTERS && bookIds.length > 1) {
+    throw new InvalidMeetingBooksError(
+      "Clubes com leitura por capítulos só podem vincular um livro por encontro."
+    );
+  }
+
+  const clubBookLinks =
+    await meetingRepository.findActiveClubBooksByClubAndBookIds(
+      input.clubId,
+      bookIds
+    );
+
+  if (clubBookLinks.length !== bookIds.length) {
+    throw new InvalidMeetingBooksError(
+      "Um ou mais livros não pertencem a este clube."
+    );
+  }
+
+  return bookIds;
+}
+
+async function markClubBooksStarted(clubId: string, bookIds: string[]) {
+  if (bookIds.length === 0) return;
+
+  const clubBookLinks =
+    await meetingRepository.findActiveClubBooksByClubAndBookIds(
+      clubId,
+      bookIds
+    );
+
+  for (const clubBookLink of clubBookLinks) {
+    if (clubBookLink.status !== BookStatus.STARTED) {
+      await meetingRepository.updateClubBookStatusById(
+        clubBookLink.id,
+        BookStatus.STARTED
+      );
+    }
+  }
 }
 
 export async function getMeetingsFromClub(clubId: string) {
   const meetingsList = await meetingRepository.findMeetingsWithBookByClubId(
     clubId
   );
-  return meetingsList.map((meeting) => ({
-    id: meeting.id,
-    status: meeting.status,
-    location: meeting.location,
-    description: meeting.description,
-    meetingDate: meeting.meetingDate,
-    meetingTime: meeting.meetingTime,
-    chapterStart: meeting.chapterStart,
-    chapterEnd: meeting.chapterEnd,
-    googleEventId: meeting.googleEventId,
-    googleSyncError: meeting.googleSyncError,
-    book: formatMeetingBook(meeting),
+  return meetingsList.map((meetingRow) => ({
+    id: meetingRow.id,
+    status: meetingRow.status,
+    location: meetingRow.location,
+    description: meetingRow.description,
+    meetingDate: meetingRow.meetingDate,
+    meetingTime: meetingRow.meetingTime,
+    chapterStart: meetingRow.chapterStart,
+    chapterEnd: meetingRow.chapterEnd,
+    googleEventId: meetingRow.googleEventId,
+    googleSyncError: meetingRow.googleSyncError,
+    books: formatMeetingBooks(meetingRow.meetingBooks),
   }));
 }
 
@@ -60,11 +146,7 @@ export async function getPastMeetingsFromClub(
 ) {
   const skip = (page - 1) * limit;
   const [meetingsList, totalItems] = await Promise.all([
-    meetingRepository.findPastMeetingsWithBookPaginated(
-      clubId,
-      skip,
-      limit
-    ),
+    meetingRepository.findPastMeetingsWithBookPaginated(clubId, skip, limit),
     meetingRepository.countPastMeetingsByClubId(clubId),
   ]);
 
@@ -72,7 +154,7 @@ export async function getPastMeetingsFromClub(
   const activeRecaps =
     await meetingRecapRepository.findActiveRecapsByMeetingIds(meetingIds);
   const recapByMeetingId = new Map(
-    activeRecaps.map((recapRow) => [recapRow.meetingId, recapRow]),
+    activeRecaps.map((recapRow) => [recapRow.meetingId, recapRow])
   );
 
   const totalPages = Math.ceil(totalItems / limit);
@@ -88,7 +170,7 @@ export async function getPastMeetingsFromClub(
       createdAt: meetingRow.createdAt,
       chapterStart: meetingRow.chapterStart,
       chapterEnd: meetingRow.chapterEnd,
-      book: formatMeetingBook(meetingRow as any),
+      books: formatMeetingBooks(meetingRow.meetingBooks),
       recap: recapRow
         ? {
             id: recapRow.id,
@@ -123,14 +205,7 @@ export async function getMyUpcomingMeetings(userId: string, limit: number) {
       id: row.clubId,
       name: row.clubName,
     },
-    book: row.bookId
-      ? {
-          id: row.bookId,
-          title: row.bookTitle!,
-          author: row.bookAuthor,
-          coverUrl: row.bookCoverUrl,
-        }
-      : null,
+    books: row.books,
   }));
 
   return { data };
@@ -138,7 +213,7 @@ export async function getMyUpcomingMeetings(userId: string, limit: number) {
 
 export async function createMeeting(input: {
   createdByUserId: string;
-  bookId?: string | null;
+  bookIds?: string[] | null;
   chapterStart?: number | null;
   chapterEnd?: number | null;
   totalChapters?: number | null;
@@ -148,13 +223,16 @@ export async function createMeeting(input: {
   meetingTime: string;
   clubId: string;
 }) {
-  const bookId = input.bookId ?? null;
+  const bookIds = await validateAndResolveBookIds({
+    clubId: input.clubId,
+    bookIds: input.bookIds,
+  });
   const chapterStart = input.chapterStart ?? null;
   const chapterEnd = input.chapterEnd ?? null;
 
   await validateMeetingChapterInput({
     clubId: input.clubId,
-    bookId,
+    bookIds,
     chapterStart,
     chapterEnd,
     totalChapters: input.totalChapters,
@@ -167,7 +245,6 @@ export async function createMeeting(input: {
     description: input.description ?? null,
     meetingDate: toMeetingDateYmd(input.meetingDate),
     meetingTime: input.meetingTime,
-    bookId,
     chapterStart,
     chapterEnd,
     clubId: input.clubId,
@@ -178,25 +255,13 @@ export async function createMeeting(input: {
     throw new Error("insert_meeting_failed");
   }
 
+  await meetingRepository.replaceMeetingBooks(newMeeting.id, bookIds);
+
   await googleCalendarSyncService
     .createGoogleCalendarEventForMeeting(newMeeting.id)
     .catch((error) => console.error(error));
 
-  if (!bookId) {
-    return newMeeting;
-  }
-
-  const clubBookEntry = await meetingRepository.findClubBookByClubAndBook(
-    input.clubId,
-    bookId
-  );
-
-  if (clubBookEntry && clubBookEntry.status !== BookStatus.STARTED) {
-    await meetingRepository.updateClubBookStatusById(
-      clubBookEntry.id,
-      BookStatus.STARTED
-    );
-  }
+  await markClubBooksStarted(input.clubId, bookIds);
 
   return newMeeting;
 }
@@ -204,7 +269,7 @@ export async function createMeeting(input: {
 export async function updateMeeting(
   meetingId: string,
   input: {
-    bookId?: string | null;
+    bookIds?: string[] | null;
     chapterStart?: number | null;
     chapterEnd?: number | null;
     totalChapters?: number | null;
@@ -216,36 +281,37 @@ export async function updateMeeting(
     clubId: string;
   }
 ) {
-  const bookId = input.bookId ?? null;
+  const bookIds = await validateAndResolveBookIds({
+    clubId: input.clubId,
+    bookIds: input.bookIds,
+  });
   const chapterStart = input.chapterStart ?? null;
   const chapterEnd = input.chapterEnd ?? null;
 
   await validateMeetingChapterInput({
     clubId: input.clubId,
-    bookId,
+    bookIds,
     chapterStart,
     chapterEnd,
     totalChapters: input.totalChapters,
   });
 
-  const updatedMeeting = await meetingRepository.updateMeetingById(
-    meetingId,
-    {
-      location: input.location,
-      description: input.description ?? null,
-      meetingDate: toMeetingDateYmd(input.meetingDate),
-      meetingTime: input.meetingTime,
-      bookId,
-      chapterStart,
-      chapterEnd,
-      clubId: input.clubId,
-      status: input.status,
-    }
-  );
+  const updatedMeeting = await meetingRepository.updateMeetingById(meetingId, {
+    location: input.location,
+    description: input.description ?? null,
+    meetingDate: toMeetingDateYmd(input.meetingDate),
+    meetingTime: input.meetingTime,
+    chapterStart,
+    chapterEnd,
+    clubId: input.clubId,
+    status: input.status,
+  });
 
   if (!updatedMeeting) {
     return null;
   }
+
+  await meetingRepository.replaceMeetingBooks(meetingId, bookIds);
 
   if (input.status === MeetingStatus.CANCELLED) {
     await googleCalendarSyncService
@@ -260,27 +326,35 @@ export async function updateMeeting(
       .catch((error) => console.error(error));
   }
 
-  if (input.status === MeetingStatus.COMPLETED && bookId) {
-    const readingMode = await meetingRepository.findClubReadingModeById(input.clubId);
+  if (input.status === MeetingStatus.SCHEDULED) {
+    await markClubBooksStarted(input.clubId, bookIds);
+  }
+
+  if (input.status === MeetingStatus.COMPLETED && bookIds.length > 0) {
+    const readingMode = await meetingRepository.findClubReadingModeById(
+      input.clubId
+    );
     if (!readingMode) {
       return updatedMeeting;
     }
 
     if (readingMode === ReadingMode.BOOK) {
-      const clubBookEntry = await meetingRepository.findClubBookByClubAndBook(
-        input.clubId,
-        bookId
-      );
-      if (clubBookEntry) {
+      const clubBookLinks =
+        await meetingRepository.findActiveClubBooksByClubAndBookIds(
+          input.clubId,
+          bookIds
+        );
+      for (const clubBookLink of clubBookLinks) {
         await meetingRepository.updateClubBookStatusById(
-          clubBookEntry.id,
+          clubBookLink.id,
           BookStatus.FINISHED
         );
       }
       return updatedMeeting;
     }
 
-    const bookRow = await meetingRepository.findBookById(bookId);
+    const soleBookId = bookIds[0]!;
+    const bookRow = await meetingRepository.findBookById(soleBookId);
     const reachedLastChapter =
       chapterEnd !== null &&
       bookRow?.totalChapters != null &&
@@ -289,7 +363,7 @@ export async function updateMeeting(
     if (reachedLastChapter) {
       const clubBookEntry = await meetingRepository.findClubBookByClubAndBook(
         input.clubId,
-        bookId
+        soleBookId
       );
       if (clubBookEntry) {
         await meetingRepository.updateClubBookStatusById(
@@ -330,6 +404,9 @@ export async function autoCompleteOverdueMeetings(limit = 100) {
   for (const meetingRow of overdueMeetings) {
     try {
       const meetingDate = toMeetingDateYmd(meetingRow.meetingDate);
+      const bookIds = await meetingRepository.findBookIdsByMeetingId(
+        meetingRow.id
+      );
 
       await updateMeeting(meetingRow.id, {
         clubId: meetingRow.clubId,
@@ -337,7 +414,7 @@ export async function autoCompleteOverdueMeetings(limit = 100) {
         description: meetingRow.description,
         meetingDate,
         meetingTime: String(meetingRow.meetingTime).slice(0, 8),
-        bookId: meetingRow.bookId,
+        bookIds,
         chapterStart: meetingRow.chapterStart,
         chapterEnd: meetingRow.chapterEnd,
         status: MeetingStatus.COMPLETED,
@@ -347,7 +424,7 @@ export async function autoCompleteOverdueMeetings(limit = 100) {
       failed += 1;
       console.error(
         `[meetings:auto-complete] falha meetingId=${meetingRow.id}`,
-        error,
+        error
       );
     }
   }
@@ -369,7 +446,7 @@ export async function resyncMeetingGoogleCalendar(meetingId: string) {
   if (meeting.googleEventId) {
     const syncResult =
       await googleCalendarSyncService.updateGoogleCalendarEventForMeeting(
-        meetingId,
+        meetingId
       );
     if (!syncResult.ok) {
       return { success: false as const, message: syncResult.error };
@@ -381,7 +458,7 @@ export async function resyncMeetingGoogleCalendar(meetingId: string) {
   }
   const syncResult =
     await googleCalendarSyncService.createGoogleCalendarEventForMeeting(
-      meetingId,
+      meetingId
     );
   if (!syncResult.ok) {
     return { success: false as const, message: syncResult.error };
@@ -400,13 +477,19 @@ export async function resyncMeetingGoogleCalendar(meetingId: string) {
 
 async function validateMeetingChapterInput(input: {
   clubId: string;
-  bookId: string | null;
+  bookIds: string[];
   chapterStart: number | null;
   chapterEnd: number | null;
   totalChapters?: number | null;
 }) {
   if (input.chapterStart === null && input.chapterEnd === null) {
     return;
+  }
+
+  if (input.bookIds.length !== 1) {
+    throw new InvalidMeetingChapterRangeError(
+      "Intervalo de capítulos só é permitido com exatamente um livro no encontro."
+    );
   }
 
   if (input.chapterStart === null || input.chapterEnd === null) {
@@ -433,11 +516,7 @@ async function validateMeetingChapterInput(input: {
     );
   }
 
-  if (!input.bookId) {
-    throw new InvalidMeetingChapterRangeError(
-      "Selecione um livro para informar intervalo de capítulos."
-    );
-  }
+  const bookId = input.bookIds[0]!;
 
   const readingMode = await meetingRepository.findClubReadingModeById(input.clubId);
   if (readingMode !== ReadingMode.CHAPTERS) {
@@ -446,7 +525,7 @@ async function validateMeetingChapterInput(input: {
     );
   }
 
-  const bookRow = await meetingRepository.findBookById(input.bookId);
+  const bookRow = await meetingRepository.findBookById(bookId);
   if (!bookRow) {
     throw new InvalidMeetingChapterRangeError("Livro não encontrado.");
   }
@@ -472,10 +551,7 @@ async function validateMeetingChapterInput(input: {
       );
     }
 
-    await bookRepository.updateBookTotalChaptersById(
-      input.bookId,
-      input.totalChapters
-    );
+    await bookRepository.updateBookTotalChaptersById(bookId, input.totalChapters);
     effectiveTotalChapters = input.totalChapters;
   }
 

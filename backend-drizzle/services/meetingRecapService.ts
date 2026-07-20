@@ -257,6 +257,9 @@ export async function getPendingMeetingRecap(userId: string) {
     return { meeting: null };
   }
 
+  const booksByMeetingId =
+    await meetingRepository.findMeetingBooksByMeetingIds([row.id]);
+
   return {
     meeting: {
       id: row.id,
@@ -268,14 +271,7 @@ export async function getPendingMeetingRecap(userId: string) {
         id: row.clubId,
         name: row.clubName,
       },
-      book: row.bookId
-        ? {
-            id: row.bookId,
-            title: row.bookTitle,
-            author: row.bookAuthor,
-            coverUrl: row.bookCoverUrl,
-          }
-        : null,
+      books: booksByMeetingId.get(row.id) ?? [],
     },
   };
 }

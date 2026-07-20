@@ -3,7 +3,7 @@ import * as meetingService from "../../services/meetingService";
 import { respondIfNotClubMember } from "../../utils/clubAccess";
 
 export const createMeeting = async (req: Request, res: Response) => {
-  const { bookId, description, location, meetingDate, meetingTime, clubId } =
+  const { bookIds, description, location, meetingDate, meetingTime, clubId } =
     req.body;
 
   const chapterStart = req.body.chapterStart
@@ -30,7 +30,7 @@ export const createMeeting = async (req: Request, res: Response) => {
   try {
     const newMeeting = await meetingService.createMeeting({
       createdByUserId,
-      bookId,
+      bookIds: Array.isArray(bookIds) ? bookIds : [],
       chapterStart,
       chapterEnd,
       totalChapters,
@@ -46,7 +46,10 @@ export const createMeeting = async (req: Request, res: Response) => {
       meeting: newMeeting,
     });
   } catch (error: any) {
-    if (error instanceof meetingService.InvalidMeetingChapterRangeError) {
+    if (
+      error instanceof meetingService.InvalidMeetingChapterRangeError ||
+      error instanceof meetingService.InvalidMeetingBooksError
+    ) {
       return res.status(400).json({ message: error.message });
     }
     console.error(error);

@@ -9,9 +9,7 @@ import { MeetingStatus } from "../../enums/meetingStatus";
 
 export const updateMeeting = async (req: Request, res: Response) => {
   const {
-    bookId,
-    chapterStart: rawChapterStart,
-    chapterEnd: rawChapterEnd,
+    bookIds,
     description,
     location,
     meetingDate,
@@ -57,7 +55,7 @@ export const updateMeeting = async (req: Request, res: Response) => {
 
   try {
     const updatedMeeting = await meetingService.updateMeeting(id, {
-      bookId,
+      bookIds: Array.isArray(bookIds) ? bookIds : [],
       chapterStart,
       chapterEnd,
       totalChapters,
@@ -78,7 +76,10 @@ export const updateMeeting = async (req: Request, res: Response) => {
       meeting: updatedMeeting,
     });
   } catch (error: any) {
-    if (error instanceof meetingService.InvalidMeetingChapterRangeError) {
+    if (
+      error instanceof meetingService.InvalidMeetingChapterRangeError ||
+      error instanceof meetingService.InvalidMeetingBooksError
+    ) {
       return res.status(400).json({ message: error.message });
     }
     if (error?.code === "23503") {

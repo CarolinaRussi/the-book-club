@@ -179,9 +179,6 @@ export const meeting = pgTable("Meeting", {
   meetingTime: time("meeting_time").notNull(),
   description: text("description"),
   status: meetingStatusEnum("status").default("scheduled").notNull(),
-  bookId: varchar("book_id", { length: 255 }).references(() => book.id, {
-    onDelete: "restrict",
-  }),
   chapterStart: integer("chapter_start"),
   chapterEnd: integer("chapter_end"),
   googleEventId: varchar("google_event_id", { length: 512 }),
@@ -469,10 +466,6 @@ export const membershipRequestRelations = relations(
 );
 
 export const meetingRelations = relations(meeting, ({ one, many }) => ({
-  book: one(book, {
-    fields: [meeting.bookId],
-    references: [book.id],
-  }),
   club: one(club, {
     fields: [meeting.clubId],
     references: [club.id],

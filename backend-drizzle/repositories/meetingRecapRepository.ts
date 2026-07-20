@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, inArray, isNull, notExists, sql } from "drizzle-orm";
 import { db } from "../db/client";
-import { book, club, meeting, meetingRecap } from "../db/schema";
+import { club, meeting, meetingRecap } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
 
 export async function findActiveRecapByMeetingId(meetingId: string) {
@@ -123,14 +123,9 @@ export async function findPendingMeetingRecapForOwner(
       description: meeting.description,
       clubId: club.id,
       clubName: club.name,
-      bookId: book.id,
-      bookTitle: book.title,
-      bookAuthor: book.author,
-      bookCoverUrl: book.coverUrl,
     })
     .from(meeting)
     .innerJoin(club, eq(meeting.clubId, club.id))
-    .leftJoin(book, eq(meeting.bookId, book.id))
     .where(
       and(
         eq(club.ownerId, ownerUserId),

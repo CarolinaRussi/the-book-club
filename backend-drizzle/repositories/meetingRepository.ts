@@ -1,9 +1,10 @@
-import { eq, and, inArray, count, asc, lt, sql } from "drizzle-orm";
+import { eq, and, inArray, count, asc, lt, sql, isNull } from "drizzle-orm";
 import { db } from "../db/client";
-import { meeting, clubBook, club, book } from "../db/schema";
+import { meeting, meetingBook, clubBook, club, book } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
 import { BookStatus } from "../enums/bookStatus";
 import { ReadingMode } from "../enums/readingMode";
+import { createId } from "../utils/id";
 
 const pastStatuses = [
   MeetingStatus.COMPLETED,
@@ -30,12 +31,17 @@ export async function findMeetingsWithBookByClubId(clubId: string) {
       googleSyncError: true,
     },
     with: {
-      book: {
-        columns: {
-          id: true,
-          title: true,
-          author: true,
-          coverUrl: true,
+      meetingBooks: {
+        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        with: {
+          book: {
+            columns: {
+              id: true,
+              title: true,
+              author: true,
+              coverUrl: true,
+            },
+          },
         },
       },
     },
@@ -69,12 +75,17 @@ export async function findPastMeetingsWithBookPaginated(
       chapterEnd: true,
     },
     with: {
-      book: {
-        columns: {
-          id: true,
-          title: true,
-          author: true,
-          coverUrl: true,
+      meetingBooks: {
+        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        with: {
+          book: {
+            columns: {
+              id: true,
+              title: true,
+              author: true,
+              coverUrl: true,
+            },
+          },
         },
       },
     },
@@ -100,7 +111,7 @@ export async function findUpcomingMeetingsByClubIds(
 ) {
   if (clubIds.length === 0) return [];
 
-  return db
+  const rows = await db
     .select({
       id: meeting.id,
       meetingDate: meeting.meetingDate,
@@ -111,14 +122,9 @@ export async function findUpcomingMeetingsByClubIds(
       chapterEnd: meeting.chapterEnd,
       clubId: club.id,
       clubName: club.name,
-      bookId: book.id,
-      bookTitle: book.title,
-      bookAuthor: book.author,
-      bookCoverUrl: book.coverUrl,
     })
     .from(meeting)
     .innerJoin(club, eq(meeting.clubId, club.id))
-    .leftJoin(book, eq(meeting.bookId, book.id))
     .where(
       and(
         inArray(meeting.clubId, clubIds),
@@ -128,6 +134,62 @@ export async function findUpcomingMeetingsByClubIds(
     )
     .orderBy(asc(meeting.meetingDate), asc(meeting.meetingTime))
     .limit(limit);
+
+  const booksByMeetingId = await findMeetingBooksByMeetingIds(
+    rows.map((row) => row.id)
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    books: booksByMeetingId.get(row.id) ?? [],
+  }));
+}
+
+export type MeetingBookSummary = {
+  id: string;
+  title: string;
+  author: string | null;
+  coverUrl: string | null;
+};
+
+export async function findMeetingBooksByMeetingIds(meetingIds: string[]) {
+  const booksByMeetingId = new Map<string, MeetingBookSummary[]>();
+  if (meetingIds.length === 0) return booksByMeetingId;
+
+  const rows = await db
+    .select({
+      meetingId: meetingBook.meetingId,
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      coverUrl: book.coverUrl,
+    })
+    .from(meetingBook)
+    .innerJoin(book, eq(meetingBook.bookId, book.id))
+    .where(inArray(meetingBook.meetingId, meetingIds))
+    .orderBy(asc(meetingBook.meetingId), asc(meetingBook.position));
+
+  for (const row of rows) {
+    const list = booksByMeetingId.get(row.meetingId) ?? [];
+    list.push({
+      id: row.id,
+      title: row.title,
+      author: row.author,
+      coverUrl: row.coverUrl,
+    });
+    booksByMeetingId.set(row.meetingId, list);
+  }
+
+  return booksByMeetingId;
+}
+
+export async function findBookIdsByMeetingId(meetingId: string) {
+  const rows = await db
+    .select({ bookId: meetingBook.bookId })
+    .from(meetingBook)
+    .where(eq(meetingBook.meetingId, meetingId))
+    .orderBy(asc(meetingBook.position));
+  return rows.map((row) => row.bookId);
 }
 
 export async function findScheduledMeetingsBeforeDate(
@@ -142,7 +204,6 @@ export async function findScheduledMeetingsBeforeDate(
       description: meeting.description,
       meetingDate: meeting.meetingDate,
       meetingTime: meeting.meetingTime,
-      bookId: meeting.bookId,
       chapterStart: meeting.chapterStart,
       chapterEnd: meeting.chapterEnd,
     })
@@ -183,7 +244,6 @@ export async function findMeetingForGoogleCalendar(meetingId: string) {
       meetingTime: true,
       description: true,
       status: true,
-      bookId: true,
       chapterStart: true,
       chapterEnd: true,
       googleEventId: true,
@@ -192,7 +252,12 @@ export async function findMeetingForGoogleCalendar(meetingId: string) {
       googleSyncError: true,
     },
     with: {
-      book: { columns: { title: true } },
+      meetingBooks: {
+        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        with: {
+          book: { columns: { title: true } },
+        },
+      },
       club: { columns: { name: true } },
     },
   });
@@ -241,6 +306,42 @@ export async function insertMeeting(values: typeof meeting.$inferInsert) {
   return row ?? null;
 }
 
+export async function replaceMeetingBooks(meetingId: string, bookIds: string[]) {
+  await db.delete(meetingBook).where(eq(meetingBook.meetingId, meetingId));
+  if (bookIds.length === 0) return;
+
+  await db.insert(meetingBook).values(
+    bookIds.map((bookId, position) => ({
+      id: createId(),
+      meetingId,
+      bookId,
+      position,
+    }))
+  );
+}
+
+export async function findActiveClubBooksByClubAndBookIds(
+  clubId: string,
+  bookIds: string[]
+) {
+  if (bookIds.length === 0) return [];
+
+  return db
+    .select({
+      id: clubBook.id,
+      bookId: clubBook.bookId,
+      status: clubBook.status,
+    })
+    .from(clubBook)
+    .where(
+      and(
+        eq(clubBook.clubId, clubId),
+        inArray(clubBook.bookId, bookIds),
+        isNull(clubBook.deletedAt)
+      )
+    );
+}
+
 export async function findClubBookByClubAndBook(
   clubId: string,
   bookId: string
@@ -266,7 +367,6 @@ export async function updateMeetingById(
     description: string | null;
     meetingDate: string;
     meetingTime: string;
-    bookId: string | null;
     chapterStart: number | null;
     chapterEnd: number | null;
     clubId: string;
@@ -280,7 +380,6 @@ export async function updateMeetingById(
       description: data.description,
       meetingDate: data.meetingDate,
       meetingTime: data.meetingTime,
-      bookId: data.bookId,
       chapterStart: data.chapterStart,
       chapterEnd: data.chapterEnd,
       clubId: data.clubId,
