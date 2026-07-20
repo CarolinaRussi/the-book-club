@@ -1,11 +1,12 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
@@ -126,83 +127,87 @@ const MeetingRecapDialog = ({
     books.length > 0 ? formatMeetingBooksLabel(books) : null;
 
   return (
-    <Dialog open={openDialog} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-xl">
-        <DialogHeader className="mb-2 gap-0 text-left">
-          <DialogTitle className="text-left text-3xl text-primary">
-            Registrar encontro
-          </DialogTitle>
-          <DialogDescription className="text-left text-sm text-muted-foreground">
-            {meeting
-              ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}${
-                  booksLabel ? ` · ${booksLabel}` : ""
-                }`
-              : null}
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog open={openDialog} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-[425px] lg:max-h-[90vh] lg:max-w-xl lg:overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <ResponsiveDialogHeader className="mb-2 gap-0 text-left">
+            <ResponsiveDialogTitle className="text-left text-3xl text-primary">
+              Registrar encontro
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className="text-left text-sm text-muted-foreground">
+              {meeting
+                ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}${
+                    booksLabel ? ` · ${booksLabel}` : ""
+                  }`
+                : null}
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
-        {firstBook ? (
-          <div className="mb-4 flex items-center gap-3 rounded-md border border-secondary/60 p-3">
-            {firstBook.coverUrl ? (
-              <img
-                src={firstBook.coverUrl}
-                alt=""
-                className="h-16 w-11 rounded object-cover"
-              />
+          <ResponsiveDialogBody className="space-y-4">
+            {firstBook ? (
+              <div className="flex items-center gap-3 rounded-md border border-secondary/60 p-3">
+                {firstBook.coverUrl ? (
+                  <img
+                    src={firstBook.coverUrl}
+                    alt=""
+                    className="h-16 w-11 rounded object-cover"
+                  />
+                ) : null}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">
+                    {formatMeetingBooksLabel(books)}
+                  </p>
+                  {books.length === 1 && firstBook.author ? (
+                    <p className="text-sm text-muted-foreground truncate">
+                      {firstBook.author}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             ) : null}
-            <div className="min-w-0">
-              <p className="font-medium truncate">
-                {formatMeetingBooksLabel(books)}
-              </p>
-              {books.length === 1 && firstBook.author ? (
-                <p className="text-sm text-muted-foreground truncate">
-                  {firstBook.author}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
 
-        <MeetingRecapForm
-          value={recapForm}
-          onChange={setRecapForm}
-          disabled={isSaving || isDismissing}
-          idPrefix="prompt-recap"
-        />
+            <MeetingRecapForm
+              value={recapForm}
+              onChange={setRecapForm}
+              disabled={isSaving || isDismissing}
+              idPrefix="prompt-recap"
+            />
+          </ResponsiveDialogBody>
 
-        <DialogFooter className="mt-5 flex-col gap-2 sm:flex-row">
-          {showDismissButton ? (
+          <ResponsiveDialogFooter className="mt-5 flex-col gap-2 sm:flex-row">
+            {showDismissButton ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving || isDismissing}
+                onClick={() => dismissPrompt()}
+                className="w-full sm:w-auto"
+              >
+                Agora não
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving || isDismissing}
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancelar
+              </Button>
+            )}
             <Button
               type="button"
-              variant="outline"
               disabled={isSaving || isDismissing}
-              onClick={() => dismissPrompt()}
+              onClick={() => saveRecap()}
               className="w-full sm:w-auto"
             >
-              Agora não
+              {isSaving ? "Salvando…" : "Publicar registro"}
             </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSaving || isDismissing}
-              onClick={() => onOpenChange(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancelar
-            </Button>
-          )}
-          <Button
-            type="button"
-            disabled={isSaving || isDismissing}
-            onClick={() => saveRecap()}
-            className="w-full sm:w-auto"
-          >
-            {isSaving ? "Salvando…" : "Publicar registro"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </ResponsiveDialogFooter>
+        </div>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
 

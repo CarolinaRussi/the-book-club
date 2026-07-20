@@ -14,12 +14,13 @@ import {
 } from "@/api/mutations/meetingRecapMutate";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { useBook } from "@/contexts/BookContext";
 import { useClub } from "@/contexts/ClubContext";
 import type { IApiError } from "@/types/IApi";
@@ -261,39 +262,44 @@ export default function EditMeetingDialog({
   };
 
   return (
-    <Dialog open={openDialog} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-2xl">
+    <ResponsiveDialog open={openDialog} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-[425px] lg:max-h-[90vh] lg:max-w-2xl lg:overflow-y-auto">
         <FormProvider {...form}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <DialogHeader className="mb-4 gap-0 text-left">
-              <DialogTitle className="text-left text-3xl text-primary">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <ResponsiveDialogHeader className="mb-4 gap-0 text-left">
+              <ResponsiveDialogTitle className="text-left text-3xl text-primary">
                 {isCompletedMeeting ? "Registro do encontro" : "Editar encontro"}
-              </DialogTitle>
-            </DialogHeader>
+              </ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
 
-            {!isCompletedMeeting ? <MeetingGoogleCalendarFormNote /> : null}
+            <ResponsiveDialogBody className="space-y-4">
+              {!isCompletedMeeting ? <MeetingGoogleCalendarFormNote /> : null}
 
-            <MeetingFormFields
-              books={booksFromSelectedClub}
-              isChaptersMode={isChaptersMode}
-              needsTotalChapters={needsTotalChapters}
-              maxBooks={maxBooks}
-            />
-
-            {isCompletedMeeting && meeting ? (
-              <CompletedMeetingRecapSection
-                meeting={meeting}
-                recapExpanded={recapExpanded}
-                recapForm={recapForm}
-                disabled={isPending || isDeletingRecap}
-                onRecapFormChange={setRecapForm}
-                onExpand={() => setRecapExpanded(true)}
-                onCollapse={() => setRecapExpanded(false)}
-                onDelete={() => deleteRecapMutate()}
+              <MeetingFormFields
+                books={booksFromSelectedClub}
+                isChaptersMode={isChaptersMode}
+                needsTotalChapters={needsTotalChapters}
+                maxBooks={maxBooks}
               />
-            ) : null}
 
-            <DialogFooter className="mt-5 flex-col gap-2 sm:flex-row">
+              {isCompletedMeeting && meeting ? (
+                <CompletedMeetingRecapSection
+                  meeting={meeting}
+                  recapExpanded={recapExpanded}
+                  recapForm={recapForm}
+                  disabled={isPending || isDeletingRecap}
+                  onRecapFormChange={setRecapForm}
+                  onExpand={() => setRecapExpanded(true)}
+                  onCollapse={() => setRecapExpanded(false)}
+                  onDelete={() => deleteRecapMutate()}
+                />
+              ) : null}
+            </ResponsiveDialogBody>
+
+            <ResponsiveDialogFooter className="mt-5 flex-col gap-2 sm:flex-row">
               <Button
                 type="button"
                 variant="outline"
@@ -309,10 +315,10 @@ export default function EditMeetingDialog({
               >
                 {isPending ? "Salvando…" : "Salvar"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </FormProvider>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
