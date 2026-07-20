@@ -200,6 +200,27 @@ export const meeting = pgTable("Meeting", {
     .notNull(),
 });
 
+// MeetingBook
+export const meetingBook = pgTable(
+  "MeetingBook",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    meetingId: varchar("meeting_id", { length: 255 })
+      .notNull()
+      .references(() => meeting.id, { onDelete: "cascade" }),
+    bookId: varchar("book_id", { length: 255 })
+      .notNull()
+      .references(() => book.id, { onDelete: "restrict" }),
+    position: integer("position").notNull(),
+  },
+  (table) => [
+    uniqueIndex("MeetingBook_meeting_id_book_id_key").on(
+      table.meetingId,
+      table.bookId
+    ),
+  ]
+);
+
 // MeetingRecap
 export const meetingRecap = pgTable(
   "MeetingRecap",
@@ -401,6 +422,7 @@ export const bookRelations = relations(book, ({ many }) => ({
   clubBooks: many(clubBook),
   userBooks: many(userBook),
   reviews: many(review),
+  meetingBooks: many(meetingBook),
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -459,8 +481,20 @@ export const meetingRelations = relations(meeting, ({ one, many }) => ({
     fields: [meeting.createdByUserId],
     references: [user.id],
   }),
+  meetingBooks: many(meetingBook),
   confirmations: many(meetingConfirmation),
   recaps: many(meetingRecap),
+}));
+
+export const meetingBookRelations = relations(meetingBook, ({ one }) => ({
+  meeting: one(meeting, {
+    fields: [meetingBook.meetingId],
+    references: [meeting.id],
+  }),
+  book: one(book, {
+    fields: [meetingBook.bookId],
+    references: [book.id],
+  }),
 }));
 
 export const meetingRecapRelations = relations(meetingRecap, ({ one }) => ({
