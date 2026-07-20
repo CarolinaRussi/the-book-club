@@ -9,12 +9,13 @@ import { toast } from "react-toastify";
 import { createMeeting } from "@/api/mutations/meetingMutate";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { useBook } from "@/contexts/BookContext";
 import { useClub } from "@/contexts/ClubContext";
 import type { IApiError } from "@/types/IApi";
@@ -155,32 +156,37 @@ export default function CreateMeetingDialog({
   };
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={openDialog}
       onOpenChange={(open) => {
         if (isPending) return;
         onOpenChange(open);
       }}
     >
-      <DialogContent className="sm:max-w-[425px] lg:max-w-2xl">
+      <ResponsiveDialogContent className="sm:max-w-[425px] lg:max-w-2xl">
         <FormProvider {...form}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <DialogHeader className="mb-4 gap-0">
-              <DialogTitle className="text-3xl text-primary">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <ResponsiveDialogHeader className="mb-4 gap-0">
+              <ResponsiveDialogTitle className="text-3xl text-primary">
                 Marcar encontro
-              </DialogTitle>
-            </DialogHeader>
+              </ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
 
-            <MeetingGoogleCalendarFormNote />
+            <ResponsiveDialogBody className="space-y-4">
+              <MeetingGoogleCalendarFormNote />
 
-            <MeetingFormFields
-              books={bookOptions}
-              isChaptersMode={isChaptersMode}
-              needsTotalChapters={needsTotalChapters}
-              maxBooks={maxBooks}
-            />
+              <MeetingFormFields
+                books={bookOptions}
+                isChaptersMode={isChaptersMode}
+                needsTotalChapters={needsTotalChapters}
+                maxBooks={maxBooks}
+              />
+            </ResponsiveDialogBody>
 
-            <DialogFooter className="mt-5">
+            <ResponsiveDialogFooter className="mt-5">
               <Button
                 type="button"
                 variant="outline"
@@ -192,10 +198,10 @@ export default function CreateMeetingDialog({
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Marcando…" : "Marcar encontro"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </FormProvider>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
