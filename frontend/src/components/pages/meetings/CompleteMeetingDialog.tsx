@@ -77,7 +77,7 @@ const CompleteMeetingDialog = ({
 
     completeMeetingMutate({
       id: meeting.id,
-      bookId: meeting.book?.id ?? null,
+      bookIds: meeting.books?.map((book) => book.id) ?? [],
       chapterStart: meeting.chapterStart ?? null,
       chapterEnd: meeting.chapterEnd ?? null,
       description: meeting.description,

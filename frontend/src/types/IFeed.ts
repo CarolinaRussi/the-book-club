@@ -48,7 +48,7 @@ export interface IFeedMeetingRecapActivity {
     meetingTime: string;
     location: string;
   };
-  book: IFeedActivityBook | null;
+  books: IFeedActivityBook[];
   text: string | null;
   imageUrl: string | null;
 }

@@ -25,7 +25,6 @@ import { useClub } from "@/contexts/ClubContext";
 import type { IApiError } from "@/types/IApi";
 import type { IMeeting, IMeetingUpdatePayload } from "@/types/IMeetings";
 import {
-  MEETING_NO_BOOK_SELECT_VALUE,
   MEETING_STATUS_COMPLETED,
   MEETING_STATUS_SCHEDULED,
 } from "@/utils/constants/meeting";
@@ -54,13 +53,24 @@ type EditMeetingDialogProps = {
   initialRecapExpanded?: boolean;
 };
 
+const emptyEditValues: MeetingFormValues = {
+  location: "",
+  meetingDate: undefined,
+  meetingTime: "",
+  description: "",
+  bookIds: [],
+  chapterStart: undefined,
+  chapterEnd: undefined,
+  totalChapters: undefined,
+};
+
 function toFormValues(meeting: IMeeting): MeetingFormValues {
   return {
     location: meeting.location || "",
     meetingDate: parseLocalDate(meeting.meetingDate) ?? undefined,
     meetingTime: meeting.meetingTime ? formatTime(meeting.meetingTime) : "",
     description: meeting.description || "",
-    bookId: meeting.book?.id ?? MEETING_NO_BOOK_SELECT_VALUE,
+    bookIds: meeting.books?.map((book) => book.id) ?? [],
     chapterStart: meeting.chapterStart ?? undefined,
     chapterEnd: meeting.chapterEnd ?? undefined,
     totalChapters: undefined,
@@ -83,18 +93,23 @@ export default function EditMeetingDialog({
   );
 
   const form = useForm<MeetingFormValues>({
-    defaultValues: meeting ? toFormValues(meeting) : undefined,
+    defaultValues: meeting ? toFormValues(meeting) : emptyEditValues,
   });
   const { handleSubmit, reset, watch, setValue } = form;
 
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
   const isChaptersMode = selectedClub?.readingMode === "chapters";
-  const selectedBookId = watch("bookId");
+  const maxBooks = isChaptersMode ? 1 : 4;
+  const selectedBookIds = watch("bookIds") ?? [];
+  const selectedBookId = selectedBookIds[0];
   const selectedBook = booksFromSelectedClub.find(
-    (book) => book.id === selectedBookId,
+    (book) => book.id === selectedBookId
   );
   const needsTotalChapters = Boolean(
-    isChaptersMode && selectedBook && selectedBook.totalChapters == null,
+    isChaptersMode &&
+      selectedBookIds.length === 1 &&
+      selectedBook &&
+      selectedBook.totalChapters == null
   );
 
   useEffect(() => {
@@ -103,13 +118,17 @@ export default function EditMeetingDialog({
     setRecapForm(emptyMeetingRecapFormValue(meeting.recap));
     setRecapExpanded(
       Boolean(meeting.recap) ||
-        (meeting.status === MEETING_STATUS_COMPLETED && initialRecapExpanded),
+        (meeting.status === MEETING_STATUS_COMPLETED && initialRecapExpanded)
     );
   }, [meeting, reset, openDialog, initialRecapExpanded]);
 
   useEffect(() => {
     setValue("totalChapters", undefined);
-  }, [selectedBookId, setValue]);
+    if (selectedBookIds.length !== 1) {
+      setValue("chapterStart", undefined);
+      setValue("chapterEnd", undefined);
+    }
+  }, [selectedBookIds, setValue]);
 
   const invalidateMeetingQueries = async () => {
     await queryClient.invalidateQueries({
@@ -193,16 +212,15 @@ export default function EditMeetingDialog({
     }
     if (!data.meetingDate) return;
 
-    const resolvedBookId =
-      data.bookId === MEETING_NO_BOOK_SELECT_VALUE ? null : data.bookId;
-    const shouldSendChapterRange = Boolean(isChaptersMode && resolvedBookId);
+    const shouldSendChapterRange =
+      Boolean(isChaptersMode) && data.bookIds.length === 1;
 
     let recapAction: "none" | "create" | "update" | "delete" = "none";
     if (isCompletedMeeting) {
       if (meeting.recap && recapExpanded) {
         if (!meetingRecapHasContent(recapForm)) {
           toast.error(
-            "Informe um texto ou uma foto, ou apague o registro do encontro.",
+            "Informe um texto ou uma foto, ou apague o registro do encontro."
           );
           return;
         }
@@ -210,7 +228,7 @@ export default function EditMeetingDialog({
       } else if (!meeting.recap && recapExpanded) {
         if (!meetingRecapHasContent(recapForm)) {
           toast.error(
-            "Informe um texto ou uma foto para o registro do encontro.",
+            "Informe um texto ou uma foto para o registro do encontro."
           );
           return;
         }
@@ -221,7 +239,7 @@ export default function EditMeetingDialog({
     saveMeeting({
       meetingPayload: {
         id: meeting.id,
-        bookId: resolvedBookId,
+        bookIds: data.bookIds,
         chapterStart: shouldSendChapterRange ? (data.chapterStart ?? null) : null,
         chapterEnd: shouldSendChapterRange ? (data.chapterEnd ?? null) : null,
         totalChapters:
@@ -259,6 +277,7 @@ export default function EditMeetingDialog({
               books={booksFromSelectedClub}
               isChaptersMode={isChaptersMode}
               needsTotalChapters={needsTotalChapters}
+              maxBooks={maxBooks}
             />
 
             {isCompletedMeeting && meeting ? (

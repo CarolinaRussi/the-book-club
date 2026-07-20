@@ -48,7 +48,7 @@ export default function PendingMeetingRecapPrompt() {
           ? {
               id: pendingMeeting.id,
               meetingDate: pendingMeeting.meetingDate,
-              book: pendingMeeting.book,
+              books: pendingMeeting.books,
               recap: null,
             }
           : null

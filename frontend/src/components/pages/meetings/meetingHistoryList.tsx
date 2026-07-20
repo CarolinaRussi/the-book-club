@@ -2,6 +2,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { Card, CardContent } from "../../ui/card";
 import type { IMeeting } from "@/types/IMeetings";
 import { formatDayMonthYear, formatTime } from "@/utils/formatters";
+import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import { Badge } from "../../ui/badge";
 import Pagination from "../../ui/pagination";
 import {
@@ -174,10 +175,12 @@ const MeetingHistoryList = ({
                     <div className="flex flex-col justify-between items-stretch sm:items-end shrink-0 gap-3 sm:gap-0">
                       <div className="text-start sm:text-end">
                         <p className="font-regular text-sm text-muted-foreground">
-                          Livro discutido:
+                          {(meeting.books?.length ?? 0) > 1
+                            ? "Livros discutidos:"
+                            : "Livro discutido:"}
                         </p>
-                        <p className="font-medium text-sm">
-                          {meeting.book?.title ?? "Sem livro"}
+                        <p className="font-medium text-sm truncate max-w-[14rem] sm:ml-auto">
+                          {formatMeetingBooksLabel(meeting.books)}
                         </p>
                         {meeting.chapterStart != null &&
                           meeting.chapterEnd != null && (

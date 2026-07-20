@@ -39,7 +39,7 @@ export default function Meetings() {
   );
 
   const veryNextMeeting = scheduledMeetings?.[0];
-  const nextBook = veryNextMeeting?.book;
+  const nextBooks = veryNextMeeting?.books ?? [];
   const chapterStart = veryNextMeeting?.chapterStart;
   const chapterEnd = veryNextMeeting?.chapterEnd;
 
@@ -154,7 +154,7 @@ export default function Meetings() {
             <SkeletonNextMeetingBook />
           ) : (
             <NextMeetingBook
-              nextBook={nextBook}
+              books={nextBooks}
               chapterStart={chapterStart}
               chapterEnd={chapterEnd}
             />

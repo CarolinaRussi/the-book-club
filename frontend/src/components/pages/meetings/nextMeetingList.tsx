@@ -16,6 +16,7 @@ import { Link } from "react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import type { IApiError } from "@/types/IApi";
+import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 
 interface NextMeetingListProps {
   scheduledMeetings: IMeeting[] | undefined;
@@ -103,9 +104,11 @@ const NextMeetingList = ({ scheduledMeetings }: NextMeetingListProps) => {
                 <div className="md:hidden flex items-start gap-3 pb-4">
                   <Book className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="font-medium">Livro</p>
-                    <p className="text-sm text-muted-foreground">
-                      {meeting.book?.title ?? "Sem livro"}
+                    <p className="font-medium">
+                      {(meeting.books?.length ?? 0) > 1 ? "Livros" : "Livro"}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {formatMeetingBooksLabel(meeting.books)}
                     </p>
                     {meeting.chapterStart != null &&
                       meeting.chapterEnd != null && (

@@ -19,7 +19,7 @@ export interface IMeeting {
   chapterEnd?: number | null;
   status: MeetingStatus;
   createdAt: string;
-  book: IBook | null;
+  books: IBook[];
   googleEventId?: string | null;
   googleSyncError?: string | null;
   recap?: IMeetingRecap | null;
@@ -35,7 +35,7 @@ export interface IPendingMeetingRecap {
     id: string;
     name: string;
   };
-  book: IBook | null;
+  books: IBook[];
 }
 
 export interface IMeetingCreatePayload {
@@ -46,7 +46,7 @@ export interface IMeetingCreatePayload {
   chapterStart?: number | null;
   chapterEnd?: number | null;
   totalChapters?: number | null;
-  bookId?: string | null;
+  bookIds?: string[];
   clubId: string;
 }
 
@@ -60,6 +60,6 @@ export interface IMeetingUpdatePayload {
   chapterEnd?: number | null;
   totalChapters?: number | null;
   status: MeetingStatus;
-  bookId?: string | null;
+  bookIds?: string[];
   clubId: string;
 }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDayMonthYear, formatTime } from "@/utils/formatters";
+import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import HomeEmptyState from "./HomeEmptyState";
 
 type HomeUpcomingMeetingsProps = {
@@ -80,9 +81,9 @@ export default function HomeUpcomingMeetings({
                       {formatDayMonthYear(meeting.meetingDate)} ·{" "}
                       {formatTime(meeting.meetingTime)}
                     </p>
-                    {meeting.book ? (
+                    {(meeting.books?.length ?? 0) > 0 ? (
                       <p className="text-xs text-muted-foreground mt-1 truncate">
-                        {meeting.book.title}
+                        {formatMeetingBooksLabel(meeting.books)}
                       </p>
                     ) : null}
                   </button>

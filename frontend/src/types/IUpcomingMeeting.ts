@@ -19,7 +19,7 @@ export interface IUpcomingMeeting {
   chapterStart: number | null;
   chapterEnd: number | null;
   club: IUpcomingMeetingClub;
-  book: IUpcomingMeetingBook | null;
+  books: IUpcomingMeetingBook[];
 }
 
 export interface IUpcomingMeetingsResponse {

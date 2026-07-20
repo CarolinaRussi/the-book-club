@@ -9,21 +9,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MEETING_NO_BOOK_SELECT_VALUE } from "@/utils/constants/meeting";
 
 export type MeetingFormValues = {
   location: string;
   meetingDate?: Date;
   meetingTime: string;
   description?: string;
-  bookId: string;
+  bookIds: string[];
   chapterStart?: number;
   chapterEnd?: number;
   totalChapters?: number;
@@ -38,12 +30,14 @@ type MeetingFormFieldsProps = {
   books: MeetingBookOption[];
   isChaptersMode: boolean;
   needsTotalChapters: boolean;
+  maxBooks: number;
 };
 
 export function MeetingFormFields({
   books,
   isChaptersMode,
   needsTotalChapters,
+  maxBooks,
 }: MeetingFormFieldsProps) {
   const {
     register,
@@ -52,11 +46,9 @@ export function MeetingFormFields({
     formState: { errors },
   } = useFormContext<MeetingFormValues>();
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const selectedBookId = watch("bookId");
+  const selectedBookIds = watch("bookIds") ?? [];
   const showChapters =
-    isChaptersMode &&
-    selectedBookId &&
-    selectedBookId !== MEETING_NO_BOOK_SELECT_VALUE;
+    isChaptersMode && selectedBookIds.length === 1;
 
   return (
     <div className="flex flex-col gap-3">
@@ -137,36 +129,69 @@ export function MeetingFormFields({
 
       <div>
         <h3 className="mb-1 text-lg font-medium">
-          Livro para discussão (opcional):
+          {maxBooks > 1
+            ? `Livros para discussão (opcional, até ${maxBooks}):`
+            : "Livro para discussão (opcional):"}
         </h3>
         <Controller
-          name="bookId"
+          name="bookIds"
           control={control}
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="text-md w-full cursor-pointer border-2 border-secondary py-5">
-                <SelectValue placeholder="Selecione um livro" />
-              </SelectTrigger>
-              <SelectContent className="rounded-lg border-secondary bg-background">
-                <SelectItem
-                  value={MEETING_NO_BOOK_SELECT_VALUE}
-                  className="text-md cursor-pointer p-3"
-                >
-                  Sem livro
-                </SelectItem>
-                {books.map((book) => (
-                  <SelectItem
-                    key={book.id}
-                    value={book.id}
-                    className="text-md cursor-pointer p-3"
-                  >
-                    {book.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          render={({ field }) => {
+            const selectedIds = field.value ?? [];
+            return (
+            <div className="flex max-h-48 flex-col gap-2 overflow-y-auto rounded-md border-2 border-secondary bg-background p-2">
+              {books.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum livro disponível na biblioteca do clube.
+                </p>
+              ) : (
+                books.map((book) => {
+                  const isSelected = selectedIds.includes(book.id);
+                  const atMax = selectedIds.length >= maxBooks;
+
+                  return (
+                    <label
+                      key={book.id}
+                      className="flex cursor-pointer items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/50"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={isSelected}
+                        onChange={() => {
+                          if (isSelected) {
+                            field.onChange(
+                              selectedIds.filter(
+                                (bookId) => bookId !== book.id
+                              )
+                            );
+                            return;
+                          }
+                          if (maxBooks === 1) {
+                            field.onChange([book.id]);
+                            return;
+                          }
+                          if (!atMax) {
+                            field.onChange([...selectedIds, book.id]);
+                          }
+                        }}
+                      />
+                      <span className="text-sm leading-snug">{book.title}</span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+            );
+          }}
         />
+        {(selectedBookIds.length > 0) ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {selectedBookIds.length} selecionado
+            {selectedBookIds.length > 1 ? "s" : ""}
+            {maxBooks > 1 ? ` (máx. ${maxBooks})` : null}
+          </p>
+        ) : null}
       </div>
 
       {showChapters ? (

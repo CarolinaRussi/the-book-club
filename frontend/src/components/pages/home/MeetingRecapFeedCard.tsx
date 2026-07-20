@@ -14,6 +14,7 @@ import {
   formatRelativeTime,
   getInitials,
 } from "@/utils/formatters";
+import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import MeetingRecapDetailDialog from "./MeetingRecapDetailDialog";
 
 export function MeetingRecapFeedCard({
@@ -21,8 +22,9 @@ export function MeetingRecapFeedCard({
 }: {
   activity: IFeedMeetingRecapActivity;
 }) {
-  const { actor, book, club, meeting, text, imageUrl, isOwnActivity, createdAt } =
+  const { actor, books, club, meeting, text, imageUrl, isOwnActivity, createdAt } =
     activity;
+  const firstBook = books[0];
   const navigate = useNavigate();
   const displayName = actor.nickname || actor.name;
   const [detailOpen, setDetailOpen] = useState(false);
@@ -98,11 +100,11 @@ export function MeetingRecapFeedCard({
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 pt-0 sm:flex-row">
-          {book?.coverUrl || imageUrl ? (
+          {firstBook?.coverUrl || imageUrl ? (
             <div className="flex gap-3 shrink-0">
-              {book?.coverUrl ? (
+              {firstBook?.coverUrl ? (
                 <img
-                  src={book.coverUrl}
+                  src={firstBook.coverUrl}
                   alt=""
                   className="h-28 w-[4.5rem] rounded-md object-cover bg-muted"
                 />
@@ -117,11 +119,13 @@ export function MeetingRecapFeedCard({
             </div>
           ) : null}
           <div className="min-w-0 flex-1 space-y-1">
-            {book ? (
-              <p className="font-medium text-foreground">{book.title}</p>
+            {books.length > 0 ? (
+              <p className="font-medium text-foreground truncate">
+                {formatMeetingBooksLabel(books)}
+              </p>
             ) : null}
-            {book?.author ? (
-              <p className="text-sm text-muted-foreground">{book.author}</p>
+            {books.length === 1 && firstBook?.author ? (
+              <p className="text-sm text-muted-foreground">{firstBook.author}</p>
             ) : null}
             {text ? (
               <p className="text-sm text-foreground line-clamp-4">{text}</p>

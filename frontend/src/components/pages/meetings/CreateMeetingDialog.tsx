@@ -23,7 +23,6 @@ import {
   BOOK_STATUS_STARTED,
   BOOK_STATUS_SUGGESTED,
 } from "@/utils/constants/books";
-import { MEETING_NO_BOOK_SELECT_VALUE } from "@/utils/constants/meeting";
 import {
   formatMeetingDateForApi,
   formatMeetingTimeForApi,
@@ -44,7 +43,7 @@ const emptyValues: MeetingFormValues = {
   meetingDate: undefined,
   meetingTime: "",
   description: "",
-  bookId: MEETING_NO_BOOK_SELECT_VALUE,
+  bookIds: [],
   chapterStart: undefined,
   chapterEnd: undefined,
   totalChapters: undefined,
@@ -65,17 +64,22 @@ export default function CreateMeetingDialog({
 
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
   const isChaptersMode = selectedClub?.readingMode === "chapters";
-  const selectedBookId = watch("bookId");
+  const maxBooks = isChaptersMode ? 1 : 4;
+  const selectedBookIds = watch("bookIds");
+  const selectedBookId = selectedBookIds[0];
   const selectedBook = booksFromSelectedClub.find(
-    (book) => book.id === selectedBookId,
+    (book) => book.id === selectedBookId
   );
   const needsTotalChapters = Boolean(
-    isChaptersMode && selectedBook && selectedBook.totalChapters == null,
+    isChaptersMode &&
+      selectedBookIds.length === 1 &&
+      selectedBook &&
+      selectedBook.totalChapters == null
   );
   const bookOptions = booksFromSelectedClub.filter(
     (book) =>
       book.status === BOOK_STATUS_SUGGESTED ||
-      book.status === BOOK_STATUS_STARTED,
+      book.status === BOOK_STATUS_STARTED
   );
 
   const { mutate: createMeetingMutate, isPending } = useMutation<
@@ -115,7 +119,11 @@ export default function CreateMeetingDialog({
 
   useEffect(() => {
     setValue("totalChapters", undefined);
-  }, [selectedBookId, setValue]);
+    if (selectedBookIds.length !== 1) {
+      setValue("chapterStart", undefined);
+      setValue("chapterEnd", undefined);
+    }
+  }, [selectedBookIds, setValue]);
 
   const onSubmit: SubmitHandler<MeetingFormValues> = (data) => {
     if (!selectedClubId) {
@@ -124,14 +132,11 @@ export default function CreateMeetingDialog({
     }
     if (!data.meetingDate) return;
 
-    const resolvedBookId =
-      data.bookId && data.bookId !== MEETING_NO_BOOK_SELECT_VALUE
-        ? data.bookId
-        : undefined;
-    const shouldSendChapterRange = isChaptersMode && resolvedBookId;
+    const shouldSendChapterRange =
+      isChaptersMode && data.bookIds.length === 1;
 
     createMeetingMutate({
-      ...(resolvedBookId ? { bookId: resolvedBookId } : {}),
+      bookIds: data.bookIds,
       ...(shouldSendChapterRange
         ? {
             chapterStart: data.chapterStart ?? null,
@@ -172,6 +177,7 @@ export default function CreateMeetingDialog({
               books={bookOptions}
               isChaptersMode={isChaptersMode}
               needsTotalChapters={needsTotalChapters}
+              maxBooks={maxBooks}
             />
 
             <DialogFooter className="mt-5">

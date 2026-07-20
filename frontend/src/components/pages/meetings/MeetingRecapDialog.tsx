@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@/types/IApi";
 import type { IMeeting } from "@/types/IMeetings";
 import { formatDayMonthYear } from "@/utils/formatters";
+import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import {
   createMeetingRecap,
   dismissMeetingRecapPrompt,
@@ -29,7 +30,7 @@ interface MeetingRecapDialogProps {
   onOpenChange: (open: boolean) => void;
   meeting: Pick<
     IMeeting,
-    "id" | "meetingDate" | "book" | "recap"
+    "id" | "meetingDate" | "books" | "recap"
   > | null;
   showDismissButton?: boolean;
   onFinished?: () => void;
@@ -119,7 +120,10 @@ const MeetingRecapDialog = ({
     },
   });
 
-  const bookTitle = meeting?.book?.title;
+  const books = meeting?.books ?? [];
+  const firstBook = books[0];
+  const booksLabel =
+    books.length > 0 ? formatMeetingBooksLabel(books) : null;
 
   return (
     <Dialog open={openDialog} onOpenChange={onOpenChange}>
@@ -131,26 +135,28 @@ const MeetingRecapDialog = ({
           <DialogDescription className="text-left text-sm text-muted-foreground">
             {meeting
               ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}${
-                  bookTitle ? ` · ${bookTitle}` : ""
+                  booksLabel ? ` · ${booksLabel}` : ""
                 }`
               : null}
           </DialogDescription>
         </DialogHeader>
 
-        {meeting?.book ? (
+        {firstBook ? (
           <div className="mb-4 flex items-center gap-3 rounded-md border border-secondary/60 p-3">
-            {meeting.book.coverUrl ? (
+            {firstBook.coverUrl ? (
               <img
-                src={meeting.book.coverUrl}
+                src={firstBook.coverUrl}
                 alt=""
                 className="h-16 w-11 rounded object-cover"
               />
             ) : null}
             <div className="min-w-0">
-              <p className="font-medium truncate">{meeting.book.title}</p>
-              {meeting.book.author ? (
+              <p className="font-medium truncate">
+                {formatMeetingBooksLabel(books)}
+              </p>
+              {books.length === 1 && firstBook.author ? (
                 <p className="text-sm text-muted-foreground truncate">
-                  {meeting.book.author}
+                  {firstBook.author}
                 </p>
               ) : null}
             </div>
