@@ -5,13 +5,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClub } from "../../../api/mutations/clubMutate";
 import { toast } from "react-toastify";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "../../ui/responsive-dialog";
 import { Button } from "../../ui/button";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useClub } from "../../../contexts/ClubContext";
@@ -132,141 +133,151 @@ const CreateClubDialog = ({ open, onOpenChange }: CreateClubDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px] lg:max-w-2xl">
-        <DialogHeader className="gap-0">
-          <DialogTitle className="text-3xl text-primary">
-            {createdCode ? "Clube Criado!" : "Criar Novo Clube"}
-          </DialogTitle>
-          <DialogDescription className="text-1xl text-warm-brown">
-            {createdCode
-              ? "Compartilhe o link ou o código para que entrem no clube."
-              : "Preencha as informações do seu clube do livro"}
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(isOpen) => !isOpen && handleClose()}
+    >
+      <ResponsiveDialogContent className="sm:max-w-[425px] lg:max-h-[90vh] lg:max-w-2xl lg:overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <ResponsiveDialogHeader className="gap-0">
+            <ResponsiveDialogTitle className="text-3xl text-primary">
+              {createdCode ? "Clube Criado!" : "Criar Novo Clube"}
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className="text-1xl text-warm-brown">
+              {createdCode
+                ? "Compartilhe o link ou o código para que entrem no clube."
+                : "Preencha as informações do seu clube do livro"}
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
-        {createdCode ? (
-          <div className="flex flex-col items-center justify-center gap-6 py-6">
-            <div className="flex w-full flex-col items-center gap-2">
-              <span className="text-sm uppercase tracking-wider text-muted-foreground">
-                Código de Convite
-              </span>
-              <div
-                className="flex w-full max-w-sm cursor-pointer items-center justify-between gap-3 rounded-xl border border-primary/20 bg-secondary/20 p-4 transition-colors hover:bg-secondary/30"
-                onClick={handleCopyCode}
-              >
-                <code className="flex-1 text-center text-3xl font-bold tracking-widest text-primary">
-                  {createdCode}
-                </code>
+          {createdCode ? (
+            <>
+              <ResponsiveDialogBody className="flex flex-col items-center justify-center gap-6 py-6">
+                <div className="flex w-full flex-col items-center gap-2">
+                  <span className="text-sm uppercase tracking-wider text-muted-foreground">
+                    Código de Convite
+                  </span>
+                  <div
+                    className="flex w-full max-w-sm cursor-pointer items-center justify-between gap-3 rounded-xl border border-primary/20 bg-secondary/20 p-4 transition-colors hover:bg-secondary/30"
+                    onClick={handleCopyCode}
+                  >
+                    <code className="flex-1 text-center text-3xl font-bold tracking-widest text-primary">
+                      {createdCode}
+                    </code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleCopyCode();
+                      }}
+                    >
+                      {copiedCode ? (
+                        <FaCheck className="text-green-600" />
+                      ) : (
+                        <FaRegCopy />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Clique no código para copiar
+                  </p>
+                </div>
+
+                <div className="flex w-full max-w-sm flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleCopyLink}
+                  >
+                    {copiedLink ? (
+                      <>
+                        <FaCheck className="text-green-600" />
+                        Link copiado
+                      </>
+                    ) : (
+                      <>
+                        <FaRegCopy />
+                        Copiar link de convite
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </ResponsiveDialogBody>
+
+              <ResponsiveDialogFooter className="w-full sm:justify-center">
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleCopyCode();
-                  }}
+                  onClick={handleClose}
+                  className="w-full py-6 text-base sm:w-1/2 md:text-lg"
                 >
-                  {copiedCode ? (
-                    <FaCheck className="text-green-600" />
-                  ) : (
-                    <FaRegCopy />
-                  )}
+                  Fechar e Ir para o Clube
                 </Button>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Clique no código para copiar
-              </p>
-            </div>
-
-            <div className="flex w-full max-w-sm flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleCopyLink}
+              </ResponsiveDialogFooter>
+            </>
+          ) : (
+            <FormProvider {...form}>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex min-h-0 flex-1 flex-col"
               >
-                {copiedLink ? (
-                  <>
-                    <FaCheck className="text-green-600" />
-                    Link copiado
-                  </>
-                ) : (
-                  <>
-                    <FaRegCopy />
-                    Copiar link de convite
-                  </>
-                )}
-              </Button>
-            </div>
+                <ResponsiveDialogBody className="grid gap-4">
+                  <div className="grid gap-2">
+                    <label htmlFor="name" className="text-warm-brown">
+                      Nome do Clube:
+                    </label>
+                    <input
+                      {...register("name", { required: true })}
+                      placeholder="Ex.: Clube dos Clássicos"
+                      className="w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
+                    />
+                    {errors.name ? (
+                      <h3 className="text-xs text-primary">
+                        Um clube precisa de um nome!
+                      </h3>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-1">
+                    <label htmlFor="description" className="text-warm-brown">
+                      Descrição:
+                    </label>
+                    <textarea
+                      {...register("description", {
+                        required: true,
+                        validate: (value) =>
+                          visibility !== CLUB_VISIBILITY_PUBLIC ||
+                          value.trim().length >=
+                            PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
+                            ? true
+                            : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
+                      })}
+                      placeholder="Descreva o objetivo e tema do clube"
+                      className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
+                    />
+                    {errors.description ? (
+                      <h3 className="text-xs text-primary">
+                        {errors.description.message ||
+                          "Deixe os leitores saberem mais sobre o clube"}
+                      </h3>
+                    ) : null}
+                  </div>
 
-            <DialogFooter className="w-full sm:justify-center">
-              <Button
-                onClick={handleClose}
-                className="w-full py-6 text-base sm:w-1/2 md:text-lg"
-              >
-                Fechar e Ir para o Clube
-              </Button>
-            </DialogFooter>
-          </div>
-        ) : (
-          <FormProvider {...form}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <label htmlFor="name" className="text-warm-brown">
-                    Nome do Clube:
-                  </label>
-                  <input
-                    {...register("name", { required: true })}
-                    placeholder="Ex.: Clube dos Clássicos"
-                    className="w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
-                  />
-                  {errors.name ? (
-                    <h3 className="text-xs text-primary">
-                      Um clube precisa de um nome!
-                    </h3>
-                  ) : null}
-                </div>
-                <div className="grid gap-1">
-                  <label htmlFor="description" className="text-warm-brown">
-                    Descrição:
-                  </label>
-                  <textarea
-                    {...register("description", {
-                      required: true,
-                      validate: (value) =>
-                        visibility !== CLUB_VISIBILITY_PUBLIC ||
-                        value.trim().length >=
-                          PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH
-                          ? true
-                          : `Mínimo de ${PUBLIC_CLUB_DESCRIPTION_MIN_LENGTH} caracteres para clube público`,
-                    })}
-                    placeholder="Descreva o objetivo e tema do clube"
-                    className="h-40 w-full rounded-lg border-2 border-secondary bg-background p-2 text-foreground"
-                  />
-                  {errors.description ? (
-                    <h3 className="text-xs text-primary">
-                      {errors.description.message ||
-                        "Deixe os leitores saberem mais sobre o clube"}
-                    </h3>
-                  ) : null}
-                </div>
-
-                <ClubMetadataFields requireLocation />
-              </div>
-              <DialogFooter className=" mt-5 ">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Criando…" : "Criar Clube"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </FormProvider>
-        )}
-      </DialogContent>
-    </Dialog>
+                  <ClubMetadataFields requireLocation />
+                </ResponsiveDialogBody>
+                <ResponsiveDialogFooter className="mt-5">
+                  <Button type="button" variant="outline" onClick={handleClose}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isPending}>
+                    {isPending ? "Criando…" : "Criar Clube"}
+                  </Button>
+                </ResponsiveDialogFooter>
+              </form>
+            </FormProvider>
+          )}
+        </div>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
 

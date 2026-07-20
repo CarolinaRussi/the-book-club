@@ -10,13 +10,14 @@ import {
 } from "@/components/pages/library/BookSearchCombobox";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { useClub } from "@/contexts/ClubContext";
 import { cn } from "@/lib/utils";
 import type { IApiError } from "@/types/IApi";
@@ -155,22 +156,22 @@ export default function CreateBookDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(90dvh,100svh)] min-h-0 w-full max-w-[calc(100vw-2rem)] flex-col gap-4 overflow-hidden p-6 sm:max-w-[425px] lg:max-w-2xl">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="w-full sm:max-w-[425px] lg:flex lg:max-h-[min(90dvh,100svh)] lg:max-w-2xl lg:flex-col lg:overflow-hidden">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
         >
-          <DialogHeader className="shrink-0 gap-0 pr-8">
-            <DialogTitle className="line-clamp-2 text-balance text-left text-2xl text-primary sm:text-3xl">
+          <ResponsiveDialogHeader className="shrink-0 gap-0 pr-8">
+            <ResponsiveDialogTitle className="line-clamp-2 text-balance text-left text-2xl text-primary sm:text-3xl">
               Adicionar nova Leitura
-            </DialogTitle>
-            <DialogDescription className="text-1xl text-warm-brown">
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription className="text-1xl text-warm-brown">
               Pesquise na Open Library ou adicione manualmente.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
-          <div className="min-h-0 max-h-[min(70dvh,calc(100svh-14rem))] flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+          <ResponsiveDialogBody className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
             <h3 className="mt-3 mb-3 text-lg font-medium">
               1. Pesquisar na OpenLibrary (biblioteca online)
             </h3>
@@ -348,9 +349,9 @@ export default function CreateBookDialog({
                 </div>
               </div>
             </div>
-          </div>
+          </ResponsiveDialogBody>
 
-          <DialogFooter className="mt-0 shrink-0 border-t border-border/60 pt-4">
+          <ResponsiveDialogFooter className="mt-0 shrink-0 border-t border-border/60 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -361,9 +362,9 @@ export default function CreateBookDialog({
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Salvar Livro"}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

@@ -1,9 +1,10 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "../../ui/responsive-dialog";
 import JoinClubPanel from "./JoinClubPanel";
 
 interface JoinClubDialogProps {
@@ -20,25 +21,29 @@ const JoinClubDialog = ({
   onSuccess,
 }: JoinClubDialogProps) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-2 sm:max-w-[425px]">
-        <DialogHeader className="gap-0">
-          <DialogTitle className="text-3xl text-primary">
-            Entrar em um Clube
-          </DialogTitle>
-        </DialogHeader>
-        <JoinClubPanel
-          invitationCode={invitationCode}
-          enabled={open && !!invitationCode}
-          variant="dialog"
-          onCancel={() => onOpenChange(false)}
-          onJoined={() => {
-            onOpenChange(false);
-            onSuccess();
-          }}
-        />
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="gap-2 sm:max-w-[425px]">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <ResponsiveDialogHeader className="gap-0">
+            <ResponsiveDialogTitle className="text-3xl text-primary">
+              Entrar em um Clube
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody>
+            <JoinClubPanel
+              invitationCode={invitationCode}
+              enabled={open && !!invitationCode}
+              variant="dialog"
+              onCancel={() => onOpenChange(false)}
+              onJoined={() => {
+                onOpenChange(false);
+                onSuccess();
+              }}
+            />
+          </ResponsiveDialogBody>
+        </div>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
 

@@ -27,11 +27,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -216,17 +217,17 @@ export default function AddReviewDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-6 pr-0 sm:max-w-[425px] lg:max-w-2xl">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="w-full max-w-[calc(100vw-2rem)] sm:max-w-[425px] lg:flex lg:max-h-[calc(100dvh-2rem)] lg:max-w-2xl lg:flex-col lg:overflow-hidden lg:p-6 lg:pr-0">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-          <DialogHeader className="shrink-0 gap-0 pr-8">
+          <ResponsiveDialogHeader className="shrink-0 gap-0 pr-8">
             <div className="flex flex-wrap items-start justify-center gap-2 text-center sm:justify-start sm:text-left">
-              <DialogTitle className="line-clamp-3 min-w-0 max-w-[calc(100%-2rem)] text-2xl text-primary sm:text-3xl">
+              <ResponsiveDialogTitle className="line-clamp-3 min-w-0 max-w-[calc(100%-2rem)] text-2xl text-primary sm:text-3xl">
                 {book?.title}
-              </DialogTitle>
+              </ResponsiveDialogTitle>
               {canDeleteBook && onDeleteBook ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -262,9 +263,9 @@ export default function AddReviewDialog({
                 </AlertDialog>
               ) : null}
             </div>
-          </DialogHeader>
+          </ResponsiveDialogHeader>
 
-          <div className="min-h-0 overflow-y-auto overscroll-contain pr-4">
+          <ResponsiveDialogBody className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4">
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-4 sm:gap-3">
               <div className="mx-auto w-28 sm:mx-0 sm:w-auto">
                 <img
@@ -411,9 +412,9 @@ export default function AddReviewDialog({
 
             <hr className="my-4" />
             <BookReviewsList reviews={reviews} />
-          </div>
+          </ResponsiveDialogBody>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

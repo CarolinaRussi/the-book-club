@@ -158,7 +158,8 @@ function ResponsiveDialogContent({
     <DrawerContent
       className={cn(
         "flex h-[90dvh] max-h-[90dvh] flex-col gap-0 overflow-hidden p-0",
-        className
+        className,
+        "w-full! max-w-none!"
       )}
       {...props}
     >
