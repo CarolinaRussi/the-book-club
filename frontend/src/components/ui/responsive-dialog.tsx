@@ -136,9 +136,11 @@ function ResponsiveDialogContent({
   className,
   children,
   showCloseButton = true,
+  flush = false,
   ...props
 }: React.ComponentProps<typeof DialogContent> & {
   showCloseButton?: boolean;
+  flush?: boolean;
 }) {
   const { isDesktop } = useResponsiveDialogContext();
 
@@ -163,12 +165,20 @@ function ResponsiveDialogContent({
       )}
       {...props}
     >
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-2">
+      <div
+        className={cn(
+          "relative flex min-h-0 flex-1 flex-col overflow-hidden",
+          flush ? "p-0" : "px-6 pt-2 pb-6"
+        )}
+      >
         {children}
         {showCloseButton && (
           <DrawerClose
             data-slot="drawer-close"
-            className="absolute top-2 right-4 cursor-pointer rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+            className={cn(
+              "absolute cursor-pointer rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none",
+              flush ? "top-4 right-4" : "top-2 right-4"
+            )}
           >
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>
