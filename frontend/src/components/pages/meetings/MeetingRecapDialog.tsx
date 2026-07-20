@@ -14,7 +14,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IApiError } from "@/types/IApi";
 import type { IMeeting } from "@/types/IMeetings";
 import { formatDayMonthYear } from "@/utils/formatters";
-import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import {
   createMeetingRecap,
   dismissMeetingRecapPrompt,
@@ -122,9 +121,6 @@ const MeetingRecapDialog = ({
   });
 
   const books = meeting?.books ?? [];
-  const firstBook = books[0];
-  const booksLabel =
-    books.length > 0 ? formatMeetingBooksLabel(books) : null;
 
   return (
     <ResponsiveDialog open={openDialog} onOpenChange={onOpenChange}>
@@ -136,33 +132,35 @@ const MeetingRecapDialog = ({
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription className="text-left text-sm text-muted-foreground">
               {meeting
-                ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}${
-                    booksLabel ? ` · ${booksLabel}` : ""
-                  }`
+                ? `Encontro de ${formatDayMonthYear(meeting.meetingDate)}`
                 : null}
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
           <ResponsiveDialogBody className="space-y-4">
-            {firstBook ? (
-              <div className="flex items-center gap-3 rounded-md border border-secondary/60 p-3">
-                {firstBook.coverUrl ? (
-                  <img
-                    src={firstBook.coverUrl}
-                    alt=""
-                    className="h-16 w-11 rounded object-cover"
-                  />
-                ) : null}
-                <div className="min-w-0">
-                  <p className="font-medium truncate">
-                    {formatMeetingBooksLabel(books)}
-                  </p>
-                  {books.length === 1 && firstBook.author ? (
-                    <p className="text-sm text-muted-foreground truncate">
-                      {firstBook.author}
-                    </p>
-                  ) : null}
-                </div>
+            {books.length > 0 ? (
+              <div className="flex flex-col gap-2 rounded-md border border-secondary/60 p-3">
+                {books.map((book) => (
+                  <div key={book.id} className="flex items-center gap-3">
+                    {book.coverUrl ? (
+                      <img
+                        src={book.coverUrl}
+                        alt=""
+                        className="h-16 w-11 shrink-0 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="h-16 w-11 shrink-0 rounded bg-muted" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-medium leading-snug">{book.title}</p>
+                      {book.author ? (
+                        <p className="text-sm text-muted-foreground truncate">
+                          {book.author}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : null}
 

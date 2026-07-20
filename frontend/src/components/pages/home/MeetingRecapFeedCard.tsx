@@ -14,7 +14,6 @@ import {
   formatRelativeTime,
   getInitials,
 } from "@/utils/formatters";
-import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 import MeetingRecapDetailDialog from "./MeetingRecapDetailDialog";
 
 export function MeetingRecapFeedCard({
@@ -24,7 +23,6 @@ export function MeetingRecapFeedCard({
 }) {
   const { actor, books, club, meeting, text, imageUrl, isOwnActivity, createdAt } =
     activity;
-  const firstBook = books[0];
   const navigate = useNavigate();
   const displayName = actor.nickname || actor.name;
   const [detailOpen, setDetailOpen] = useState(false);
@@ -99,39 +97,45 @@ export function MeetingRecapFeedCard({
             </p>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 pt-0 sm:flex-row">
-          {firstBook?.coverUrl || imageUrl ? (
-            <div className="flex gap-3 shrink-0">
-              {firstBook?.coverUrl ? (
-                <img
-                  src={firstBook.coverUrl}
-                  alt=""
-                  className="h-28 w-[4.5rem] rounded-md object-cover bg-muted"
-                />
-              ) : null}
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt=""
-                  className="h-28 w-36 rounded-md object-cover bg-muted"
-                />
-              ) : null}
+        <CardContent className="flex flex-col gap-3 pt-0">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt=""
+              className="h-28 w-36 rounded-md object-cover bg-muted"
+            />
+          ) : null}
+          {books.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {books.map((book) => (
+                <div key={book.id} className="flex items-center gap-3">
+                  {book.coverUrl ? (
+                    <img
+                      src={book.coverUrl}
+                      alt=""
+                      className="h-16 w-11 shrink-0 rounded-md object-cover bg-muted"
+                    />
+                  ) : (
+                    <div className="h-16 w-11 shrink-0 rounded-md bg-muted" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-medium leading-snug text-foreground">
+                      {book.title}
+                    </p>
+                    {book.author ? (
+                      <p className="text-sm text-muted-foreground">
+                        {book.author}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : null}
-          <div className="min-w-0 flex-1 space-y-1">
-            {books.length > 0 ? (
-              <p className="font-medium text-foreground truncate">
-                {formatMeetingBooksLabel(books)}
-              </p>
-            ) : null}
-            {books.length === 1 && firstBook?.author ? (
-              <p className="text-sm text-muted-foreground">{firstBook.author}</p>
-            ) : null}
-            {text ? (
-              <p className="text-sm text-foreground line-clamp-4">{text}</p>
-            ) : null}
-            <p className="text-sm text-muted-foreground">{meeting.location}</p>
-          </div>
+          {text ? (
+            <p className="text-sm text-foreground line-clamp-4">{text}</p>
+          ) : null}
+          <p className="text-sm text-muted-foreground">{meeting.location}</p>
         </CardContent>
         <CardFooter className="pt-0">
           <span className="text-sm font-medium text-primary">Ver registro</span>

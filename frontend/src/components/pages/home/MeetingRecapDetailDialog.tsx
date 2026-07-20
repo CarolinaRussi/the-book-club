@@ -18,7 +18,6 @@ import {
   formatTime,
   getInitials,
 } from "@/utils/formatters";
-import { formatMeetingBooksLabel } from "@/utils/formatMeetingBooksLabel";
 
 interface MeetingRecapDetailDialogProps {
   open: boolean;
@@ -38,7 +37,6 @@ export default function MeetingRecapDetailDialog({
   if (!activity) return null;
 
   const { actor, books, club, meeting, text, imageUrl, createdAt } = activity;
-  const firstBook = books[0];
   const displayName = actor.nickname || actor.name;
   const clubFromContext = clubs.find((clubRow) => clubRow.id === club.id);
   const isAdminOfClub = !!(
@@ -118,28 +116,34 @@ export default function MeetingRecapDetailDialog({
             ) : null}
 
             <div className="flex flex-col gap-4 px-5 py-4 text-left sm:px-6">
-              {firstBook ? (
-                <div className="flex items-center gap-3">
-                  {firstBook.coverUrl ? (
-                    <img
-                      src={firstBook.coverUrl}
-                      alt=""
-                      className="h-20 w-14 shrink-0 rounded object-cover bg-muted shadow-sm"
-                    />
-                  ) : null}
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">
-                      {books.length > 1 ? "Livros da vez" : "Livro da vez"}
-                    </p>
-                    <p className="font-medium leading-snug text-foreground">
-                      {formatMeetingBooksLabel(books, 80)}
-                    </p>
-                    {books.length === 1 && firstBook.author ? (
-                      <p className="text-sm text-muted-foreground">
-                        {firstBook.author}
-                      </p>
-                    ) : null}
-                  </div>
+              {books.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs text-muted-foreground">
+                    {books.length > 1 ? "Livros da vez" : "Livro da vez"}
+                  </p>
+                  {books.map((book) => (
+                    <div key={book.id} className="flex items-center gap-3">
+                      {book.coverUrl ? (
+                        <img
+                          src={book.coverUrl}
+                          alt=""
+                          className="h-20 w-14 shrink-0 rounded object-cover bg-muted shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-20 w-14 shrink-0 rounded bg-muted shadow-sm" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium leading-snug text-foreground">
+                          {book.title}
+                        </p>
+                        {book.author ? (
+                          <p className="text-sm text-muted-foreground">
+                            {book.author}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : null}
 
