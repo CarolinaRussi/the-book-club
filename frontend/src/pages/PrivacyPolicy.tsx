@@ -110,14 +110,82 @@ export default function PrivacyPolicy() {
           Os tokens de atualização (refresh) são guardados no{" "}
           <strong className="text-foreground">servidor</strong> da aplicação,
           de forma protegida, e não são expostos no site público nem partilhados
-          com outros utilizadores da plataforma. Não acedemos ao conteúdo dos
-          seus e-mails nem a contatos fora do descrito acima.
+          com outros utilizadores da aplicação. Não acedemos ao conteúdo dos
+          seus e-mails nem a contactos fora do descrito acima.
+        </p>
+        <p className="text-base leading-relaxed text-muted-foreground">
+          Permissões solicitadas ao Google:{" "}
+          <strong className="text-foreground">
+            criar, editar e eliminar eventos de calendário
+          </strong>{" "}
+          (<code className="text-sm">calendar.events</code>) e{" "}
+          <strong className="text-foreground">ler o endereço de e-mail</strong>{" "}
+          da conta Google ligada (<code className="text-sm">userinfo.email</code>
+          ), apenas para identificar qual conta está conectada.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="text-xl font-semibold text-foreground">
-          5. Conservação dos dados
+          5. Proteção de dados sensíveis
+        </h2>
+        <p className="text-base leading-relaxed text-muted-foreground">
+          Aplicamos as seguintes medidas técnicas e organizativas aos dados
+          sensíveis tratados pela aplicação, incluindo tokens OAuth do Google e
+          credenciais de conta:
+        </p>
+        <ul className="list-disc space-y-2 pl-5 text-base leading-relaxed text-muted-foreground">
+          <li>
+            <strong className="text-foreground">Encriptação em trânsito:</strong>{" "}
+            toda a comunicação entre o browser, a API e serviços externos
+            (incluindo Google OAuth e Google Calendar API) utiliza{" "}
+            <strong className="text-foreground">HTTPS/TLS</strong>.
+          </li>
+          <li>
+            <strong className="text-foreground">Encriptação em repouso:</strong>{" "}
+            os refresh tokens OAuth do Google são encriptados com{" "}
+            <strong className="text-foreground">AES-256-GCM</strong> antes de
+            serem persistidos na base de dados; a chave de encriptação reside
+            apenas no servidor da aplicação e não é exposta ao cliente.
+          </li>
+          <li>
+            <strong className="text-foreground">Controlo de acesso:</strong>{" "}
+            tokens Google e dados de calendário associados a uma conta só são
+            acedidos no contexto da sessão autenticada dessa utilizadora;
+            outros utilizadores da plataforma não têm acesso a esses dados.
+          </li>
+          <li>
+            <strong className="text-foreground">Senhas:</strong> armazenadas com
+            função de hash unidirecional (bcrypt), nunca em texto plano.
+          </li>
+          <li>
+            <strong className="text-foreground">Minimização e finalidade:</strong>{" "}
+            os tokens Google servem exclusivamente para sincronizar eventos de
+            encontros criados na aplicação com o Google Calendar da utilizadora;
+            não são utilizados para publicidade, perfilamento nem treino de
+            modelos de IA/ML.
+          </li>
+          <li>
+            <strong className="text-foreground">Revogação e eliminação:</strong>{" "}
+            pode desconectar o Google Calendar na área de perfil da aplicação
+            (remoção dos tokens no servidor) e revogar o acesso em{" "}
+            <a
+              href="https://myaccount.google.com/permissions"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              myaccount.google.com/permissions
+            </a>
+            ; ao eliminar a conta Entrelivros, os dados associados, incluindo
+            tokens Google, são removidos nos limites técnicos aplicáveis.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10 space-y-3">
+        <h2 className="text-xl font-semibold text-foreground">
+          6. Conservação dos dados
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           Conservamos os dados enquanto a sua conta existir e forem necessários
@@ -128,7 +196,7 @@ export default function PrivacyPolicy() {
 
       <section className="mt-10 space-y-3">
         <h2 className="text-xl font-semibold text-foreground">
-          6. Encarregados de tratamento e transferências
+          7. Encarregados de tratamento e transferências
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           A aplicação utiliza prestadores de infraestrutura (por exemplo,
@@ -140,7 +208,7 @@ export default function PrivacyPolicy() {
 
       <section className="mt-10 space-y-3">
         <h2 className="text-xl font-semibold text-foreground">
-          7. Os seus direitos
+          8. Os seus direitos
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           Nos termos da legislação aplicável (por exemplo, a Lei Geral de
@@ -153,7 +221,7 @@ export default function PrivacyPolicy() {
 
       <section className="mt-10 space-y-3">
         <h2 className="text-xl font-semibold text-foreground">
-          8. Alterações a esta política
+          9. Alterações a esta política
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
           Podemos atualizar esta página para refletir mudanças no serviço ou
