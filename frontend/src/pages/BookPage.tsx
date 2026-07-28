@@ -7,7 +7,7 @@ import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
 import { toast } from "react-toastify";
 import { fetchBookPage } from "@/api/queries/fetchBookPage";
 import { updateUserPersonalList } from "@/api/mutations/userMutate";
-import { BookPageMyClubsSection } from "@/components/pages/book/BookPageMyClubsSection";
+import { BookPageClubLinks } from "@/components/pages/book/BookPageClubLinks";
 import { BookPageReviewForm } from "@/components/pages/book/BookPageReviewForm";
 import { BookPageReviewsSection } from "@/components/pages/book/BookPageReviewsSection";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -192,6 +192,7 @@ export default function BookPage() {
                 {bookPage.book.title}
               </h1>
               <p className="mt-2 text-warm-brown/70">{bookPage.book.author}</p>
+              <BookPageClubLinks clubs={bookPage.myClubsWithBook} />
             </div>
           </header>
 
@@ -215,10 +216,6 @@ export default function BookPage() {
             onScopeChange={handleScopeChange}
             onPageChange={setReviewsPage}
           />
-
-          <hr />
-
-          <BookPageMyClubsSection clubs={bookPage.myClubsWithBook} />
         </>
       ) : null}
     </div>
