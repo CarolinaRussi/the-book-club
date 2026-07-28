@@ -49,6 +49,7 @@ import type {
   IBookReviewPayload,
   IBookTotalChaptersPayload,
   IReview,
+  IUserBook,
 } from "@/types/IBooks";
 import { formatMonthYear } from "@/utils/formatters";
 import {
@@ -70,6 +71,8 @@ type AddReviewDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   book: IBook | undefined;
+  mode?: "library" | "profile";
+  profileUserBook?: IUserBook;
   canDeleteBook?: boolean;
   isDeletingBook?: boolean;
   onDeleteBook?: () => void;
@@ -79,10 +82,13 @@ export default function AddReviewDialog({
   open,
   onOpenChange,
   book,
+  mode = "library",
+  profileUserBook,
   canDeleteBook = false,
   isDeletingBook = false,
   onDeleteBook,
 }: AddReviewDialogProps) {
+  const isProfileMode = mode === "profile";
   const { user } = useAuth();
   const { selectedClubId } = useClub();
   const queryClient = useQueryClient();
@@ -98,6 +104,12 @@ export default function AddReviewDialog({
     });
 
   useEffect(() => {
+    if (open && isProfileMode && profileUserBook) {
+      setValue("readingStatus", profileUserBook.readingStatus);
+      setValue("rating", profileUserBook.myRating ?? 0);
+      setValue("comment", profileUserBook.myComment ?? "");
+      return;
+    }
     if (open && book) {
       const userReview = book.reviews?.find(
         (review: IReview) => review.user.id === user?.id,
@@ -116,7 +128,7 @@ export default function AddReviewDialog({
         totalChapters: undefined,
       });
     }
-  }, [open, book, user, setValue, reset]);
+  }, [open, book, user, isProfileMode, profileUserBook, setValue, reset]);
 
   const reviews = book?.reviews || [];
   const { average: averageRating, count: reviewsCount } =
@@ -134,7 +146,9 @@ export default function AddReviewDialog({
         queryClient.invalidateQueries({
           queryKey: ["booksFromSelectedClub", selectedClubId],
         }),
+        queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] }),
         queryClient.invalidateQueries({ queryKey: ["bookUsers"] }),
+        queryClient.invalidateQueries({ queryKey: ["userReadings"] }),
         queryClient.invalidateQueries({ queryKey: ["myFeed"] }),
       ]);
       onOpenChange(false);
@@ -184,10 +198,12 @@ export default function AddReviewDialog({
   };
 
   const onSubmit: SubmitHandler<BookReviewForm> = (data) => {
-    if (!selectedClubId || !user || !book) {
-      toast.error(
-        "Clube, livro ou usuário não encontrado, não é possível salvar.",
-      );
+    if (!user || !book) {
+      toast.error("Livro ou usuário não encontrado, não é possível salvar.");
+      return;
+    }
+    if (!isProfileMode && !selectedClubId) {
+      toast.error("Clube não encontrado, não é possível salvar.");
       return;
     }
     if (!data.readingStatus) {
@@ -208,9 +224,13 @@ export default function AddReviewDialog({
       return;
     }
 
+    const clubId = isProfileMode
+      ? profileUserBook?.clubs[0]?.id
+      : selectedClubId;
+
     saveReviewMutate({
       ...data,
-      clubId: selectedClubId,
+      ...(clubId ? { clubId } : {}),
       userId: user.id,
       bookId: book.id,
     });
@@ -228,7 +248,7 @@ export default function AddReviewDialog({
               <ResponsiveDialogTitle className="line-clamp-3 min-w-0 max-w-[calc(100%-2rem)] text-2xl text-primary sm:text-3xl">
                 {book?.title}
               </ResponsiveDialogTitle>
-              {canDeleteBook && onDeleteBook ? (
+              {canDeleteBook && onDeleteBook && !isProfileMode ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button
@@ -276,63 +296,71 @@ export default function AddReviewDialog({
               </div>
               <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:col-span-3 sm:items-start sm:text-left">
                 <div className="text-warm-brown/70">{book?.author}</div>
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                  <Rating
-                    initialValue={averageRating}
-                    readonly
-                    allowFraction
-                    SVGstyle={{ display: "inline" }}
-                    size={25}
-                    fillColor="#be2c3f"
-                    emptyColor="#e2cad0"
-                  />
-                  <span className="text-lg font-bold text-warm-brown/70">
-                    {averageRating.toFixed(1)}
-                  </span>
-                  <span className="text-sm text-warm-brown/70">
-                    ({reviewsCount}{" "}
-                    {reviewsCount === 1 ? "avaliação" : "avaliações"})
-                  </span>
-                </div>
-                {book?.createdAt ? (
-                  <div className="flex items-center gap-1 text-xs text-warm-brown/70">
-                    <LuCalendarDays size={20} />
-                    Lido em {formatMonthYear(book.createdAt)}
-                  </div>
+                {!isProfileMode ? (
+                  <>
+                    <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                      <Rating
+                        initialValue={averageRating}
+                        readonly
+                        allowFraction
+                        SVGstyle={{ display: "inline" }}
+                        size={25}
+                        fillColor="#be2c3f"
+                        emptyColor="#e2cad0"
+                      />
+                      <span className="text-lg font-bold text-warm-brown/70">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-sm text-warm-brown/70">
+                        ({reviewsCount}{" "}
+                        {reviewsCount === 1 ? "avaliação" : "avaliações"})
+                      </span>
+                    </div>
+                    {book?.createdAt ? (
+                      <div className="flex items-center gap-1 text-xs text-warm-brown/70">
+                        <LuCalendarDays size={20} />
+                        Lido em {formatMonthYear(book.createdAt)}
+                      </div>
+                    ) : null}
+                  </>
                 ) : null}
               </div>
             </div>
 
-            <hr className="my-4" />
+            {!isProfileMode ? <hr className="my-4" /> : null}
 
-            <div className="flex flex-col gap-3">
-              <h1 className="text-xl font-semibold text-primary">
-                Dados do livro
-              </h1>
-              <div>
-                <h3 className="font-semibold text-primary">
-                  Total de capítulos:
-                </h3>
-                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    type="number"
-                    min={1}
-                    {...register("totalChapters", { valueAsNumber: true })}
-                    className="border-2 border-secondary"
-                    placeholder="Ex.: 24"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleUpdateTotalChapters}
-                    disabled={isUpdatingTotalChapters}
-                  >
-                    {isUpdatingTotalChapters ? "Salvando..." : "Salvar"}
-                  </Button>
+            {!isProfileMode ? (
+              <div className="flex flex-col gap-3">
+                <h1 className="text-xl font-semibold text-primary">
+                  Dados do livro
+                </h1>
+                <div>
+                  <h3 className="font-semibold text-primary">
+                    Total de capítulos:
+                  </h3>
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      type="number"
+                      min={1}
+                      {...register("totalChapters", { valueAsNumber: true })}
+                      className="border-2 border-secondary"
+                      placeholder="Ex.: 24"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleUpdateTotalChapters}
+                      disabled={isUpdatingTotalChapters}
+                    >
+                      {isUpdatingTotalChapters ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
-            <hr className="my-4" />
+            {!isProfileMode ? <hr className="my-4" /> : null}
+
+            {isProfileMode ? <hr className="my-4" /> : null}
 
             <div className="flex flex-col gap-3">
               <h1 className="text-xl font-semibold text-primary">
@@ -410,8 +438,12 @@ export default function AddReviewDialog({
               </Button>
             </div>
 
-            <hr className="my-4" />
-            <BookReviewsList reviews={reviews} />
+            {!isProfileMode ? (
+              <>
+                <hr className="my-4" />
+                <BookReviewsList reviews={reviews} />
+              </>
+            ) : null}
           </ResponsiveDialogBody>
         </form>
       </ResponsiveDialogContent>

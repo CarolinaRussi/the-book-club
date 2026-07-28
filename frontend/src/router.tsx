@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound.tsx";
 import InviteJoin from "./pages/InviteJoin.tsx";
 import Explore from "./pages/Explore.tsx";
 import ExploreClub from "./pages/ExploreClub.tsx";
+import BookPage from "./pages/BookPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
           {
             path: "/users/:userId",
             element: <UserProfile />,
+          },
+          {
+            path: "/books/:bookId",
+            element: <BookPage />,
           },
           {
             element: <ClubGuard />,

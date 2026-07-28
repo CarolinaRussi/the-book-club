@@ -1,5 +1,6 @@
 import type { BookStatus } from "../utils/constants/books";
 import type { ReadingStatus } from "../utils/constants/reading";
+import type { IPaginatedResponse } from "./IApi";
 import type { IUser } from "./IUser";
 
 export interface IUserPreview {
@@ -72,7 +73,7 @@ export interface IBookReviewPayload {
   rating: number;
   comment: string;
   readingStatus: ReadingStatus | undefined;
-  clubId: string;
+  clubId?: string;
   userId: string;
   bookId: string;
 }
@@ -81,4 +82,40 @@ export interface IBookTotalChaptersPayload {
   clubId: string;
   bookId: string;
   totalChapters: number;
+}
+
+export interface IBookPageBook {
+  id: string;
+  title: string;
+  author: string;
+  coverUrl: string;
+  totalChapters: number | null;
+  createdAt: string;
+}
+
+export interface IBookPageClub {
+  id: string;
+  name: string;
+  clubBookStatus: BookStatus;
+  addedAt: string;
+}
+
+export interface IBookPageMyUserBook {
+  readingStatus: ReadingStatus;
+}
+
+export interface IBookPageMyReview {
+  rating: number | null;
+  comment: string | null;
+}
+
+export type BookReviewsScope = "all" | "my_clubs";
+
+export interface IBookPageResponse {
+  book: IBookPageBook;
+  myUserBook: IBookPageMyUserBook | null;
+  myReview: IBookPageMyReview | null;
+  isInWantToReadQueue: boolean;
+  myClubsWithBook: IBookPageClub[];
+  reviews: IPaginatedResponse<IReview>;
 }

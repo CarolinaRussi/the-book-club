@@ -30,7 +30,7 @@ export default function Me() {
       <section className="space-y-6">
         <ProfileSectionHeading
           id="livros"
-          title="Livros lidos"
+          title="Minha estante"
           description="O que você finalizou e o que outros leitores verão no seu perfil."
         />
         <ProfileReadingsGrid userId={user.id} />

@@ -76,7 +76,7 @@ export function LibraryBookCard({
               }}
               size={40}
               className="relative text-primary drop-shadow-md transition-all hover:scale-110 hover:text-primary"
-              title="Adicionar à fila Quero ler"
+              title="Salvar na minha estante"
             />
           )}
         </div>

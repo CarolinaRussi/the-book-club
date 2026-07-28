@@ -80,7 +80,7 @@ export default function UserProfile() {
 
           <section className="space-y-6">
             <ProfileSectionHeading
-              title="Livros lidos"
+              title="Minha estante"
               description={
                 profile.stats.finishedBooksCount > 0
                   ? `${profile.stats.finishedBooksCount} livro${

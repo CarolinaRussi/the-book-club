@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Rating } from "react-simple-star-rating";
+import AddReviewDialog from "@/components/pages/library/AddReviewDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Pagination from "@/components/ui/pagination";
 import { fetchPaginatedUserBooks } from "@/api/queries/fetchBooks";
 import { fetchUserProfileReadings } from "@/api/queries/fetchUserReadings";
 import ProfileReadingComment from "@/components/pages/profile/ProfileReadingComment";
 import SkeletonMyReadings from "@/components/pages/me/skeletons/SkeletonMyReadings";
+import type { IBook, IUserBook } from "@/types/IBooks";
+import { BOOK_STATUS_FINISHED } from "@/utils/constants/books";
+import { readingStatusLabels } from "@/utils/constants/reading";
 
 interface ProfileReadingsGridProps {
   userId: string;
@@ -16,6 +21,20 @@ interface ProfileReadingsGridProps {
   emptyMessage?: string;
   variant?: "self" | "public";
   viewerId?: string | null;
+}
+
+function profileUserBookToDialogBook(userBook: IUserBook): IBook | undefined {
+  const book = userBook.book;
+  if (!book) return undefined;
+  return {
+    id: book.id,
+    title: book.title,
+    author: book.author ?? "",
+    coverUrl: book.coverUrl ?? "",
+    status: BOOK_STATUS_FINISHED,
+    addedAt: userBook.updatedAt,
+    createdAt: userBook.updatedAt,
+  };
 }
 
 export default function ProfileReadingsGrid({
@@ -27,6 +46,8 @@ export default function ProfileReadingsGrid({
   viewerId = null,
 }: ProfileReadingsGridProps) {
   const [booksPage, setBooksPage] = useState(1);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [userBookToEdit, setUserBookToEdit] = useState<IUserBook | undefined>();
   const isPublic = variant === "public";
 
   const { data: userBooksData, isFetching } = useQuery({
@@ -48,6 +69,18 @@ export default function ProfileReadingsGrid({
     setBooksPage(1);
   }, [userId]);
 
+  const handleOpenEdit = (userBook: IUserBook) => {
+    setUserBookToEdit(userBook);
+    setEditDialogOpen(true);
+  };
+
+  const handleCardClick = (userBook: IUserBook) => {
+    if (isPublic) return;
+    if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+      handleOpenEdit(userBook);
+    }
+  };
+
   if (isFetching) {
     return <SkeletonMyReadings />;
   }
@@ -66,8 +99,23 @@ export default function ProfileReadingsGrid({
         {booksWithData.map((userBook) => (
           <Card
             key={userBook.id}
-            className="group flex w-full flex-row items-stretch gap-0 overflow-hidden py-0 transition-all hover:shadow-(--shadow-medium) md:flex-col"
+            className={`group relative isolate flex w-full flex-row items-stretch gap-0 overflow-hidden py-0 transition-all hover:shadow-(--shadow-medium) md:flex-col ${
+              isPublic ? "" : "cursor-pointer"
+            }`}
+            onClick={() => handleCardClick(userBook)}
           >
+            {!isPublic ? (
+              <div className="pointer-events-none invisible absolute inset-0 z-10 hidden flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity md:flex md:group-hover:visible md:group-hover:opacity-100 md:group-focus-within:visible md:group-focus-within:opacity-100">
+                <Button
+                  type="button"
+                  className="pointer-events-auto w-full max-w-45"
+                  onClick={() => handleOpenEdit(userBook)}
+                >
+                  Editar avaliação
+                </Button>
+              </div>
+            ) : null}
+
             <div className="relative w-22 shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:aspect-2/3 md:w-full md:shrink">
               <img
                 src={userBook.book!.coverUrl ?? ""}
@@ -84,13 +132,15 @@ export default function ProfileReadingsGrid({
                     {userBook.book!.title}
                   </h3>
                   <Badge className="mt-0.5 hidden shrink-0 md:inline-flex">
-                    Completo
+                    {readingStatusLabels[userBook.readingStatus]}
                   </Badge>
                 </div>
                 <p className="mb-2 line-clamp-2 text-sm text-muted-foreground md:mb-3">
                   {userBook.book!.author}
                 </p>
-                <Badge className="mb-3 w-fit md:hidden">Completo</Badge>
+                <Badge className="mb-3 w-fit md:hidden">
+                  {readingStatusLabels[userBook.readingStatus]}
+                </Badge>
                 <ProfileReadingComment
                   comment={userBook.myComment}
                   mode={isPublic ? "expandable" : "fixed-clamp"}
@@ -147,6 +197,23 @@ export default function ProfileReadingsGrid({
           />
         </div>
       )}
+
+      {!isPublic ? (
+        <AddReviewDialog
+          open={editDialogOpen}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) setUserBookToEdit(undefined);
+          }}
+          mode="profile"
+          profileUserBook={userBookToEdit}
+          book={
+            userBookToEdit
+              ? profileUserBookToDialogBook(userBookToEdit)
+              : undefined
+          }
+        />
+      ) : null}
     </>
   );
 }
