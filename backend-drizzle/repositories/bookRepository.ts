@@ -1,7 +1,8 @@
-import { eq, and, or, inArray, desc, ilike, isNull } from "drizzle-orm";
+import { eq, and, or, inArray, desc, ilike, isNull, count, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import {
   book,
+  club,
   clubBook,
   userBook,
   review,
@@ -68,6 +69,129 @@ export async function searchBooksByTitleOrAuthor(pattern: string) {
       or(ilike(book.title, pattern), ilike(book.author ?? "", pattern))
     )
     .limit(10);
+}
+
+export async function findBookById(bookId: string) {
+  const [row] = await db
+    .select()
+    .from(book)
+    .where(eq(book.id, bookId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findViewerClubsWithBook(
+  viewerUserId: string,
+  bookId: string,
+) {
+  return db
+    .select({
+      clubId: club.id,
+      clubName: club.name,
+      clubBookStatus: clubBook.status,
+      addedAt: clubBook.addedAt,
+    })
+    .from(clubBook)
+    .innerJoin(club, eq(clubBook.clubId, club.id))
+    .innerJoin(member, eq(member.clubId, club.id))
+    .where(
+      and(
+        eq(member.userId, viewerUserId),
+        eq(clubBook.bookId, bookId),
+        isNull(clubBook.deletedAt),
+      ),
+    )
+    .orderBy(club.name);
+}
+
+export async function findReviewsWithUsersForBookAll(
+  bookId: string,
+  offset: number,
+  limit: number,
+) {
+  return db
+    .select({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      userId: review.userId,
+      bookId: review.bookId,
+      userName: user.name,
+      userNickname: user.nickname,
+      userProfilePicture: user.profilePicture,
+      userIdFull: user.id,
+    })
+    .from(review)
+    .innerJoin(user, eq(review.userId, user.id))
+    .where(eq(review.bookId, bookId))
+    .orderBy(desc(review.createdAt))
+    .offset(offset)
+    .limit(limit);
+}
+
+export async function countReviewsForBookAll(bookId: string) {
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(review)
+    .where(eq(review.bookId, bookId));
+  return Number(value ?? 0);
+}
+
+export async function findReviewsWithUsersForBookInViewerClubs(
+  bookId: string,
+  clubIds: string[],
+) {
+  if (clubIds.length === 0) return [];
+  return db
+    .select({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      userId: review.userId,
+      bookId: review.bookId,
+      userName: user.name,
+      userNickname: user.nickname,
+      userProfilePicture: user.profilePicture,
+      userIdFull: user.id,
+    })
+    .from(review)
+    .innerJoin(user, eq(review.userId, user.id))
+    .innerJoin(member, eq(member.userId, review.userId))
+    .where(and(eq(review.bookId, bookId), inArray(member.clubId, clubIds)))
+    .orderBy(desc(review.createdAt));
+}
+
+export async function countReviewsForBookInViewerClubs(
+  bookId: string,
+  clubIds: string[],
+) {
+  if (clubIds.length === 0) return 0;
+  const [{ value }] = await db
+    .select({ value: sql<number>`count(distinct ${review.id})` })
+    .from(review)
+    .innerJoin(member, eq(member.userId, review.userId))
+    .where(and(eq(review.bookId, bookId), inArray(member.clubId, clubIds)));
+  return Number(value ?? 0);
+}
+
+export async function findViewerClubIdsWithBook(
+  viewerUserId: string,
+  bookId: string,
+) {
+  const rows = await db
+    .select({ clubId: clubBook.clubId })
+    .from(clubBook)
+    .innerJoin(member, eq(member.clubId, clubBook.clubId))
+    .where(
+      and(
+        eq(member.userId, viewerUserId),
+        eq(clubBook.bookId, bookId),
+        isNull(clubBook.deletedAt),
+      ),
+    );
+  return [...new Set(rows.map((row) => row.clubId))];
 }
 
 export class BookAlreadyInClubSuggestedError extends Error {

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   saveReview as saveReviewService,
   NotClubMemberForReviewError,
+  BookNotFoundError,
 } from "../../services/bookService";
 
 export const saveReview = async (req: Request, res: Response) => {
@@ -10,7 +11,7 @@ export const saveReview = async (req: Request, res: Response) => {
     const { clubId, bookId, rating, comment } = req.body;
     const userId = req.userId;
 
-    if (!clubId || !bookId || !readingStatus || !userId) {
+    if (!bookId || !readingStatus || !userId) {
       return res.status(400).json({
         message: "Selecione o status da leitura para salvar sua avaliação.",
       });
@@ -34,9 +35,12 @@ export const saveReview = async (req: Request, res: Response) => {
     if (error instanceof NotClubMemberForReviewError) {
       return res.status(404).json({ message: error.message });
     }
+    if (error instanceof BookNotFoundError) {
+      return res.status(404).json({ message: error.message });
+    }
     console.error("Erro ao salvar avaliação:", error);
     return res
-      .status(500)
-      .json({ message: "Erro interno ao processar a avaliação." });
+    .status(500)
+    .json({ message: "Erro interno ao processar a avaliação." });
   }
 };

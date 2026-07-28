@@ -190,12 +190,162 @@ export async function getBooksByTitleOrAuthor(query: string | undefined) {
   }));
 }
 
+type BookReviewScope = "all" | "my_clubs";
+
+function dedupeReviewRowsById<
+  ReviewRow extends { id: string; createdAt: Date },
+>(reviewRows: ReviewRow[]) {
+  const byId = new Map<string, ReviewRow>();
+  for (const reviewRow of reviewRows) {
+    if (!byId.has(reviewRow.id)) {
+      byId.set(reviewRow.id, reviewRow);
+    }
+  }
+  return [...byId.values()].sort(
+    (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+  );
+}
+
+function formatReviewRows(
+  reviewRows: Awaited<
+    ReturnType<typeof bookRepository.findReviewsWithUsersForBookAll>
+  >,
+  userBooksForBook: Awaited<
+    ReturnType<typeof bookRepository.findUserBooksByBookIds>
+  >,
+) {
+  const userBooksMap = new Map(
+    userBooksForBook.map((userBookRow) => [userBookRow.userId, userBookRow]),
+  );
+  return reviewRows.map((reviewRow) => {
+    const userBookRow = userBooksMap.get(reviewRow.userId);
+    return {
+      id: reviewRow.id,
+      rating: reviewRow.rating,
+      comment: reviewRow.comment,
+      readingStatus: userBookRow?.readingStatus ?? ReadingStatus.NOTSTARTED,
+      user: {
+        id: reviewRow.userIdFull,
+        name: reviewRow.userName,
+        nickname: reviewRow.userNickname,
+        profilePicture: reviewRow.userProfilePicture,
+      },
+    };
+  });
+}
+
+export async function getBookPage(input: {
+  bookId: string;
+  viewerUserId: string;
+  reviewsScope: BookReviewScope;
+  reviewsPage: number;
+  reviewsLimit: number;
+}) {
+  const bookRow = await bookRepository.findBookById(input.bookId);
+  if (!bookRow) {
+    throw new BookNotFoundError();
+  }
+
+  const skip = (input.reviewsPage - 1) * input.reviewsLimit;
+
+  const [myUserBook, myReviewRows, myClubsWithBook, viewerClubIdsWithBook] =
+    await Promise.all([
+      userRepository.findUserBookByUserAndBook(
+        input.viewerUserId,
+        input.bookId,
+      ),
+      userRepository.findMyReviewsForUserBookIds(input.viewerUserId, [
+        input.bookId,
+      ]),
+      bookRepository.findViewerClubsWithBook(
+        input.viewerUserId,
+        input.bookId,
+      ),
+      bookRepository.findViewerClubIdsWithBook(
+        input.viewerUserId,
+        input.bookId,
+      ),
+    ]);
+
+  const myReview = myReviewRows[0] ?? null;
+  const isInWantToReadQueue =
+    myUserBook?.readingStatus === ReadingStatus.WANT_TO_READ;
+
+  let reviewRows: Awaited<
+    ReturnType<typeof bookRepository.findReviewsWithUsersForBookAll>
+  > = [];
+  let totalReviews = 0;
+
+  if (input.reviewsScope === "all") {
+    [reviewRows, totalReviews] = await Promise.all([
+      bookRepository.findReviewsWithUsersForBookAll(
+        input.bookId,
+        skip,
+        input.reviewsLimit,
+      ),
+      bookRepository.countReviewsForBookAll(input.bookId),
+    ]);
+  } else {
+    const scopedReviewRows = dedupeReviewRowsById(
+      await bookRepository.findReviewsWithUsersForBookInViewerClubs(
+        input.bookId,
+        viewerClubIdsWithBook,
+      ),
+    );
+    totalReviews = scopedReviewRows.length;
+    reviewRows = scopedReviewRows.slice(skip, skip + input.reviewsLimit);
+  }
+
+  const userBooksForBook = await bookRepository.findUserBooksByBookIds([
+    input.bookId,
+  ]);
+
+  const totalPages = Math.ceil(totalReviews / input.reviewsLimit) || 0;
+
+  return {
+    book: {
+      id: bookRow.id,
+      title: bookRow.title,
+      author: bookRow.author,
+      coverUrl: bookRow.coverUrl,
+      totalChapters: bookRow.totalChapters,
+      createdAt: bookRow.createdAt,
+    },
+    myUserBook: myUserBook
+      ? { readingStatus: myUserBook.readingStatus }
+      : null,
+    myReview: myReview
+      ? { rating: myReview.rating, comment: myReview.comment }
+      : null,
+    isInWantToReadQueue,
+    myClubsWithBook: myClubsWithBook.map((clubRow) => ({
+      id: clubRow.clubId,
+      name: clubRow.clubName,
+      clubBookStatus: clubRow.clubBookStatus,
+      addedAt: clubRow.addedAt,
+    })),
+    reviews: {
+      data: formatReviewRows(reviewRows, userBooksForBook),
+      totalPages,
+      currentPage: input.reviewsPage,
+      totalItems: totalReviews,
+    },
+  };
+}
+
 export class NotClubMemberForReviewError extends Error {
   constructor() {
     super(
       "Não foi possível encontrar sua matrícula neste clube para avaliar este livro."
     );
     this.name = "NotClubMemberForReviewError";
+  }
+}
+
+export class BookNotFoundError extends Error {
+  constructor() {
+    super("Livro não encontrado.");
+    this.name = "BookNotFoundError";
   }
 }
 
@@ -246,18 +396,25 @@ export async function updateBookTotalChapters(input: {
 
 export async function saveReview(input: {
   userId: string;
-  clubId: string;
+  clubId?: string;
   bookId: string;
   readingStatus: string;
   rating: number | null | undefined;
   comment: string | null | undefined;
 }) {
-  const memberRow = await bookRepository.findMemberByUserAndClub(
-    input.userId,
-    input.clubId
-  );
-  if (!memberRow) {
-    throw new NotClubMemberForReviewError();
+  if (input.clubId) {
+    const memberRow = await bookRepository.findMemberByUserAndClub(
+      input.userId,
+      input.clubId,
+    );
+    if (!memberRow) {
+      throw new NotClubMemberForReviewError();
+    }
+  } else {
+    const bookRow = await bookRepository.findBookById(input.bookId);
+    if (!bookRow) {
+      throw new BookNotFoundError();
+    }
   }
 
   return bookRepository.transactionSaveReview({

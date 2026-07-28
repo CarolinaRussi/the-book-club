@@ -3,6 +3,7 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   createBook,
   deleteBookFromClub,
+  getBookById,
   getBooksByClubId,
   getBooksByTitleOrAuthor,
   getBooksByUserId,
@@ -21,6 +22,7 @@ router.post(
   createBook
 );
 router.get("/club-books/:clubId", authMiddleware, getBooksByClubId);
+router.get("/books/:bookId", authMiddleware, getBookById);
 router.get("/user-books/:userId", authMiddleware, getBooksByUserId);
 router.get("/books/", authMiddleware, getBooksByTitleOrAuthor);
 router.post("/save-review", authMiddleware, saveReview);
