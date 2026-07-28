@@ -1,20 +1,91 @@
 import { useNavigate } from "react-router";
 import { useState } from "react";
-import type { IFeedMeetingRecapActivity } from "@/types/IFeed";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { MapPin } from "lucide-react";
+import type { IFeedActivityBook, IFeedMeetingRecapActivity } from "@/types/IFeed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import {
-  formatDayMonthYear,
   formatRelativeTime,
   getInitials,
+  parseLocalDate,
 } from "@/utils/formatters";
 import MeetingRecapDetailDialog from "./MeetingRecapDetailDialog";
+
+function formatShortDayMonthYear(dateValue: string) {
+  const date = parseLocalDate(dateValue);
+  if (!date) return "";
+  return format(date, "d MMM yyyy", { locale: ptBR });
+}
+
+function formatBooksSummary(books: IFeedActivityBook[]) {
+  if (books.length === 0) return null;
+  if (books.length === 1) return books[0].title;
+  const extraCount = books.length - 1;
+  return `${books[0].title} +${extraCount} ${extraCount === 1 ? "livro" : "livros"}`;
+}
+
+function MeetingRecapVisual({
+  imageUrl,
+  books,
+}: {
+  imageUrl: string | null;
+  books: IFeedActivityBook[];
+}) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className="h-24 w-16 shrink-0 rounded-md object-cover bg-muted"
+      />
+    );
+  }
+
+  if (books.length === 0) {
+    return null;
+  }
+
+  if (books.length === 1) {
+    const book = books[0];
+    return book.coverUrl ? (
+      <img
+        src={book.coverUrl}
+        alt=""
+        className="h-24 w-16 shrink-0 rounded-md object-cover bg-muted"
+      />
+    ) : (
+      <div className="h-24 w-16 shrink-0 rounded-md bg-muted" />
+    );
+  }
+
+  const visibleBooks = books.slice(0, 3);
+  const stackWidth = 44 + (visibleBooks.length - 1) * 12;
+
+  return (
+    <div className="relative h-24 shrink-0" style={{ width: stackWidth }}>
+      {visibleBooks.map((book, index) =>
+        book.coverUrl ? (
+          <img
+            key={book.id}
+            src={book.coverUrl}
+            alt=""
+            className="absolute top-1 h-[5.5rem] w-11 rounded-md object-cover bg-muted shadow-sm ring-2 ring-background"
+            style={{ left: index * 12 }}
+          />
+        ) : (
+          <div
+            key={book.id}
+            className="absolute top-1 h-[5.5rem] w-11 rounded-md bg-muted ring-2 ring-background"
+            style={{ left: index * 12 }}
+          />
+        ),
+      )}
+    </div>
+  );
+}
 
 export function MeetingRecapFeedCard({
   activity,
@@ -26,6 +97,10 @@ export function MeetingRecapFeedCard({
   const navigate = useNavigate();
   const displayName = actor.nickname || actor.name;
   const [detailOpen, setDetailOpen] = useState(false);
+  const booksSummary = formatBooksSummary(books);
+  const shortDate = formatShortDayMonthYear(meeting.meetingDate);
+  const hasMeta = meeting.location || shortDate;
+  const hasVisual = imageUrl || books.length > 0;
 
   const handleOpenProfile = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -88,58 +163,45 @@ export function MeetingRecapFeedCard({
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {isOwnActivity ? "Você registrou" : "Registrou"} o encontro de{" "}
-              <span className="font-medium text-foreground">
-                {formatDayMonthYear(meeting.meetingDate)}
-              </span>{" "}
-              em{" "}
+              {isOwnActivity ? "Você registrou encontro em" : "Registrou encontro em"}{" "}
               <span className="font-medium text-foreground">{club.name}</span>
             </p>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 pt-0">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt=""
-              className="h-28 w-36 rounded-md object-cover bg-muted"
-            />
-          ) : null}
-          {books.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {books.map((book) => (
-                <div key={book.id} className="flex items-center gap-3">
-                  {book.coverUrl ? (
-                    <img
-                      src={book.coverUrl}
-                      alt=""
-                      className="h-16 w-11 shrink-0 rounded-md object-cover bg-muted"
-                    />
-                  ) : (
-                    <div className="h-16 w-11 shrink-0 rounded-md bg-muted" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-medium leading-snug text-foreground">
-                      {book.title}
-                    </p>
-                    {book.author ? (
-                      <p className="text-sm text-muted-foreground">
-                        {book.author}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+        {hasVisual || hasMeta || text || booksSummary ? (
+          <CardContent className="flex gap-4 pt-0">
+            {hasVisual ? (
+              <MeetingRecapVisual imageUrl={imageUrl} books={books} />
+            ) : null}
+            <div className="min-w-0 flex-1 space-y-2">
+              {hasMeta ? (
+                <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
+                  {meeting.location ? (
+                    <span className="inline-flex min-w-0 items-center gap-1">
+                      <MapPin
+                        className="h-3.5 w-3.5 shrink-0"
+                        aria-hidden
+                      />
+                      <span className="truncate">{meeting.location}</span>
+                    </span>
+                  ) : null}
+                  {meeting.location && shortDate ? (
+                    <span aria-hidden>·</span>
+                  ) : null}
+                  {shortDate ? <span className="shrink-0">{shortDate}</span> : null}
+                </p>
+              ) : null}
+              {booksSummary ? (
+                <p className="text-sm font-medium leading-snug text-foreground line-clamp-2">
+                  {booksSummary}
+                </p>
+              ) : null}
+              {text ? (
+                <p className="text-sm text-foreground line-clamp-2">{text}</p>
+              ) : null}
             </div>
-          ) : null}
-          {text ? (
-            <p className="text-sm text-foreground line-clamp-4">{text}</p>
-          ) : null}
-          <p className="text-sm text-muted-foreground">{meeting.location}</p>
-        </CardContent>
-        <CardFooter className="pt-0">
-          <span className="text-sm font-medium text-primary">Ver registro</span>
-        </CardFooter>
+          </CardContent>
+        ) : null}
       </Card>
 
       <MeetingRecapDetailDialog
