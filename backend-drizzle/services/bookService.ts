@@ -5,6 +5,7 @@ import * as bookRepository from "../repositories/bookRepository";
 import * as clubRepository from "../repositories/clubRepository";
 import * as userRepository from "../repositories/userRepository";
 import { BookStatus } from "../enums/bookStatus";
+import { ReadingStatus } from "../enums/readingStatus";
 
 export { BookAlreadyInClubSuggestedError } from "../repositories/bookRepository";
 
@@ -139,12 +140,14 @@ export async function getBooksByClubId(
           },
         };
       });
-      const isInLibrary = userId
-        ? userBooksForBooks.some(
+      const myUserBook = userId
+        ? userBooksForBooks.find(
             (userBook) =>
-              userBook.userId === userId && userBook.bookId === book.id
+              userBook.userId === userId && userBook.bookId === book.id,
           )
-        : false;
+        : undefined;
+      const isInLibrary =
+        myUserBook?.readingStatus === ReadingStatus.WANT_TO_READ;
       const suggestedBy = clubBook.suggestedByUserId
         ? suggesterById.get(clubBook.suggestedByUserId) ?? null
         : null;

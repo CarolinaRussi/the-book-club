@@ -1,8 +1,18 @@
 import { v2 as cloudinary } from "cloudinary";
+import { ReadingStatus } from "../enums/readingStatus";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { createId } from "../utils/id";
 import { toPublicUser } from "../utils/publicUser";
 import * as userRepository from "../repositories/userRepository";
+
+export class PersonalLibraryQueueConflictError extends Error {
+  constructor() {
+    super(
+      "Este livro já está em leitura ou finalizado; use a avaliação para alterar o status.",
+    );
+    this.name = "PersonalLibraryQueueConflictError";
+  }
+}
 
 const USER_UPDATE_BLOCKED_KEYS = new Set([
   "id",
@@ -159,10 +169,13 @@ export async function updatePersonalLibrary(userId: string, bookId: string) {
   );
 
   if (existing) {
+    if (existing.readingStatus !== ReadingStatus.WANT_TO_READ) {
+      throw new PersonalLibraryQueueConflictError();
+    }
     await userRepository.deleteUserBookById(existing.id);
     return {
       action: "removed" as const,
-      message: "Livro removido da biblioteca pessoal.",
+      message: "Livro removido da fila Quero ler.",
     };
   }
 
@@ -170,6 +183,7 @@ export async function updatePersonalLibrary(userId: string, bookId: string) {
     id: createId(),
     bookId,
     userId,
+    readingStatus: ReadingStatus.WANT_TO_READ,
   });
 
   if (!newUserBook) {
@@ -178,7 +192,7 @@ export async function updatePersonalLibrary(userId: string, bookId: string) {
 
   return {
     action: "added" as const,
-    message: "Livro adicionado à biblioteca pessoal com sucesso!",
+    message: "Livro adicionado à fila Quero ler.",
     userBook: newUserBook,
   };
 }

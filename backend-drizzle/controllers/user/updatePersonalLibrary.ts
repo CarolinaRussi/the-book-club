@@ -30,6 +30,9 @@ export const updatePersonalLibrary = async (req: Request, res: Response) => {
       action: result.action,
     });
   } catch (error) {
+    if (error instanceof userService.PersonalLibraryQueueConflictError) {
+      return res.status(400).json({ message: error.message });
+    }
     console.error(error);
     res.status(500).json({ message: "Erro ao atualizar a biblioteca pessoal" });
   }
