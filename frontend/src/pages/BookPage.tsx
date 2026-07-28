@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
@@ -30,6 +35,7 @@ export default function BookPage() {
   const {
     data: bookPage,
     isLoading,
+    isFetching,
     isError,
     error,
   } = useQuery({
@@ -42,7 +48,11 @@ export default function BookPage() {
       }),
     enabled: !!user && !!bookId,
     staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
   });
+
+  const isInitialLoading = isLoading;
+  const isReviewsLoading = isFetching && !isInitialLoading;
 
   const { mutate: updateUserPersonalListMutate } = useMutation<
     { action: string },
@@ -128,7 +138,7 @@ export default function BookPage() {
         Voltar
       </button>
 
-      {isLoading ? (
+      {isInitialLoading ? (
         <div className="space-y-8">
           <div className="flex flex-col gap-6 sm:flex-row">
             <Skeleton className="mx-auto aspect-2/3 w-36 shrink-0 rounded-2xl sm:mx-0" />
@@ -213,6 +223,7 @@ export default function BookPage() {
             totalItems={bookPage.reviews.totalItems}
             reviewsLimit={REVIEWS_LIMIT}
             scope={reviewsScope}
+            isLoading={isReviewsLoading}
             onScopeChange={handleScopeChange}
             onPageChange={setReviewsPage}
           />

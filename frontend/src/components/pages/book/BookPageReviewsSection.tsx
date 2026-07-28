@@ -4,6 +4,7 @@ import {
 } from "@/components/pages/library/BookReviewsList";
 import Pagination from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { BookReviewsScope, IReview } from "@/types/IBooks";
 import { Rating } from "react-simple-star-rating";
 
@@ -14,9 +15,20 @@ type BookPageReviewsSectionProps = {
   totalItems: number;
   reviewsLimit: number;
   scope: BookReviewsScope;
+  isLoading?: boolean;
   onScopeChange: (scope: BookReviewsScope) => void;
   onPageChange: (page: number) => void;
 };
+
+function ReviewsListSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Skeleton key={index} className="h-24 w-full rounded-xl" />
+      ))}
+    </div>
+  );
+}
 
 export function BookPageReviewsSection({
   reviews,
@@ -25,12 +37,14 @@ export function BookPageReviewsSection({
   totalItems,
   reviewsLimit,
   scope,
+  isLoading = false,
   onScopeChange,
   onPageChange,
 }: BookPageReviewsSectionProps) {
   const { average: averageRating, count: finishedCount } =
     finishedReviewsAverage(reviews);
-  const showAverage = totalItems <= reviewsLimit && finishedCount > 0;
+  const showAverage =
+    !isLoading && totalItems <= reviewsLimit && finishedCount > 0;
 
   return (
     <section className="flex flex-col gap-4">
@@ -73,11 +87,17 @@ export function BookPageReviewsSection({
         </div>
       ) : null}
 
-      <p className="text-sm text-muted-foreground">
-        {totalItems} {totalItems === 1 ? "avaliação" : "avaliações"}
-      </p>
+      {isLoading ? (
+        <Skeleton className="h-4 w-28" />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {totalItems} {totalItems === 1 ? "avaliação" : "avaliações"}
+        </p>
+      )}
 
-      {reviews.length === 0 ? (
+      {isLoading ? (
+        <ReviewsListSkeleton />
+      ) : reviews.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
           {scope === "my_clubs"
             ? "Nenhuma avaliação dos seus clubes ainda."
@@ -87,7 +107,7 @@ export function BookPageReviewsSection({
         <BookReviewsList reviews={reviews} />
       )}
 
-      {totalPages > 1 ? (
+      {!isLoading && totalPages > 1 ? (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
