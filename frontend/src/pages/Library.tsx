@@ -1,11 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { FaPlus } from "react-icons/fa6";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { deleteClubBook } from "@/api/mutations/bookMutate";
 import { updateUserPersonalList } from "@/api/mutations/userMutate";
 import { fetchPaginatedClubBooks } from "@/api/queries/fetchBooks";
-import AddReviewDialog from "@/components/pages/library/AddReviewDialog";
 import CreateBookDialog from "@/components/pages/library/CreateBookDialog";
 import { LibraryBookCard } from "@/components/pages/library/LibraryBookCard";
 import SkeletonLibrary from "@/components/pages/library/skeletons/SkeletonLibrary";
@@ -19,11 +19,10 @@ import { BOOK_STATUS_SUGGESTED } from "@/utils/constants/books";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
-  const [updateBookOpen, setUpdateBookOpen] = useState(false);
-  const [bookToUpdate, setBookToUpdate] = useState<IBook | undefined>();
   const [booksPage, setBooksPage] = useState(1);
   const itemsPerPage = 8;
 
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { clubs, selectedClubId } = useClub();
   const { user } = useAuth();
@@ -88,8 +87,6 @@ export default function Library() {
       mutationFn: deleteClubBook,
       onSuccess: () => {
         toast.success("Livro excluído com sucesso!");
-        setUpdateBookOpen(false);
-        setBookToUpdate(undefined);
         queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
       },
       onError: (error) => {
@@ -159,10 +156,7 @@ export default function Library() {
                 userId={user?.id}
                 canDelete={canDeleteBook(book)}
                 isDeleting={isDeletingBook}
-                onOpenDetails={() => {
-                  setBookToUpdate(book);
-                  setUpdateBookOpen(true);
-                }}
+                onOpenDetails={() => navigate(`/books/${book.id}`)}
                 onTogglePersonalList={() => {
                   if (user?.id) {
                     updateUserPersonalListMutate({
@@ -190,19 +184,6 @@ export default function Library() {
       <CreateBookDialog
         open={createBookOpen}
         onOpenChange={setCreateBookOpen}
-      />
-      <AddReviewDialog
-        open={updateBookOpen}
-        onOpenChange={(isOpen) => {
-          setUpdateBookOpen(isOpen);
-          if (!isOpen) setBookToUpdate(undefined);
-        }}
-        book={bookToUpdate}
-        canDeleteBook={bookToUpdate ? canDeleteBook(bookToUpdate) : false}
-        isDeletingBook={isDeletingBook}
-        onDeleteBook={() => {
-          if (bookToUpdate) handleDeleteBook(bookToUpdate);
-        }}
       />
     </div>
   );

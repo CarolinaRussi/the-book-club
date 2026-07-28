@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Rating } from "react-simple-star-rating";
-import AddReviewDialog from "@/components/pages/library/AddReviewDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,8 +10,7 @@ import { fetchPaginatedUserBooks } from "@/api/queries/fetchBooks";
 import { fetchUserProfileReadings } from "@/api/queries/fetchUserReadings";
 import ProfileReadingComment from "@/components/pages/profile/ProfileReadingComment";
 import SkeletonMyReadings from "@/components/pages/me/skeletons/SkeletonMyReadings";
-import type { IBook, IUserBook } from "@/types/IBooks";
-import { BOOK_STATUS_FINISHED } from "@/utils/constants/books";
+import type { IUserBook } from "@/types/IBooks";
 import { readingStatusLabels } from "@/utils/constants/reading";
 
 interface ProfileReadingsGridProps {
@@ -23,20 +22,6 @@ interface ProfileReadingsGridProps {
   viewerId?: string | null;
 }
 
-function profileUserBookToDialogBook(userBook: IUserBook): IBook | undefined {
-  const book = userBook.book;
-  if (!book) return undefined;
-  return {
-    id: book.id,
-    title: book.title,
-    author: book.author ?? "",
-    coverUrl: book.coverUrl ?? "",
-    status: BOOK_STATUS_FINISHED,
-    addedAt: userBook.updatedAt,
-    createdAt: userBook.updatedAt,
-  };
-}
-
 export default function ProfileReadingsGrid({
   userId,
   itemsPerPage = 15,
@@ -46,8 +31,7 @@ export default function ProfileReadingsGrid({
   viewerId = null,
 }: ProfileReadingsGridProps) {
   const [booksPage, setBooksPage] = useState(1);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [userBookToEdit, setUserBookToEdit] = useState<IUserBook | undefined>();
+  const navigate = useNavigate();
   const isPublic = variant === "public";
 
   const { data: userBooksData, isFetching } = useQuery({
@@ -69,15 +53,16 @@ export default function ProfileReadingsGrid({
     setBooksPage(1);
   }, [userId]);
 
-  const handleOpenEdit = (userBook: IUserBook) => {
-    setUserBookToEdit(userBook);
-    setEditDialogOpen(true);
+  const handleOpenBook = (userBook: IUserBook) => {
+    const bookId = userBook.book?.id;
+    if (!bookId) return;
+    navigate(`/books/${bookId}`);
   };
 
   const handleCardClick = (userBook: IUserBook) => {
     if (isPublic) return;
     if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
-      handleOpenEdit(userBook);
+      handleOpenBook(userBook);
     }
   };
 
@@ -109,9 +94,9 @@ export default function ProfileReadingsGrid({
                 <Button
                   type="button"
                   className="pointer-events-auto w-full max-w-45"
-                  onClick={() => handleOpenEdit(userBook)}
+                  onClick={() => handleOpenBook(userBook)}
                 >
-                  Editar avaliação
+                  Ver detalhes
                 </Button>
               </div>
             ) : null}
@@ -197,23 +182,6 @@ export default function ProfileReadingsGrid({
           />
         </div>
       )}
-
-      {!isPublic ? (
-        <AddReviewDialog
-          open={editDialogOpen}
-          onOpenChange={(open) => {
-            setEditDialogOpen(open);
-            if (!open) setUserBookToEdit(undefined);
-          }}
-          mode="profile"
-          profileUserBook={userBookToEdit}
-          book={
-            userBookToEdit
-              ? profileUserBookToDialogBook(userBookToEdit)
-              : undefined
-          }
-        />
-      ) : null}
     </>
   );
 }

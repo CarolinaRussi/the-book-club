@@ -1,5 +1,6 @@
 import { LuCalendarDays } from "react-icons/lu";
 import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
+import { Trash2 } from "lucide-react";
 import { Rating } from "react-simple-star-rating";
 import type { IBook } from "@/types/IBooks";
 import { formatMonthYear } from "@/utils/formatters";
@@ -44,6 +45,41 @@ export function LibraryBookCard({
     finishedReviewsAverage(book.reviews || []);
   const showPersonalQueueBookmark = canShowPersonalQueueBookmark(book, userId);
 
+  const deleteDialog = canDelete ? (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="destructive"
+          className="pointer-events-auto w-full max-w-45"
+          disabled={isDeleting}
+        >
+          {isDeleting ? "Excluindo..." : "Excluir"}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir livro?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir{" "}
+            <span className="font-semibold">{book.title}</span> da biblioteca do
+            clube?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive"
+          >
+            Excluir livro
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  ) : null;
+
   const handleCardClick = () => {
     if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
       onOpenDetails();
@@ -82,25 +118,19 @@ export function LibraryBookCard({
         </div>
       ) : null}
 
-      <div className="pointer-events-none invisible absolute inset-0 z-30 hidden flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity md:flex md:group-hover:visible md:group-hover:opacity-100 md:group-focus-within:visible md:group-focus-within:opacity-100">
-        <Button
-          type="button"
-          className="pointer-events-auto w-full max-w-45"
-          onClick={onOpenDetails}
-        >
-          Ver detalhes
-        </Button>
-        {canDelete ? (
+      {canDelete ? (
+        <div className="absolute top-1 left-2 z-40 md:hidden">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
+              <button
                 type="button"
-                variant="destructive"
-                className="pointer-events-auto w-full max-w-45"
+                className="text-destructive transition-colors hover:text-destructive/80"
                 disabled={isDeleting}
+                title="Excluir livro"
+                onClick={(event) => event.stopPropagation()}
               >
-                {isDeleting ? "Excluindo..." : "Excluir"}
-              </Button>
+                <Trash2 className="size-5" />
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -123,7 +153,18 @@ export function LibraryBookCard({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        ) : null}
+        </div>
+      ) : null}
+
+      <div className="pointer-events-none invisible absolute inset-0 z-30 hidden flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity md:flex md:group-hover:visible md:group-hover:opacity-100 md:group-focus-within:visible md:group-focus-within:opacity-100">
+        <Button
+          type="button"
+          className="pointer-events-auto w-full max-w-45"
+          onClick={onOpenDetails}
+        >
+          Ver detalhes
+        </Button>
+        {deleteDialog}
       </div>
 
       <div className="relative w-22 shrink-0 self-stretch overflow-hidden bg-muted sm:w-28 md:aspect-2/3 md:w-full md:shrink md:rounded-t-xl">
