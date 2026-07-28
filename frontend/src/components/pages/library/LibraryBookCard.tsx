@@ -4,6 +4,7 @@ import { Rating } from "react-simple-star-rating";
 import type { IBook } from "@/types/IBooks";
 import { formatMonthYear } from "@/utils/formatters";
 import { getBookStatusBadgeLabel } from "@/utils/constants/books";
+import { canShowPersonalQueueBookmark } from "@/utils/constants/reading";
 import { finishedReviewsAverage } from "@/components/pages/library/BookReviewsList";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 
 type LibraryBookCardProps = {
   book: IBook;
+  userId: string | undefined;
   canDelete: boolean;
   isDeleting: boolean;
   onOpenDetails: () => void;
@@ -31,6 +33,7 @@ type LibraryBookCardProps = {
 
 export function LibraryBookCard({
   book,
+  userId,
   canDelete,
   isDeleting,
   onOpenDetails,
@@ -39,6 +42,7 @@ export function LibraryBookCard({
 }: LibraryBookCardProps) {
   const { average: averageRating, count: reviewsCount } =
     finishedReviewsAverage(book.reviews || []);
+  const showPersonalQueueBookmark = canShowPersonalQueueBookmark(book, userId);
 
   const handleCardClick = () => {
     if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
@@ -51,30 +55,32 @@ export function LibraryBookCard({
       className="group relative isolate flex w-full cursor-pointer flex-row items-stretch gap-0 overflow-hidden rounded-xl border bg-card py-0 transition-all hover:shadow-(--shadow-medium) md:flex-col md:overflow-visible"
       onClick={handleCardClick}
     >
-      <div className="absolute top-1 right-2 z-40 md:-top-2 md:right-4">
-        <div className="absolute inset-x-2 top-2 bottom-4 rounded-xs bg-white" />
-        {book.isInLibrary ? (
-          <BsBookmarkCheckFill
-            onClick={(event) => {
-              event.stopPropagation();
-              onTogglePersonalList();
-            }}
-            size={40}
-            className="relative text-primary drop-shadow-md transition-transform hover:scale-110"
-            title="Remover da biblioteca pessoal"
-          />
-        ) : (
-          <BsBookmarkPlusFill
-            onClick={(event) => {
-              event.stopPropagation();
-              onTogglePersonalList();
-            }}
-            size={40}
-            className="relative text-primary drop-shadow-md transition-all hover:scale-110 hover:text-primary"
-            title="Adicionar à biblioteca pessoal"
-          />
-        )}
-      </div>
+      {showPersonalQueueBookmark ? (
+        <div className="absolute top-1 right-2 z-40 md:-top-2 md:right-4">
+          <div className="absolute inset-x-2 top-2 bottom-4 rounded-xs bg-white" />
+          {book.isInLibrary ? (
+            <BsBookmarkCheckFill
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePersonalList();
+              }}
+              size={40}
+              className="relative text-primary drop-shadow-md transition-transform hover:scale-110"
+              title="Remover da fila Quero ler"
+            />
+          ) : (
+            <BsBookmarkPlusFill
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePersonalList();
+              }}
+              size={40}
+              className="relative text-primary drop-shadow-md transition-all hover:scale-110 hover:text-primary"
+              title="Adicionar à fila Quero ler"
+            />
+          )}
+        </div>
+      ) : null}
 
       <div className="pointer-events-none invisible absolute inset-0 z-30 hidden flex-col items-center justify-center gap-3 rounded-xl bg-black/65 px-4 opacity-0 transition-opacity md:flex md:group-hover:visible md:group-hover:opacity-100 md:group-focus-within:visible md:group-focus-within:opacity-100">
         <Button

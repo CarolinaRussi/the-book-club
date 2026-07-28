@@ -21,3 +21,17 @@ export const readingStatusLabels: Record<ReadingStatus, string> = {
   [READING_STATUS_DROPPED]: "Abandonado",
   [READING_STATUS_FINISHED]: "Finalizado",
 };
+
+type BookWithMemberReviews = {
+  reviews?: { user: { id: string }; readingStatus: ReadingStatus }[];
+};
+
+export function canShowPersonalQueueBookmark(
+  book: BookWithMemberReviews,
+  userId: string | undefined,
+): boolean {
+  if (!userId) return false;
+  const myReview = book.reviews?.find((review) => review.user.id === userId);
+  if (!myReview) return true;
+  return myReview.readingStatus === READING_STATUS_WANT_TO_READ;
+}

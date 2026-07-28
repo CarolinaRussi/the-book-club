@@ -76,8 +76,8 @@ export default function Library() {
     onSuccess: (result) => {
       toast.success(
         result.action === "added"
-          ? "Salvo na biblioteca"
-          : "Removido da biblioteca",
+          ? "Adicionado à fila Quero ler"
+          : "Removido da fila Quero ler",
         { autoClose: 1000 },
       );
     },
@@ -156,6 +156,7 @@ export default function Library() {
               <LibraryBookCard
                 key={book.id}
                 book={book}
+                userId={user?.id}
                 canDelete={canDeleteBook(book)}
                 isDeleting={isDeletingBook}
                 onOpenDetails={() => {
