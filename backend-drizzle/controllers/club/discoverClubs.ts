@@ -13,6 +13,55 @@ function parsePositiveInt(value: unknown): number | undefined {
   return parsed;
 }
 
+function parseCoordinate(value: unknown): number | undefined {
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+  return parsed;
+}
+
+function parseBbox(query: Request["query"]) {
+  const minLat = parseCoordinate(query.minLat);
+  const maxLat = parseCoordinate(query.maxLat);
+  const minLng = parseCoordinate(query.minLng);
+  const maxLng = parseCoordinate(query.maxLng);
+  const presentCount = [minLat, maxLat, minLng, maxLng].filter(
+    (value) => value !== undefined,
+  ).length;
+
+  if (presentCount === 0) {
+    return { ok: true as const, bbox: undefined };
+  }
+  if (
+    presentCount !== 4 ||
+    minLat === undefined ||
+    maxLat === undefined ||
+    minLng === undefined ||
+    maxLng === undefined
+  ) {
+    return { ok: false as const };
+  }
+  if (
+    minLat < -90 ||
+    maxLat > 90 ||
+    minLat >= maxLat ||
+    minLng < -180 ||
+    maxLng > 180 ||
+    minLng >= maxLng
+  ) {
+    return { ok: false as const };
+  }
+
+  return {
+    ok: true as const,
+    bbox: { minLat, maxLat, minLng, maxLng },
+  };
+}
+
 export const discoverClubs = async (req: Request, res: Response) => {
   const userId = req.userId;
   if (!userId) {
@@ -45,6 +94,11 @@ export const discoverClubs = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "Cidade inválida." });
   }
 
+  const bboxResult = parseBbox(req.query);
+  if (!bboxResult.ok) {
+    return res.status(400).json({ message: "Área do mapa inválida." });
+  }
+
   try {
     const payload = await clubService.discoverClubs(userId, {
       page,
@@ -53,6 +107,7 @@ export const discoverClubs = async (req: Request, res: Response) => {
       stateId,
       cityId,
       q,
+      bbox: bboxResult.bbox,
     });
     res.status(200).json(payload);
   } catch (error) {

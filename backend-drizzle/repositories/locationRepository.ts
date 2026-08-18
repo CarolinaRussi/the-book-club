@@ -32,6 +32,8 @@ export async function findCityById(cityId: number) {
       id: city.id,
       name: city.name,
       stateId: city.stateId,
+      latitude: city.latitude,
+      longitude: city.longitude,
     })
     .from(city)
     .where(eq(city.id, cityId))
@@ -55,6 +57,8 @@ export async function findCitiesByStateId(
       id: city.id,
       name: city.name,
       stateId: city.stateId,
+      latitude: city.latitude,
+      longitude: city.longitude,
     })
     .from(city)
     .where(and(...filters))

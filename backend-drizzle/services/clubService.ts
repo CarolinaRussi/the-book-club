@@ -254,6 +254,7 @@ export async function discoverClubs(
     stateId?: number;
     cityId?: number;
     q?: string;
+    bbox?: clubRepository.DiscoverBbox;
   },
 ) {
   const meetingFormat =
@@ -263,16 +264,23 @@ export async function discoverClubs(
       ? input.meetingFormat
       : undefined;
 
+  const discoverFilters = {
+    meetingFormat,
+    stateId: input.stateId,
+    cityId: input.cityId,
+    q: input.q,
+    bbox: input.bbox,
+  };
+
   const offset = (input.page - 1) * input.limit;
-  const { rows, totalItems } =
-    await clubRepository.findPublicClubsForDiscover({
-      meetingFormat,
-      stateId: input.stateId,
-      cityId: input.cityId,
-      q: input.q,
+  const [{ rows, totalItems }, mapCities] = await Promise.all([
+    clubRepository.findPublicClubsForDiscover({
+      ...discoverFilters,
       offset,
       limit: input.limit,
-    });
+    }),
+    clubRepository.findDiscoverMapCities(discoverFilters),
+  ]);
 
   const clubIds = rows.map((row) => row.id);
   const [memberClubIds, pendingClubIds] = await Promise.all([
@@ -291,6 +299,7 @@ export async function discoverClubs(
 
   return {
     data,
+    mapCities,
     totalPages,
     currentPage: input.page,
     totalItems,

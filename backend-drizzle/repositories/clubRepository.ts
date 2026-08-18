@@ -1,4 +1,15 @@
-import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import { db } from "../db/client";
 import { city, club, member, state, user } from "../db/schema";
 import { ClubStatus } from "../enums/clubStatus";
@@ -6,11 +17,19 @@ import { ClubVisibility } from "../enums/clubVisibility";
 import { MeetingFormat } from "../enums/meetingFormat";
 import { ReadingMode } from "../enums/readingMode";
 
+export type DiscoverBbox = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+};
+
 export type DiscoverClubsFilters = {
   meetingFormat?: (typeof MeetingFormat)[keyof typeof MeetingFormat];
   stateId?: number;
   cityId?: number;
   q?: string;
+  bbox?: DiscoverBbox;
   offset: number;
   limit: number;
 };
@@ -108,6 +127,14 @@ function buildDiscoverWhere(filters: DiscoverClubsFilters) {
       or(ilike(club.name, pattern), ilike(club.description, pattern))!,
     );
   }
+  if (filters.bbox) {
+    conditions.push(
+      gte(city.latitude, filters.bbox.minLat),
+      lte(city.latitude, filters.bbox.maxLat),
+      gte(city.longitude, filters.bbox.minLng),
+      lte(city.longitude, filters.bbox.maxLng),
+    );
+  }
 
   return and(...conditions);
 }
@@ -145,13 +172,82 @@ export async function findPublicClubsForDiscover(
       .orderBy(desc(club.createdAt))
       .limit(filters.limit)
       .offset(filters.offset),
-    db.select({ value: count() }).from(club).where(whereClause),
+    db
+      .select({ value: count() })
+      .from(club)
+      .leftJoin(state, eq(club.stateId, state.id))
+      .leftJoin(city, eq(club.cityId, city.id))
+      .where(whereClause),
   ]);
 
   return {
     rows,
     totalItems: Number(totalRow[0]?.value ?? 0),
   };
+}
+
+export async function findDiscoverMapCities(
+  filters: Omit<DiscoverClubsFilters, "offset" | "limit">,
+) {
+  if (!filters.bbox) {
+    return [];
+  }
+
+  const whereClause = buildDiscoverWhere({
+    ...filters,
+    offset: 0,
+    limit: 0,
+  });
+
+  const rows = await db
+    .select({
+      clubId: club.id,
+      clubName: club.name,
+      cityId: city.id,
+      cityName: city.name,
+      latitude: city.latitude,
+      longitude: city.longitude,
+    })
+    .from(club)
+    .innerJoin(city, eq(club.cityId, city.id))
+    .where(whereClause)
+    .orderBy(desc(club.createdAt));
+
+  const citiesById = new Map<
+    number,
+    {
+      id: number;
+      name: string;
+      latitude: number;
+      longitude: number;
+      clubs: { id: string; name: string }[];
+    }
+  >();
+
+  for (const row of rows) {
+    if (
+      row.cityId == null ||
+      row.cityName == null ||
+      row.latitude == null ||
+      row.longitude == null
+    ) {
+      continue;
+    }
+    const existing = citiesById.get(row.cityId);
+    if (existing) {
+      existing.clubs.push({ id: row.clubId, name: row.clubName });
+      continue;
+    }
+    citiesById.set(row.cityId, {
+      id: row.cityId,
+      name: row.cityName,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      clubs: [{ id: row.clubId, name: row.clubName }],
+    });
+  }
+
+  return [...citiesById.values()];
 }
 
 export async function findPublicClubDiscoverRow(clubId: string) {
