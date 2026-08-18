@@ -2,6 +2,13 @@ import { api } from "../index";
 import type { IDiscoverClub, IDiscoverClubsResponse } from "../../types/IClubs";
 import type { MeetingFormat } from "@/utils/constants/clubs";
 
+export type DiscoverMapBbox = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+};
+
 export type DiscoverClubsParams = {
   page?: number;
   limit?: number;
@@ -9,6 +16,7 @@ export type DiscoverClubsParams = {
   stateId?: number;
   cityId?: number;
   q?: string;
+  bbox?: DiscoverMapBbox;
 };
 
 export async function fetchDiscoverClubs(
@@ -22,6 +30,10 @@ export async function fetchDiscoverClubs(
       stateId: params.stateId,
       cityId: params.cityId,
       q: params.q?.trim() || undefined,
+      minLat: params.bbox?.minLat,
+      maxLat: params.bbox?.maxLat,
+      minLng: params.bbox?.minLng,
+      maxLng: params.bbox?.maxLng,
     },
   });
   return response.data;

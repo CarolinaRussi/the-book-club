@@ -255,3 +255,29 @@
     brand-loading-pulse 1.8s ease-in-out 0.7s infinite;
 }
 
+.explore-map-marker {
+  background: transparent;
+  border: none;
+}
+
+.explore-map-marker-pin {
+  align-items: center;
+  background: var(--primary);
+  border: 2px solid var(--background);
+  border-radius: 9999px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  color: var(--primary-foreground);
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+

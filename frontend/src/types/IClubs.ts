@@ -96,6 +96,8 @@ export interface ICity {
   id: number;
   name: string;
   stateId: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface IDiscoverClub {
@@ -133,8 +135,20 @@ export interface IJoinRequest {
   };
 }
 
+export interface IDiscoverMapCity {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  clubs: {
+    id: string;
+    name: string;
+  }[];
+}
+
 export interface IDiscoverClubsResponse {
   data: IDiscoverClub[];
+  mapCities: IDiscoverMapCity[];
   totalPages: number;
   currentPage: number;
   totalItems: number;

@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ICity, IState } from "@/types/IClubs";
+import { CitySelect } from "@/components/pages/club/CitySelect";
+import type { IState } from "@/types/IClubs";
 import {
   MEETING_FORMAT_VALUES,
   meetingFormatLabels,
@@ -26,7 +27,6 @@ export type ExploreFiltersState = {
 type ExploreFiltersProps = {
   filters: ExploreFiltersState;
   states: IState[];
-  cities: ICity[];
   onSearchInputChange: (value: string) => void;
   onApplySearch: () => void;
   onMeetingFormatChange: (value: MeetingFormat | "") => void;
@@ -37,7 +37,6 @@ type ExploreFiltersProps = {
 export function ExploreFilters({
   filters,
   states,
-  cities,
   onSearchInputChange,
   onApplySearch,
   onMeetingFormatChange,
@@ -91,7 +90,7 @@ export function ExploreFilters({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Estado</label>
+        <label className="mb-1 block text-sm font-medium">Ir para o estado</label>
         <Select
           value={
             filters.stateId != null ? String(filters.stateId) : ALL_VALUE
@@ -101,10 +100,10 @@ export function ExploreFilters({
           }
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Todos" />
+            <SelectValue placeholder="Brasil" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+            <SelectItem value={ALL_VALUE}>Brasil</SelectItem>
             {states.map((stateRow) => (
               <SelectItem key={stateRow.id} value={String(stateRow.id)}>
                 {stateRow.code} — {stateRow.name}
@@ -115,32 +114,13 @@ export function ExploreFilters({
       </div>
 
       <div className="md:col-span-2 lg:col-span-4">
-        <label className="mb-1 block text-sm font-medium">Cidade</label>
-        <Select
-          value={filters.cityId != null ? String(filters.cityId) : ALL_VALUE}
-          onValueChange={(value) =>
-            onCityIdChange(value === ALL_VALUE ? null : Number(value))
-          }
-          disabled={filters.stateId == null}
-        >
-          <SelectTrigger className="w-full md:max-w-md">
-            <SelectValue
-              placeholder={
-                filters.stateId == null
-                  ? "Selecione um estado primeiro"
-                  : "Todas as cidades"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>Todas</SelectItem>
-            {cities.map((cityRow) => (
-              <SelectItem key={cityRow.id} value={String(cityRow.id)}>
-                {cityRow.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <label className="mb-1 block text-sm font-medium">Ir para a cidade</label>
+        <CitySelect
+          stateId={filters.stateId}
+          value={filters.cityId}
+          onChange={onCityIdChange}
+          allowClear
+        />
       </div>
     </div>
   );

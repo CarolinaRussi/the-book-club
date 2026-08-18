@@ -22,9 +22,15 @@ type CitySelectProps = {
   stateId: number | null;
   value: number | null;
   onChange: (cityId: number | null) => void;
+  allowClear?: boolean;
 };
 
-export function CitySelect({ stateId, value, onChange }: CitySelectProps) {
+export function CitySelect({
+  stateId,
+  value,
+  onChange,
+  allowClear = false,
+}: CitySelectProps) {
   const [open, setOpen] = useState(false);
 
   const { data: cities = [], isLoading } = useQuery({
@@ -52,7 +58,9 @@ export function CitySelect({ stateId, value, onChange }: CitySelectProps) {
             (isLoading
               ? "Carregando cidades…"
               : stateId
-                ? "Buscar cidade"
+                ? allowClear
+                  ? "Todas as cidades"
+                  : "Buscar cidade"
                 : "Selecione o estado primeiro")}
           <ChevronsUpDown className="opacity-50" />
         </Button>
@@ -66,6 +74,23 @@ export function CitySelect({ stateId, value, onChange }: CitySelectProps) {
           <CommandList onWheel={(event) => event.stopPropagation()}>
             <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
             <CommandGroup>
+              {allowClear ? (
+                <CommandItem
+                  value="todas as cidades"
+                  onSelect={() => {
+                    onChange(null);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 size-4",
+                      value == null ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  Todas as cidades
+                </CommandItem>
+              ) : null}
               {cities.map((cityRow) => (
                 <CommandItem
                   key={cityRow.id}
