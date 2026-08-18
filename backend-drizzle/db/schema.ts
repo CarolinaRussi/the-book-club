@@ -81,6 +81,8 @@ export const city = pgTable(
     stateId: integer("state_id")
       .notNull()
       .references(() => state.id, { onDelete: "restrict" }),
+    latitude: real("latitude"),
+    longitude: real("longitude"),
   },
   (table) => [
     index("City_state_id_idx").on(table.stateId),
