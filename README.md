@@ -70,12 +70,21 @@ Abra esse link no navegador para visualizar o app.
 Altere `backend-drizzle/db/schema.ts`. Em seguida, na pasta `backend-drizzle`:
 
 ```bash
-pnpm db:generate   # gera migração SQL a partir das mudanças
+pnpm exec drizzle-kit generate --name=descricao_da_mudanca
 pnpm db:migrate    # aplica migrações
 
 # ou, em desenvolvimento, sincronizar direto sem arquivo de migração:
 pnpm db:push
 ```
+
+Depois de migrar (clone novo ou migração de coordenadas das cidades), popule UFs, municípios e centroides usados no Explorar:
+
+```bash
+cd backend-drizzle
+pnpm run db:seed-ibge
+```
+
+Sem esse seed, os selects de cidade e o mapa de clubes públicos ficam vazios.
 
 # Tecnologias utilizadas
 
@@ -87,6 +96,7 @@ tanstack/react-query
 react-toastify
 react-hook-form
 react-simple-star-rating
+leaflet / react-leaflet (mapa do Explorar, tiles OpenStreetMap)
 shadcn (pnpm dlx shadcn@latest add nomeDoComponente)
 Vite  
 Tailwind  
