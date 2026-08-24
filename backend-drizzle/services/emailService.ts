@@ -64,7 +64,7 @@ function emailButton(href: string, label: string): string {
 }
 
 function wrapTransactionalHtml(innerHtml: string): string {
-  const logoUrl = escapeHtml(`${getFrontendUrl()}/logo-entrelivros.png`);
+  const logoUrl = escapeHtml(`${getFrontendUrl()}/logo-entrelivros-email.png`);
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <body style="margin:0;padding:0;background-color:#f8f6f4;">
@@ -73,9 +73,15 @@ function wrapTransactionalHtml(innerHtml: string): string {
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#faf8f6;border:1px solid #e3dbcf;border-radius:12px;">
           <tr>
-            <td style="padding:28px 32px 16px;border-bottom:1px solid #e3dbcf;">
-              <img src="${logoUrl}" alt="Entrelivros" width="48" height="48" style="display:block;border:0;width:48px;height:48px;" />
-              <p style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#3a2d23;">Entrelivros</p>
+            <td align="center" style="padding:28px 32px 16px;border-bottom:1px solid #e3dbcf;text-align:center;">
+              <table role="presentation" align="center" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" width="200" style="width:200px;">
+                    <img src="${logoUrl}" alt="Entrelivros" width="200" height="200" style="display:block;border:0;width:200px;height:200px;max-width:200px;" />
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:4px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#3a2d23;text-align:center;">Entrelivros</p>
             </td>
           </tr>
           <tr>
