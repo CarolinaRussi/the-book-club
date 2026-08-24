@@ -14,6 +14,7 @@ import googleAuthRoutes from "../routes/googleAuthRoutes";
 import feedRoutes from "../routes/feedRoutes";
 import feedbackRoutes from "../routes/feedbackRoutes";
 import { autoCompleteOverdueMeetings } from "../services/meetingService";
+import { sendReviewReminderDigests } from "../services/reviewReminderService";
 
 const app = express();
 const port = process.env.PORT || 4001;
@@ -55,6 +56,27 @@ if (process.env.ENABLE_MEETING_AUTO_COMPLETE === "true") {
   );
   console.log(
     "Auto-conclusão de encontros agendada (03:00 America/Sao_Paulo)",
+  );
+}
+
+if (process.env.ENABLE_REVIEW_REMINDER === "true") {
+  cron.schedule(
+    "0 10 1,15 * *",
+    () => {
+      void sendReviewReminderDigests()
+        .then((result) => {
+          console.log(
+            `[reviews:remind] recipients=${result.recipients} sent=${result.sent} failed=${result.failed}`,
+          );
+        })
+        .catch((error) => {
+          console.error("[reviews:remind]", error);
+        });
+    },
+    { timezone: "America/Sao_Paulo" },
+  );
+  console.log(
+    "Lembrete de notas agendado (10:00 dias 1 e 15 America/Sao_Paulo)",
   );
 }
 

@@ -52,6 +52,7 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 | `pnpm db:studio`   | Abre o Drizzle Studio no navegador |
 | `pnpm run db:seed-ibge` | Popula `State`/`City` com UFs e municípios do IBGE + centroides (lat/lng). Necessário para selects de cidade e para o mapa do Explorar |
 | `pnpm meetings:auto-complete` | Conclui encontros com `meetingDate` anterior a hoje (SP); útil sem esperar o cron |
+| `pnpm reviews:remind` | Envia o digest de lembrete de nota a quem ainda não avaliou livros `finished` do clube; útil sem esperar o cron |
 
 ## Detalhes úteis
 

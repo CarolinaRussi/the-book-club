@@ -16,6 +16,7 @@
     "calendar:create-event": "tsx scripts/googleCalendarCreateMeetingEvent.ts",
     "meetings:auto-complete": "tsx scripts/autoCompleteMeetings.ts",
     "reviews:assert-reminder-rules": "tsx scripts/assertReviewReminderRules.ts",
+    "reviews:remind": "tsx scripts/sendReviewReminders.ts",
     "email:test": "tsx scripts/sendTestEmail.ts"
   },
   "keywords": [],
