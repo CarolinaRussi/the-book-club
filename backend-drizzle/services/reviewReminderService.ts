@@ -21,9 +21,14 @@ export type SendReviewReminderDigestsResult = {
 
 export async function sendReviewReminderDigests(options?: {
   redirectTo?: string;
+  maxEmails?: number;
 }): Promise<SendReviewReminderDigestsResult> {
   const frontendUrl = getFrontendUrl();
-  const digests = await listReviewReminderDigests();
+  let digests = await listReviewReminderDigests();
+  const maxEmails = options?.maxEmails;
+  if (maxEmails !== undefined && maxEmails >= 0) {
+    digests = digests.slice(0, maxEmails);
+  }
   const redirectTo = options?.redirectTo?.trim();
   if (redirectTo) {
     console.log(
