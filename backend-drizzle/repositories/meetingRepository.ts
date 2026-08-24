@@ -1,4 +1,4 @@
-import { eq, and, inArray, count, asc, lt, sql, isNull } from "drizzle-orm";
+import { eq, and, inArray, count, asc, desc, lt, sql, isNull } from "drizzle-orm";
 import { db } from "../db/client";
 import { meeting, meetingBook, clubBook, club, book } from "../db/schema";
 import { MeetingStatus } from "../enums/meetingStatus";
@@ -13,11 +13,8 @@ const pastStatuses = [
 
 export async function findMeetingsWithBookByClubId(clubId: string) {
   return db.query.meeting.findMany({
-    where: (meetingRow, { eq }) => eq(meetingRow.clubId, clubId),
-    orderBy: (meetingRow, { desc }) => [
-      desc(meetingRow.meetingDate),
-      desc(meetingRow.meetingTime),
-    ],
+    where: eq(meeting.clubId, clubId),
+    orderBy: [desc(meeting.meetingDate), desc(meeting.meetingTime)],
     columns: {
       id: true,
       status: true,
@@ -32,7 +29,7 @@ export async function findMeetingsWithBookByClubId(clubId: string) {
     },
     with: {
       meetingBooks: {
-        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        orderBy: [asc(meetingBook.position)],
         with: {
           book: {
             columns: {
@@ -54,12 +51,14 @@ export async function findPastMeetingsWithBookPaginated(
   limit: number
 ) {
   return db.query.meeting.findMany({
-    where: (meetingRow, { eq, and, inArray }) =>
-      and(eq(meetingRow.clubId, clubId), inArray(meetingRow.status, [...pastStatuses])),
-    orderBy: (meetingRow, { desc }) => [
-      desc(meetingRow.meetingDate),
-      desc(meetingRow.meetingTime),
-      desc(meetingRow.createdAt),
+    where: and(
+      eq(meeting.clubId, clubId),
+      inArray(meeting.status, [...pastStatuses])
+    ),
+    orderBy: [
+      desc(meeting.meetingDate),
+      desc(meeting.meetingTime),
+      desc(meeting.createdAt),
     ],
     offset,
     limit,
@@ -76,7 +75,7 @@ export async function findPastMeetingsWithBookPaginated(
     },
     with: {
       meetingBooks: {
-        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        orderBy: [asc(meetingBook.position)],
         with: {
           book: {
             columns: {
@@ -234,7 +233,7 @@ export async function findMeetingById(meetingId: string) {
 
 export async function findMeetingForGoogleCalendar(meetingId: string) {
   return db.query.meeting.findFirst({
-    where: (meetingRow, { eq }) => eq(meetingRow.id, meetingId),
+    where: eq(meeting.id, meetingId),
     columns: {
       id: true,
       clubId: true,
@@ -253,7 +252,7 @@ export async function findMeetingForGoogleCalendar(meetingId: string) {
     },
     with: {
       meetingBooks: {
-        orderBy: (meetingBookRow, { asc }) => [asc(meetingBookRow.position)],
+        orderBy: [asc(meetingBook.position)],
         with: {
           book: { columns: { title: true } },
         },
@@ -357,7 +356,16 @@ export async function findClubBookByClubAndBook(
 }
 
 export async function updateClubBookStatusById(id: string, status: BookStatus) {
-  await db.update(clubBook).set({ status }).where(eq(clubBook.id, id));
+  await db
+    .update(clubBook)
+    .set({
+      status,
+      finishedAt:
+        status === BookStatus.FINISHED
+          ? sql`coalesce(${clubBook.finishedAt}, now())`
+          : null,
+    })
+    .where(eq(clubBook.id, id));
 }
 
 export async function updateMeetingById(

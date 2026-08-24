@@ -361,6 +361,7 @@ export const clubBook = pgTable(
     addedAt: timestamp("added_at", { withTimezone: true, precision: 3 })
       .defaultNow()
       .notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true, precision: 3 }),
     deletedAt: timestamp("deleted_at", { withTimezone: true, precision: 3 }),
   },
   (table) => [
