@@ -150,6 +150,54 @@ export async function sendJoinApprovedEmail(input: {
   });
 }
 
+export type ReviewReminderEmailClub = {
+  clubName: string;
+  books: Array<{ title: string; url: string }>;
+};
+
+export async function sendReviewReminderEmail(input: {
+  to: string;
+  clubs: ReviewReminderEmailClub[];
+}): Promise<{ id: string }> {
+  const clubHtml = input.clubs
+    .map((clubSection) => {
+      const booksHtml = clubSection.books
+        .map(
+          (bookItem) =>
+            `<li><a href="${escapeHtml(bookItem.url)}">${escapeHtml(bookItem.title)}</a></li>`,
+        )
+        .join("");
+      return `<p><strong>${escapeHtml(clubSection.clubName)}</strong></p><ul>${booksHtml}</ul>`;
+    })
+    .join("");
+
+  const textLines = [
+    "Olá!",
+    "Alguns livros que o clube já terminou ainda estão sem a sua nota.",
+    "",
+  ];
+  for (const clubSection of input.clubs) {
+    textLines.push(clubSection.clubName);
+    for (const bookItem of clubSection.books) {
+      textLines.push(`- ${bookItem.title}: ${bookItem.url}`);
+    }
+    textLines.push("");
+  }
+  textLines.push("Abra o livro no Entrelivros para dar a nota.");
+
+  return sendEmail({
+    to: input.to.trim(),
+    subject: "Entrelivros — falta sua nota em livros do clube",
+    html: `
+      <p>Olá!</p>
+      <p>Alguns livros que o clube já terminou ainda estão sem a sua nota.</p>
+      ${clubHtml}
+      <p>Abra o livro no Entrelivros para dar a nota.</p>
+    `,
+    text: textLines.join("\n"),
+  });
+}
+
 export async function sendFeedbackNotificationEmail(
   input: FeedbackNotificationInput,
 ): Promise<{ id: string }> {
