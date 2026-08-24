@@ -19,16 +19,25 @@ export type SendReviewReminderDigestsResult = {
   failed: number;
 };
 
-export async function sendReviewReminderDigests(): Promise<SendReviewReminderDigestsResult> {
+export async function sendReviewReminderDigests(options?: {
+  redirectTo?: string;
+}): Promise<SendReviewReminderDigestsResult> {
   const frontendUrl = getFrontendUrl();
   const digests = await listReviewReminderDigests();
+  const redirectTo = options?.redirectTo?.trim();
+  if (redirectTo) {
+    console.log(
+      `[reviews:remind] redirecionando ${digests.length} e-mail(s) para ${redirectTo}`,
+    );
+  }
   let sent = 0;
   let failed = 0;
 
   for (const digest of digests) {
+    const to = redirectTo || digest.userEmail;
     try {
       await sendReviewReminderEmail({
-        to: digest.userEmail,
+        to,
         clubs: digest.clubs.map((clubSection) => ({
           clubName: clubSection.clubName,
           books: clubSection.books.map((bookItem) => ({
@@ -41,7 +50,7 @@ export async function sendReviewReminderDigests(): Promise<SendReviewReminderDig
     } catch (error) {
       failed += 1;
       console.error(
-        `[reviews:remind] falha userId=${digest.userId} email=${digest.userEmail}`,
+        `[reviews:remind] falha userId=${digest.userId} email=${digest.userEmail} to=${to}`,
         error,
       );
     }

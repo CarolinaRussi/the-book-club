@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import {
   EmailConfigError,
   getEmailFrom,
+  getFrontendUrl,
   getResendApiKey,
 } from "../utils/emailConfig";
 
@@ -48,6 +49,53 @@ export async function sendEmail(input: SendEmailInput): Promise<{ id: string }> 
   return { id: data.id };
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function emailButton(href: string, label: string): string {
+  const safeHref = escapeHtml(href);
+  const safeLabel = escapeHtml(label);
+  return `<a href="${safeHref}" style="display:inline-block;background-color:#be2c3f;color:#fafafa;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:8px;margin:8px 0;">${safeLabel}</a>`;
+}
+
+function wrapTransactionalHtml(innerHtml: string): string {
+  const logoUrl = escapeHtml(`${getFrontendUrl()}/logo-entrelivros.png`);
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<body style="margin:0;padding:0;background-color:#f8f6f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f6f4;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#faf8f6;border:1px solid #e3dbcf;border-radius:12px;">
+          <tr>
+            <td style="padding:28px 32px 16px;border-bottom:1px solid #e3dbcf;">
+              <img src="${logoUrl}" alt="Entrelivros" width="48" height="48" style="display:block;border:0;width:48px;height:48px;" />
+              <p style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#3a2d23;">Entrelivros</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 8px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3a2d23;">
+              ${innerHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 28px;font-family:Georgia,'Times New Roman',serif;font-size:13px;line-height:1.5;color:#6e5c51;">
+              Clube de leitura · <a href="${escapeHtml(getFrontendUrl())}" style="color:#be2c3f;">entrelivros.com</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   resetUrl: string,
@@ -55,14 +103,14 @@ export async function sendPasswordResetEmail(
   return sendEmail({
     to: to.trim(),
     subject: "Entrelivros — redefinir senha",
-    html: `
-      <p>Olá!</p>
-      <p>Recebemos um pedido para redefinir a senha da sua conta no <strong>Entrelivros</strong>.</p>
-      <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>
-      <p>Ou copie e cole este link no navegador:</p>
-      <p>${resetUrl}</p>
-      <p>Este link expira em 1 hora. Se você não pediu isso, pode ignorar este e-mail.</p>
-    `,
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 16px;">Olá!</p>
+      <p style="margin:0 0 16px;">Recebemos um pedido para redefinir a senha da sua conta no <strong>Entrelivros</strong>.</p>
+      <p style="margin:0 0 16px;">${emailButton(resetUrl, "Criar nova senha")}</p>
+      <p style="margin:0 0 8px;color:#6e5c51;font-size:14px;">Ou copie e cole este link no navegador:</p>
+      <p style="margin:0 0 16px;font-size:14px;word-break:break-all;color:#6e5c51;">${escapeHtml(resetUrl)}</p>
+      <p style="margin:0;color:#6e5c51;font-size:14px;">Este link expira em 1 hora. Se você não pediu isso, pode ignorar este e-mail.</p>
+    `),
     text: [
       "Olá!",
       "Recebemos um pedido para redefinir a senha da sua conta no Entrelivros.",
@@ -80,21 +128,13 @@ export async function sendTestEmail(to: string): Promise<{ id: string }> {
   return sendEmail({
     to: to.trim(),
     subject: "Entrelivros — teste de e-mail",
-    html: `
-      <p>Olá!</p>
-      <p>Este é um e-mail de teste do <strong>Entrelivros</strong>.</p>
-      <p>Se você recebeu, a integração com a Resend está funcionando.</p>
-    `,
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 16px;">Olá!</p>
+      <p style="margin:0 0 16px;">Este é um e-mail de teste do <strong>Entrelivros</strong>.</p>
+      <p style="margin:0;">Se você recebeu, a integração com a Resend está funcionando.</p>
+    `),
     text: "Olá! Este é um e-mail de teste do Entrelivros. Se você recebeu, a integração com a Resend está funcionando.",
   });
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 export type FeedbackNotificationInput = {
@@ -116,11 +156,11 @@ export async function sendJoinRequestAdminEmail(input: {
   return sendEmail({
     to: input.to.trim(),
     subject: `Entrelivros — novo pedido de entrada em ${input.clubName}`,
-    html: `
-      <p>Olá!</p>
-      <p><strong>${escapeHtml(input.requesterName)}</strong> pediu para entrar no clube <strong>${escapeHtml(input.clubName)}</strong>.</p>
-      <p><a href="${escapeHtml(input.manageUrl)}">Abrir Gerenciar clube</a> para aprovar ou recusar.</p>
-    `,
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 16px;">Olá!</p>
+      <p style="margin:0 0 16px;"><strong>${escapeHtml(input.requesterName)}</strong> pediu para entrar no clube <strong>${escapeHtml(input.clubName)}</strong>.</p>
+      <p style="margin:0;">${emailButton(input.manageUrl, "Abrir Gerenciar clube")}</p>
+    `),
     text: [
       "Olá!",
       `${input.requesterName} pediu para entrar no clube ${input.clubName}.`,
@@ -137,11 +177,11 @@ export async function sendJoinApprovedEmail(input: {
   return sendEmail({
     to: input.to.trim(),
     subject: `Entrelivros — você entrou em ${input.clubName}`,
-    html: `
-      <p>Olá!</p>
-      <p>Seu pedido para entrar no clube <strong>${escapeHtml(input.clubName)}</strong> foi aprovado.</p>
-      <p><a href="${escapeHtml(input.clubHomeUrl)}">Abrir o Entrelivros</a></p>
-    `,
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 16px;">Olá!</p>
+      <p style="margin:0 0 16px;">Seu pedido para entrar no clube <strong>${escapeHtml(input.clubName)}</strong> foi aprovado.</p>
+      <p style="margin:0;">${emailButton(input.clubHomeUrl, "Abrir o Entrelivros")}</p>
+    `),
     text: [
       "Olá!",
       `Seu pedido para entrar no clube ${input.clubName} foi aprovado.`,
@@ -164,10 +204,18 @@ export async function sendReviewReminderEmail(input: {
       const booksHtml = clubSection.books
         .map(
           (bookItem) =>
-            `<li><a href="${escapeHtml(bookItem.url)}">${escapeHtml(bookItem.title)}</a></li>`,
+            `<tr>
+              <td style="padding:10px 0;border-bottom:1px solid #e3dbcf;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#3a2d23;">
+                ${escapeHtml(bookItem.title)}
+              </td>
+              <td style="padding:10px 0;border-bottom:1px solid #e3dbcf;text-align:right;white-space:nowrap;">
+                <a href="${escapeHtml(bookItem.url)}" style="color:#be2c3f;font-weight:700;text-decoration:none;">Dar nota</a>
+              </td>
+            </tr>`,
         )
         .join("");
-      return `<p><strong>${escapeHtml(clubSection.clubName)}</strong></p><ul>${booksHtml}</ul>`;
+      return `<p style="margin:20px 0 8px;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:#6e5c51;">${escapeHtml(clubSection.clubName)}</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${booksHtml}</table>`;
     })
     .join("");
 
@@ -188,12 +236,12 @@ export async function sendReviewReminderEmail(input: {
   return sendEmail({
     to: input.to.trim(),
     subject: "Entrelivros — falta sua nota em livros do clube",
-    html: `
-      <p>Olá!</p>
-      <p>Alguns livros que o clube já terminou ainda estão sem a sua nota.</p>
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 16px;">Olá!</p>
+      <p style="margin:0 0 8px;">Alguns livros que o clube já terminou ainda estão sem a sua nota.</p>
       ${clubHtml}
-      <p>Abra o livro no Entrelivros para dar a nota.</p>
-    `,
+      <p style="margin:20px 0 0;color:#6e5c51;font-size:14px;">Abra o livro no Entrelivros para dar a nota.</p>
+    `),
     text: textLines.join("\n"),
   });
 }
@@ -212,14 +260,14 @@ export async function sendFeedbackNotificationEmail(
   return sendEmail({
     to: input.to.trim(),
     subject,
-    html: `
-      <p><strong>Tipo:</strong> ${safeType}</p>
-      <p><strong>Usuária:</strong> ${safeName} (${safeEmail})</p>
-      <p><strong>userId:</strong> ${safeUserId}</p>
-      <p><strong>Página:</strong> ${safePageUrl}</p>
-      <p><strong>Mensagem:</strong></p>
-      <p>${safeMessage.replace(/\n/g, "<br />")}</p>
-    `,
+    html: wrapTransactionalHtml(`
+      <p style="margin:0 0 8px;"><strong>Tipo:</strong> ${safeType}</p>
+      <p style="margin:0 0 8px;"><strong>Usuária:</strong> ${safeName} (${safeEmail})</p>
+      <p style="margin:0 0 8px;"><strong>userId:</strong> ${safeUserId}</p>
+      <p style="margin:0 0 16px;"><strong>Página:</strong> ${safePageUrl}</p>
+      <p style="margin:0 0 8px;"><strong>Mensagem:</strong></p>
+      <p style="margin:0;">${safeMessage.replace(/\n/g, "<br />")}</p>
+    `),
     text: [
       `Tipo: ${input.typeLabel}`,
       `Usuária: ${input.userName} (${input.userEmail})`,
