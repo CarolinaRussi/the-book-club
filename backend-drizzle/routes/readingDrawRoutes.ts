@@ -2,12 +2,15 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   cancelReadingDraw,
+  castReadingDrawVotes,
+  closeReadingDrawVote,
   completeReadingDraw,
   confirmReadingDrawNomination,
   createReadingDraw,
   eliminateReadingDraw,
   getActiveReadingDraw,
   getReadingDrawByShareCode,
+  openReadingDrawVote,
   revealReadingDraw,
   unconfirmReadingDrawNomination,
   upsertReadingDrawNomination,
@@ -50,6 +53,17 @@ router.post(
   "/reading-draws/:id/eliminate",
   authMiddleware,
   eliminateReadingDraw,
+);
+router.post(
+  "/reading-draws/:id/open-vote",
+  authMiddleware,
+  openReadingDrawVote,
+);
+router.put("/reading-draws/:id/votes", authMiddleware, castReadingDrawVotes);
+router.post(
+  "/reading-draws/:id/close-vote",
+  authMiddleware,
+  closeReadingDrawVote,
 );
 router.post("/reading-draws/:id/cancel", authMiddleware, cancelReadingDraw);
 router.post(

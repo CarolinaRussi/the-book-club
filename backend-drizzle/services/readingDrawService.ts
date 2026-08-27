@@ -86,12 +86,16 @@ async function expireDrawIfPastDeadline(draw: DrawRow): Promise<DrawRow> {
 }
 
 async function buildRoomPayload(draw: DrawRow, viewerUserId: string) {
-  const [clubRow, host, participants, nominations] = await Promise.all([
-    readingDrawRepository.findClubNameById(draw.clubId),
-    readingDrawRepository.findHostPublicProfile(draw.hostUserId),
-    readingDrawRepository.findParticipantsWithUsers(draw.id),
-    readingDrawRepository.findNominations(draw.id),
-  ]);
+  const [clubRow, host, participants, nominations, roundVotes] =
+    await Promise.all([
+      readingDrawRepository.findClubNameById(draw.clubId),
+      readingDrawRepository.findHostPublicProfile(draw.hostUserId),
+      readingDrawRepository.findParticipantsWithUsers(draw.id),
+      readingDrawRepository.findNominations(draw.id),
+      draw.voteRound != null
+        ? readingDrawRepository.findVotesForRound(draw.id, draw.voteRound)
+        : Promise.resolve([]),
+    ]);
 
   const participantUserIds = new Set(
     participants.map((participant) => participant.userId),
@@ -102,6 +106,13 @@ async function buildRoomPayload(draw: DrawRow, viewerUserId: string) {
   } else if (participantUserIds.has(viewerUserId)) {
     viewerRole = "participant";
   }
+
+  const voterUserIdsWhoVoted = [
+    ...new Set(roundVotes.map((vote) => vote.voterUserId)),
+  ];
+  const myVoteNominationIds = roundVotes
+    .filter((vote) => vote.voterUserId === viewerUserId)
+    .map((vote) => vote.nominationId);
 
   return {
     id: draw.id,
@@ -114,6 +125,7 @@ async function buildRoomPayload(draw: DrawRow, viewerUserId: string) {
     winnerNominationId: draw.winnerNominationId,
     winningClubBookId: draw.winningClubBookId,
     voteVotesPerParticipant: draw.voteVotesPerParticipant,
+    voteRound: draw.voteRound,
     revealStartedAt: draw.revealStartedAt,
     createdAt: draw.createdAt,
     updatedAt: draw.updatedAt,
@@ -139,6 +151,9 @@ async function buildRoomPayload(draw: DrawRow, viewerUserId: string) {
       eliminatedAt: nomination.eliminatedAt,
       eliminationRound: nomination.eliminationRound,
     })),
+    myVoteNominationIds,
+    votersWhoVotedCount: voterUserIdsWhoVoted.length,
+    voterUserIdsWhoVoted,
   };
 }
 
@@ -148,16 +163,31 @@ function parseCreateMode(mode: unknown): ReadingDrawModeValue {
   }
   if (
     mode === ReadingDrawMode.DIRECT ||
-    mode === ReadingDrawMode.LAST_STANDING
+    mode === ReadingDrawMode.LAST_STANDING ||
+    mode === ReadingDrawMode.VOTE
   ) {
     return mode;
   }
-  if (mode === ReadingDrawMode.VOTE) {
+  throw new ReadingDrawValidationError("Modo de sorteio inválido.");
+}
+
+function parseVoteVotesPerParticipant(
+  mode: ReadingDrawModeValue,
+  raw: unknown,
+): number | null {
+  if (mode !== ReadingDrawMode.VOTE) {
+    return null;
+  }
+  if (raw === undefined || raw === null || raw === "") {
+    return 3;
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > 5) {
     throw new ReadingDrawValidationError(
-      "O modo votação ainda não está disponível.",
+      "Cada participante pode ter de 1 a 5 votos.",
     );
   }
-  throw new ReadingDrawValidationError("Modo de sorteio inválido.");
+  return value;
 }
 
 export async function createReadingDraw(input: {
@@ -166,8 +196,13 @@ export async function createReadingDraw(input: {
   participantUserIds: string[];
   deadlineAt?: unknown;
   mode?: unknown;
+  voteVotesPerParticipant?: unknown;
 }) {
   const mode = parseCreateMode(input.mode);
+  const voteVotesPerParticipant = parseVoteVotesPerParticipant(
+    mode,
+    input.voteVotesPerParticipant,
+  );
   const activeClub = await clubRepository.findActiveClubById(input.clubId);
   if (!activeClub) {
     throw new ReadingDrawNotFoundError("Clube não encontrado.");
@@ -224,6 +259,7 @@ export async function createReadingDraw(input: {
           status: ReadingDrawStatus.NOMINATING,
           shareCode,
           deadlineAt,
+          voteVotesPerParticipant,
         })
         .returning();
 
@@ -332,6 +368,12 @@ async function loadNominatingDrawForParticipant(
   if (await readingDrawRepository.hasEliminationStarted(currentDraw.id)) {
     throw new ReadingDrawValidationError(
       "As indicações estão travadas: a eliminação já começou.",
+    );
+  }
+
+  if (currentDraw.voteRound != null) {
+    throw new ReadingDrawValidationError(
+      "As indicações estão travadas: a votação já começou.",
     );
   }
 
@@ -617,6 +659,7 @@ export async function cancelReadingDraw(drawId: string, hostUserId: string) {
       );
     }
     await readingDrawRepository.clearNominationEliminations(draw.id);
+    await readingDrawRepository.deleteVotesForDraw(draw.id);
     const freshDraw = await readingDrawRepository.findById(draw.id);
     if (!freshDraw) {
       throw new ReadingDrawNotFoundError();
@@ -632,6 +675,234 @@ export async function cancelReadingDraw(drawId: string, hostUserId: string) {
   }
 
   return buildRoomPayload(cancelled, hostUserId);
+}
+
+export async function openReadingDrawVote(drawId: string, hostUserId: string) {
+  const draw = await loadDrawForHost(drawId, hostUserId);
+
+  if (draw.mode !== ReadingDrawMode.VOTE) {
+    throw new ReadingDrawValidationError(
+      "Abrir votação só está disponível no modo votação.",
+    );
+  }
+
+  if (draw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "Este sorteio não está na fase de indicações.",
+    );
+  }
+
+  if (draw.voteRound != null) {
+    throw new ReadingDrawValidationError("A votação já foi aberta.");
+  }
+
+  const confirmed = await readingDrawRepository.findConfirmedNominations(
+    draw.id,
+  );
+  if (confirmed.length < 2) {
+    throw new ReadingDrawValidationError(
+      "É preciso pelo menos 2 indicações confirmadas para abrir a votação.",
+    );
+  }
+
+  const opened = await readingDrawRepository.setVoteRound(draw.id, 1);
+  if (!opened) {
+    throw new ReadingDrawValidationError(
+      "Não foi possível abrir a votação.",
+    );
+  }
+
+  return buildRoomPayload(opened, hostUserId);
+}
+
+export async function castReadingDrawVotes(input: {
+  drawId: string;
+  userId: string;
+  nominationIds: unknown;
+}) {
+  const draw = await readingDrawRepository.findById(input.drawId);
+  if (!draw) {
+    throw new ReadingDrawNotFoundError();
+  }
+
+  const membership = await memberRepository.findMemberByUserAndClub(
+    input.userId,
+    draw.clubId,
+  );
+  if (!membership) {
+    throw new ReadingDrawForbiddenError();
+  }
+
+  const currentDraw = await expireDrawIfPastDeadline(draw);
+  if (currentDraw.mode !== ReadingDrawMode.VOTE) {
+    throw new ReadingDrawValidationError(
+      "Este sorteio não está no modo votação.",
+    );
+  }
+  if (currentDraw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "A votação não está aberta neste momento.",
+    );
+  }
+  if (currentDraw.voteRound == null) {
+    throw new ReadingDrawValidationError(
+      "Aguarde o host abrir a votação.",
+    );
+  }
+
+  const participant = await readingDrawRepository.findParticipant(
+    currentDraw.id,
+    input.userId,
+  );
+  if (!participant) {
+    throw new ReadingDrawForbiddenError(
+      "Apenas participantes podem votar.",
+    );
+  }
+
+  if (!Array.isArray(input.nominationIds)) {
+    throw new ReadingDrawValidationError(
+      "Informe a lista de indicações (nominationIds).",
+    );
+  }
+
+  const uniqueNominationIds = [
+    ...new Set(
+      input.nominationIds
+        .map((nominationId) => String(nominationId).trim())
+        .filter(Boolean),
+    ),
+  ];
+
+  const votesAllowed = currentDraw.voteVotesPerParticipant ?? 1;
+  if (uniqueNominationIds.length > votesAllowed) {
+    throw new ReadingDrawValidationError(
+      `Você pode escolher no máximo ${votesAllowed} livro(s).`,
+    );
+  }
+
+  const standing = await readingDrawRepository.findStandingNominations(
+    currentDraw.id,
+  );
+  const standingIds = new Set(standing.map((nomination) => nomination.id));
+  const invalidNomination = uniqueNominationIds.find(
+    (nominationId) => !standingIds.has(nominationId),
+  );
+  if (invalidNomination) {
+    throw new ReadingDrawValidationError(
+      "Só é possível votar em indicações ativas desta rodada.",
+    );
+  }
+
+  await readingDrawRepository.replaceVotesForVoterInRound({
+    drawId: currentDraw.id,
+    round: currentDraw.voteRound,
+    voterUserId: input.userId,
+    nominationIds: uniqueNominationIds,
+  });
+
+  const freshDraw = await readingDrawRepository.findById(currentDraw.id);
+  if (!freshDraw) {
+    throw new ReadingDrawNotFoundError();
+  }
+  return buildRoomPayload(freshDraw, input.userId);
+}
+
+export async function closeReadingDrawVote(drawId: string, hostUserId: string) {
+  const draw = await loadDrawForHost(drawId, hostUserId);
+
+  if (draw.mode !== ReadingDrawMode.VOTE) {
+    throw new ReadingDrawValidationError(
+      "Fechar votação só está disponível no modo votação.",
+    );
+  }
+
+  if (draw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "Este sorteio não está na fase de votação.",
+    );
+  }
+
+  if (draw.voteRound == null) {
+    throw new ReadingDrawValidationError("A votação ainda não foi aberta.");
+  }
+
+  const standing = await readingDrawRepository.findStandingNominations(
+    draw.id,
+  );
+  if (standing.length < 1) {
+    throw new ReadingDrawValidationError(
+      "Não há indicações elegíveis para fechar a votação.",
+    );
+  }
+
+  const votes = await readingDrawRepository.findVotesForRound(
+    draw.id,
+    draw.voteRound,
+  );
+  if (votes.length < 1) {
+    throw new ReadingDrawValidationError(
+      "É preciso pelo menos um voto para fechar a votação.",
+    );
+  }
+
+  const tally = new Map<string, number>();
+  for (const nomination of standing) {
+    tally.set(nomination.id, 0);
+  }
+  for (const vote of votes) {
+    if (!tally.has(vote.nominationId)) continue;
+    tally.set(vote.nominationId, (tally.get(vote.nominationId) ?? 0) + 1);
+  }
+
+  let topCount = -1;
+  for (const count of tally.values()) {
+    if (count > topCount) topCount = count;
+  }
+
+  const tiedIds = [...tally.entries()]
+    .filter(([, count]) => count === topCount)
+    .map(([nominationId]) => nominationId);
+
+  const closedAt = new Date();
+
+  if (tiedIds.length === 1) {
+    const revealed = await readingDrawRepository.revealDrawWinner({
+      drawId: draw.id,
+      winnerNominationId: tiedIds[0],
+      revealStartedAt: closedAt,
+    });
+    if (!revealed) {
+      throw new ReadingDrawValidationError(
+        "Não foi possível registrar o resultado da votação.",
+      );
+    }
+    return buildRoomPayload(revealed, hostUserId);
+  }
+
+  const eliminatedIds = standing
+    .filter((nomination) => !tiedIds.includes(nomination.id))
+    .map((nomination) => nomination.id);
+
+  await readingDrawRepository.eliminateNominationsBatch({
+    drawId: draw.id,
+    nominationIds: eliminatedIds,
+    eliminationRound: draw.voteRound,
+    eliminatedAt: closedAt,
+  });
+
+  const nextRound = draw.voteRound + 1;
+  const advanced = await readingDrawRepository.setVoteRound(
+    draw.id,
+    nextRound,
+  );
+  if (!advanced) {
+    throw new ReadingDrawValidationError(
+      "Empate registrado, mas não foi possível abrir a próxima rodada.",
+    );
+  }
+
+  return buildRoomPayload(advanced, hostUserId);
 }
 
 export async function completeReadingDraw(input: {

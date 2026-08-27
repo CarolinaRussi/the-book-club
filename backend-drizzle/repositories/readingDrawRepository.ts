@@ -5,9 +5,11 @@ import {
   readingDraw,
   readingDrawNomination,
   readingDrawParticipant,
+  readingDrawVote,
   user,
 } from "../db/schema";
 import { ReadingDrawStatus } from "../enums/readingDrawStatus";
+import { createId } from "../utils/id";
 
 const ACTIVE_STATUSES = [
   ReadingDrawStatus.NOMINATING,
@@ -313,6 +315,7 @@ export async function reopenDrawToNominating(drawId: string) {
       winnerNominationId: null,
       winningClubBookId: null,
       revealStartedAt: null,
+      voteRound: null,
     })
     .where(
       and(
@@ -332,6 +335,103 @@ export async function clearNominationEliminations(drawId: string) {
       eliminationRound: null,
     })
     .where(eq(readingDrawNomination.drawId, drawId));
+}
+
+export async function deleteVotesForDraw(drawId: string) {
+  await db
+    .delete(readingDrawVote)
+    .where(eq(readingDrawVote.drawId, drawId));
+}
+
+export async function setVoteRound(drawId: string, voteRound: number) {
+  const [row] = await db
+    .update(readingDraw)
+    .set({ voteRound })
+    .where(
+      and(
+        eq(readingDraw.id, drawId),
+        eq(readingDraw.status, ReadingDrawStatus.NOMINATING),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function findVotesForRound(drawId: string, round: number) {
+  return db
+    .select({
+      id: readingDrawVote.id,
+      drawId: readingDrawVote.drawId,
+      round: readingDrawVote.round,
+      voterUserId: readingDrawVote.voterUserId,
+      nominationId: readingDrawVote.nominationId,
+      createdAt: readingDrawVote.createdAt,
+    })
+    .from(readingDrawVote)
+    .where(
+      and(
+        eq(readingDrawVote.drawId, drawId),
+        eq(readingDrawVote.round, round),
+      ),
+    );
+}
+
+export async function replaceVotesForVoterInRound(input: {
+  drawId: string;
+  round: number;
+  voterUserId: string;
+  nominationIds: string[];
+}) {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(readingDrawVote)
+      .where(
+        and(
+          eq(readingDrawVote.drawId, input.drawId),
+          eq(readingDrawVote.round, input.round),
+          eq(readingDrawVote.voterUserId, input.voterUserId),
+        ),
+      );
+
+    if (input.nominationIds.length === 0) {
+      return;
+    }
+
+    await tx.insert(readingDrawVote).values(
+      input.nominationIds.map((nominationId) => ({
+        id: createId(),
+        drawId: input.drawId,
+        round: input.round,
+        voterUserId: input.voterUserId,
+        nominationId,
+      })),
+    );
+  });
+}
+
+export async function eliminateNominationsBatch(input: {
+  drawId: string;
+  nominationIds: string[];
+  eliminationRound: number;
+  eliminatedAt: Date;
+}) {
+  if (input.nominationIds.length === 0) {
+    return;
+  }
+  await db
+    .update(readingDrawNomination)
+    .set({
+      eliminatedAt: input.eliminatedAt,
+      eliminationRound: input.eliminationRound,
+    })
+    .where(
+      and(
+        eq(readingDrawNomination.drawId, input.drawId),
+        inArray(readingDrawNomination.id, input.nominationIds),
+        sql`${readingDrawNomination.confirmedAt} is not null`,
+        sql`${readingDrawNomination.eliminatedAt} is null`,
+      ),
+    );
 }
 
 export async function cancelActiveDraw(drawId: string) {
