@@ -16,8 +16,12 @@ export const cancelReadingDrawHandler = async (req: Request, res: Response) => {
 
   try {
     const readingDraw = await cancelReadingDraw(id, hostUserId);
+    const message =
+      readingDraw.status === "nominating"
+        ? "Resultado descartado. Pode sortear de novo com as mesmas indicações."
+        : "Sorteio cancelado.";
     return res.status(200).json({
-      message: "Sorteio cancelado.",
+      message,
       readingDraw,
     });
   } catch (error) {

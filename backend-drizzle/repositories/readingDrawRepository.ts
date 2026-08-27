@@ -305,6 +305,35 @@ export async function revealDrawWinner(input: {
   return row ?? null;
 }
 
+export async function reopenDrawToNominating(drawId: string) {
+  const [row] = await db
+    .update(readingDraw)
+    .set({
+      status: ReadingDrawStatus.NOMINATING,
+      winnerNominationId: null,
+      winningClubBookId: null,
+      revealStartedAt: null,
+    })
+    .where(
+      and(
+        eq(readingDraw.id, drawId),
+        eq(readingDraw.status, ReadingDrawStatus.AWAITING_BOOK),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function clearNominationEliminations(drawId: string) {
+  await db
+    .update(readingDrawNomination)
+    .set({
+      eliminatedAt: null,
+      eliminationRound: null,
+    })
+    .where(eq(readingDrawNomination.drawId, drawId));
+}
+
 export async function cancelActiveDraw(drawId: string) {
   const [row] = await db
     .update(readingDraw)

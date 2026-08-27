@@ -607,6 +607,23 @@ export async function cancelReadingDraw(drawId: string, hostUserId: string) {
     throw new ReadingDrawValidationError("Este sorteio já foi encerrado.");
   }
 
+  if (draw.status === ReadingDrawStatus.AWAITING_BOOK) {
+    const reopened = await readingDrawRepository.reopenDrawToNominating(
+      draw.id,
+    );
+    if (!reopened) {
+      throw new ReadingDrawValidationError(
+        "Não foi possível reabrir este sorteio.",
+      );
+    }
+    await readingDrawRepository.clearNominationEliminations(draw.id);
+    const freshDraw = await readingDrawRepository.findById(draw.id);
+    if (!freshDraw) {
+      throw new ReadingDrawNotFoundError();
+    }
+    return buildRoomPayload(freshDraw, hostUserId);
+  }
+
   const cancelled = await readingDrawRepository.cancelActiveDraw(draw.id);
   if (!cancelled) {
     throw new ReadingDrawValidationError(
