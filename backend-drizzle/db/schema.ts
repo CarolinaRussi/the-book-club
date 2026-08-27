@@ -505,6 +505,11 @@ export const readingDrawNomination = pgTable(
       withTimezone: true,
       precision: 6,
     }),
+    eliminatedAt: timestamp("eliminated_at", {
+      withTimezone: true,
+      precision: 6,
+    }),
+    eliminationRound: integer("elimination_round"),
   },
   (table) => [
     uniqueIndex("ReadingDrawNomination_draw_id_user_id_key").on(

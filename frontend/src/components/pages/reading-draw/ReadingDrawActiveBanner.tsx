@@ -1,9 +1,14 @@
 import { Link, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Dices } from "lucide-react";
 import { fetchActiveReadingDraw } from "@/api/queries/fetchReadingDraw";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
-import { isReadingDrawLiveStatus } from "@/utils/constants/readingDraw";
+import {
+  isReadingDrawLiveStatus,
+  READING_DRAW_STATUS_AWAITING_BOOK,
+} from "@/utils/constants/readingDraw";
 
 export default function ReadingDrawActiveBanner() {
   const { user } = useAuth();
@@ -25,19 +30,38 @@ export default function ReadingDrawActiveBanner() {
     return null;
   }
 
+  const isAwaitingBook =
+    readingDraw.status === READING_DRAW_STATUS_AWAITING_BOOK;
+  const title = isAwaitingBook
+    ? "O sorteio já tem vencedor"
+    : "Sorteio da próxima leitura em andamento";
+  const detail = isAwaitingBook
+    ? "Entre na sala para ver o resultado e concluir."
+    : "Indicações abertas neste clube — entre na sala para participar.";
+
   return (
-    <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-foreground">
-          Há um <span className="font-semibold text-primary">sorteio</span>{" "}
-          rolando neste clube.
-        </p>
-        <Link
-          to={`/sorteio/${readingDraw.shareCode}`}
-          className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
+    <div className="sticky top-0 z-20 border-b border-primary/25 bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 md:px-8">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 sm:mt-0">
+            <Dices className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 space-y-0.5">
+            <p className="text-sm font-semibold leading-snug sm:text-base">
+              {title}
+            </p>
+            <p className="text-xs leading-relaxed text-primary-foreground/85 sm:text-sm">
+              {detail}
+            </p>
+          </div>
+        </div>
+        <Button
+          asChild
+          size="sm"
+          className="w-full shrink-0 bg-primary-foreground text-primary hover:bg-primary-foreground/90 sm:w-auto"
         >
-          Entrar na sala
-        </Link>
+          <Link to={`/sorteio/${readingDraw.shareCode}`}>Entrar na sala</Link>
+        </Button>
       </div>
     </div>
   );

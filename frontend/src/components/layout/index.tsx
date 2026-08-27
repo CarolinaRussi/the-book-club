@@ -8,8 +8,8 @@ export function Layout() {
   return (
     <>
       <Header />
+      <ReadingDrawActiveBanner />
       <Container>
-        <ReadingDrawActiveBanner />
         <Outlet />
       </Container>
       <FeedbackWidget />

@@ -75,7 +75,7 @@ export default function ReadingDrawResultPanel({
     try {
       const result = await completeReadingDraw(readingDraw.id, clubBookId);
       invalidateRoom(result.readingDraw);
-      toast.success("Livro adicionado e sorteio concluído!");
+      toast.success("Sorteio finalizado! Livro na biblioteca.");
     } catch (error) {
       const message =
         error && typeof error === "object" && "message" in error

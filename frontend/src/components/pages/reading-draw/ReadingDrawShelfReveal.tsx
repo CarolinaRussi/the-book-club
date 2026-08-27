@@ -5,7 +5,7 @@ import ReadingDrawGeneratedCover, {
 } from "./ReadingDrawGeneratedCover";
 import { cn } from "@/lib/utils";
 
-export const READING_DRAW_REVEAL_DURATION_MS = 6200;
+export const READING_DRAW_REVEAL_DURATION_MS = 14000;
 
 type ReadingDrawShelfRevealProps = {
   nominations: IReadingDrawNomination[];
@@ -36,7 +36,7 @@ function buildSweepPath(
 ): number[] {
   const random = createSeededRandom(seed);
   const path: number[] = [];
-  for (let step = 0; step < 16; step += 1) {
+  for (let step = 0; step < 30; step += 1) {
     path.push(Math.floor(random() * bookCount));
   }
   const neighbor = (winnerIndex + 1) % bookCount;
@@ -111,17 +111,17 @@ export default function ReadingDrawShelfReveal({
           setPhase("celebrate");
           doneTimer = window.setTimeout(() => {
             finish();
-          }, 1400);
-        }, 900);
+          }, 2600);
+        }, 1400);
         return;
       }
       setSweepStep(step);
       const progress = step / sweepPath.length;
-      const delay = 90 + progress * 160;
+      const delay = 150 + progress * 260;
       sweepTimer = window.setTimeout(tickSweep, delay);
     };
 
-    sweepTimer = window.setTimeout(tickSweep, 280);
+    sweepTimer = window.setTimeout(tickSweep, 450);
 
     return () => {
       window.clearTimeout(fadeIn);

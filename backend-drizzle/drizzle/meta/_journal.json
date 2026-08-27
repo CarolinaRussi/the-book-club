@@ -120,6 +120,13 @@
       "when": 1787855896797,
       "tag": "0016_reading_draw_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787859584926,
+      "tag": "0017_reading_draw_elimination_fields",
+      "breakpoints": true
     }
   ]
 }

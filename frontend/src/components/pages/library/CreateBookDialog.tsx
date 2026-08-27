@@ -54,6 +54,11 @@ export default function CreateBookDialog({
   const [openCombobox, setOpenCombobox] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [createdClubBookId, setCreatedClubBookId] = useState<string | null>(
+    null,
+  );
+  const [createdBookTitle, setCreatedBookTitle] = useState("");
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const { selectedClubId } = useClub();
   const queryClient = useQueryClient();
 
@@ -62,6 +67,7 @@ export default function CreateBookDialog({
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<CreateBookForm>({
     defaultValues: {
       title: "",
@@ -82,10 +88,11 @@ export default function CreateBookDialog({
         queryKey: ["booksFromSelectedClub", selectedClubId],
       });
       if (onBookCreated) {
-        await onBookCreated(result.book.id);
-      } else {
-        toast.success("Livro adicionado à biblioteca com sucesso!");
+        setCreatedClubBookId(result.book.id);
+        setCreatedBookTitle(getValues("title").trim() || initialTitle);
+        return;
       }
+      toast.success("Livro adicionado à biblioteca com sucesso!");
       onOpenChange(false);
     },
     onError: (error) => {
@@ -105,11 +112,28 @@ export default function CreateBookDialog({
     setInputValue(initialTitle);
     setPreviewUrl(undefined);
     setOpenCombobox(false);
+    setCreatedClubBookId(null);
+    setCreatedBookTitle("");
+    setIsFinalizing(false);
     setFileInputKey((key) => key + 1);
   }, [open, reset, initialTitle, initialAuthor]);
 
+  const handleFinalize = async () => {
+    if (!createdClubBookId || !onBookCreated) return;
+    setIsFinalizing(true);
+    try {
+      await onBookCreated(createdClubBookId);
+      onOpenChange(false);
+    } catch {
+      // caller already toasted
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
   const isLocalSelection = selectedBook?.source === "local";
   const isOpenLibrarySelection = selectedBook?.source === "openLibrary";
+  const showFinalizeStep = Boolean(onBookCreated && createdClubBookId);
 
   const handleSelect = (book: SearchResultBook) => {
     setSelectedBook(book);
@@ -170,6 +194,36 @@ export default function CreateBookDialog({
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="w-full sm:max-w-[425px] lg:flex lg:max-h-[min(90dvh,100svh)] lg:max-w-2xl lg:flex-col lg:overflow-hidden">
+        {showFinalizeStep ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+            <ResponsiveDialogHeader className="shrink-0 gap-1 pr-8">
+              <ResponsiveDialogTitle className="text-left text-2xl text-primary sm:text-3xl">
+                Livro adicionado
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription className="text-warm-brown">
+                O livro já está na biblioteca do clube. Finalize o sorteio para
+                voltar à sala.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className="min-h-0 flex-1">
+              <p className="text-sm text-muted-foreground">
+                Título cadastrado:{" "}
+                <span className="font-medium text-foreground">
+                  {createdBookTitle || "livro sorteado"}
+                </span>
+              </p>
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter className="mt-0 shrink-0 border-t border-border/60 pt-4">
+              <Button
+                type="button"
+                onClick={() => void handleFinalize()}
+                disabled={isFinalizing}
+              >
+                {isFinalizing ? "Finalizando…" : "Finalizar sorteio"}
+              </Button>
+            </ResponsiveDialogFooter>
+          </div>
+        ) : (
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
@@ -376,6 +430,7 @@ export default function CreateBookDialog({
             </Button>
           </ResponsiveDialogFooter>
         </form>
+        )}
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
