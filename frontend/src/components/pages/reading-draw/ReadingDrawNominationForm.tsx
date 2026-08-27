@@ -28,6 +28,9 @@ export default function ReadingDrawNominationForm({
     (nomination) => nomination.userId === userId,
   );
   const isConfirmed = Boolean(myNomination?.confirmedAt);
+  const eliminationsStarted = readingDraw.nominations.some(
+    (nomination) => nomination.eliminatedAt,
+  );
 
   const [title, setTitle] = useState(myNomination?.title ?? "");
   const [author, setAuthor] = useState(myNomination?.author ?? "");
@@ -92,6 +95,29 @@ export default function ReadingDrawNominationForm({
   });
 
   const isPending = isSaving || isConfirming || isUnconfirming;
+
+  if (eliminationsStarted) {
+    return (
+      <div className="space-y-3 rounded-lg border border-muted bg-muted/30 p-4">
+        <p className="text-sm font-medium text-primary">Sua indicação</p>
+        {myNomination?.title ? (
+          <>
+            <p className="text-lg font-semibold text-foreground">
+              {myNomination.title}
+            </p>
+            {myNomination.author ? (
+              <p className="text-sm text-warm-brown">{myNomination.author}</p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sem indicação nesta rodada.</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          A eliminação já começou — indicações travadas.
+        </p>
+      </div>
+    );
+  }
 
   if (isConfirmed) {
     return (

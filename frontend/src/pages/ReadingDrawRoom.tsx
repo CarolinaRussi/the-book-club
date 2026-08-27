@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import BrandLoadingScreen from "@/components/BrandLoadingScreen";
+import ReadingDrawEliminationBeat, {
+  READING_DRAW_ELIMINATION_DURATION_MS,
+} from "@/components/pages/reading-draw/ReadingDrawEliminationBeat";
 import ReadingDrawHostControls from "@/components/pages/reading-draw/ReadingDrawHostControls";
 import ReadingDrawNominationForm from "@/components/pages/reading-draw/ReadingDrawNominationForm";
 import ReadingDrawResultPanel from "@/components/pages/reading-draw/ReadingDrawResultPanel";
@@ -15,11 +18,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import {
   isReadingDrawLiveStatus,
+  READING_DRAW_MODE_LAST_STANDING,
   READING_DRAW_STATUS_AWAITING_BOOK,
   READING_DRAW_STATUS_COMPLETED,
   READING_DRAW_STATUS_NOMINATING,
+  readingDrawModeLabels,
   readingDrawStatusLabels,
 } from "@/utils/constants/readingDraw";
+import type { ReadingDrawCreateMode } from "@/types/IReadingDraw";
 
 const POLL_MS = 2000;
 
@@ -27,11 +33,16 @@ function revealStorageKey(drawId: string, revealStartedAt: string) {
   return `reading-draw-reveal:${drawId}:${revealStartedAt}`;
 }
 
+function eliminationStorageKey(drawId: string, elimKey: string) {
+  return `reading-draw-elim:${drawId}:${elimKey}`;
+}
+
 export default function ReadingDrawRoom() {
   const { shareCode } = useParams<{ shareCode: string }>();
   const { user } = useAuth();
   const { selectedClubId, setSelectedClubId } = useClub();
   const [revealDone, setRevealDone] = useState(false);
+  const [elimBeatDoneKey, setElimBeatDoneKey] = useState<string | null>(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["readingDraw", shareCode],
@@ -54,6 +65,23 @@ export default function ReadingDrawRoom() {
     }
   }, [readingDraw?.clubId, selectedClubId, setSelectedClubId]);
 
+  const latestEliminated = useMemo(() => {
+    if (!readingDraw) return null;
+    const eliminated = readingDraw.nominations.filter(
+      (nomination) => nomination.eliminatedAt,
+    );
+    if (eliminated.length === 0) return null;
+    return [...eliminated].sort(
+      (left, right) =>
+        (right.eliminationRound ?? 0) - (left.eliminationRound ?? 0),
+    )[0];
+  }, [readingDraw]);
+
+  const elimKey =
+    latestEliminated?.eliminatedAt != null
+      ? `${latestEliminated.id}:${latestEliminated.eliminatedAt}`
+      : null;
+
   useEffect(() => {
     if (!readingDraw) return;
 
@@ -70,6 +98,10 @@ export default function ReadingDrawRoom() {
       return;
     }
 
+    if (readingDraw.mode === READING_DRAW_MODE_LAST_STANDING) {
+      return;
+    }
+
     const key = revealStorageKey(readingDraw.id, readingDraw.revealStartedAt);
     const elapsed =
       Date.now() - new Date(readingDraw.revealStartedAt).getTime();
@@ -81,7 +113,47 @@ export default function ReadingDrawRoom() {
     } else {
       setRevealDone(false);
     }
-  }, [readingDraw?.id, readingDraw?.status, readingDraw?.revealStartedAt]);
+  }, [
+    readingDraw?.id,
+    readingDraw?.status,
+    readingDraw?.revealStartedAt,
+    readingDraw?.mode,
+  ]);
+
+  useEffect(() => {
+    if (!latestEliminated) {
+      setElimBeatDoneKey(null);
+    }
+  }, [latestEliminated]);
+
+  useEffect(() => {
+    if (!readingDraw || !elimKey || !latestEliminated?.eliminatedAt) return;
+
+    const storageKey = eliminationStorageKey(readingDraw.id, elimKey);
+    const elapsed =
+      Date.now() - new Date(latestEliminated.eliminatedAt).getTime();
+    if (
+      sessionStorage.getItem(storageKey) ||
+      elapsed >= READING_DRAW_ELIMINATION_DURATION_MS
+    ) {
+      setElimBeatDoneKey(elimKey);
+    }
+  }, [readingDraw?.id, elimKey, latestEliminated?.eliminatedAt]);
+
+  useEffect(() => {
+    if (!readingDraw) return;
+    if (readingDraw.mode !== READING_DRAW_MODE_LAST_STANDING) return;
+    if (readingDraw.status !== READING_DRAW_STATUS_AWAITING_BOOK) return;
+
+    if (!elimKey || elimBeatDoneKey === elimKey) {
+      setRevealDone(true);
+    }
+  }, [
+    readingDraw?.mode,
+    readingDraw?.status,
+    elimKey,
+    elimBeatDoneKey,
+  ]);
 
   if (!shareCode) {
     return (
@@ -127,15 +199,40 @@ export default function ReadingDrawRoom() {
   const isAwaitingBook =
     readingDraw.status === READING_DRAW_STATUS_AWAITING_BOOK;
   const isCompleted = readingDraw.status === READING_DRAW_STATUS_COMPLETED;
+  const isLastStanding =
+    readingDraw.mode === READING_DRAW_MODE_LAST_STANDING;
+  const modeLabel =
+    readingDraw.mode === "vote"
+      ? "Votação"
+      : readingDrawModeLabels[readingDraw.mode as ReadingDrawCreateMode]
+          ?.title ?? readingDraw.mode;
+
+  const showEliminationBeat =
+    Boolean(elimKey) &&
+    Boolean(latestEliminated?.eliminatedAt) &&
+    elimBeatDoneKey !== elimKey;
+
   const showShelfReveal =
     isAwaitingBook &&
+    !isLastStanding &&
     !revealDone &&
     Boolean(readingDraw.revealStartedAt) &&
     Boolean(readingDraw.winnerNominationId);
 
+  const showSpectacle = showEliminationBeat || showShelfReveal;
+
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
   ).length;
+  const standingCount = readingDraw.nominations.filter(
+    (nomination) => nomination.confirmedAt && !nomination.eliminatedAt,
+  ).length;
+  const remainingForElimBeat = readingDraw.nominations.filter(
+    (nomination) =>
+      nomination.confirmedAt &&
+      !nomination.eliminatedAt &&
+      nomination.id !== latestEliminated?.id,
+  );
   const deadlineLabel = new Date(readingDraw.deadlineAt).toLocaleString(
     "pt-BR",
     {
@@ -154,6 +251,8 @@ export default function ReadingDrawRoom() {
           Sorteio da próxima leitura
         </h1>
         <p className="text-warm-brown">
+          {modeLabel}
+          {" · "}
           {readingDrawStatusLabels[readingDraw.status]}
           {" · "}
           Você:{" "}
@@ -165,7 +264,7 @@ export default function ReadingDrawRoom() {
         </p>
       </div>
 
-      {!showShelfReveal ? (
+      {!showSpectacle ? (
         <div className="space-y-2 rounded-lg border border-secondary/40 bg-background p-4 text-sm">
           <p>
             <span className="font-medium text-primary">Prazo:</span>{" "}
@@ -177,18 +276,25 @@ export default function ReadingDrawRoom() {
             {" · "}
             <span className="font-medium text-primary">Confirmados:</span>{" "}
             {confirmedCount}
+            {isLastStanding ? (
+              <>
+                {" · "}
+                <span className="font-medium text-primary">Restantes:</span>{" "}
+                {standingCount}
+              </>
+            ) : null}
           </p>
         </div>
       ) : null}
 
-      {isReadingDrawLiveStatus(readingDraw.status) && !showShelfReveal ? (
+      {isReadingDrawLiveStatus(readingDraw.status) && !showSpectacle ? (
         <ReadingDrawSharePanel
           shareCode={readingDraw.shareCode}
           clubName={readingDraw.club?.name}
         />
       ) : null}
 
-      {isNominating && isParticipant && user?.id ? (
+      {isNominating && isParticipant && user?.id && !showEliminationBeat ? (
         <ReadingDrawNominationForm
           readingDraw={readingDraw}
           shareCode={shareCode}
@@ -196,10 +302,26 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      {isNominating && isHost ? (
+      {isNominating && isHost && !showEliminationBeat ? (
         <ReadingDrawHostControls
           readingDraw={readingDraw}
           shareCode={shareCode}
+          actionLocked={showEliminationBeat}
+        />
+      ) : null}
+
+      {showEliminationBeat && latestEliminated?.eliminatedAt ? (
+        <ReadingDrawEliminationBeat
+          eliminated={latestEliminated}
+          remaining={remainingForElimBeat}
+          eliminatedAt={latestEliminated.eliminatedAt}
+          onFinished={() => {
+            sessionStorage.setItem(
+              eliminationStorageKey(readingDraw.id, elimKey!),
+              "1",
+            );
+            setElimBeatDoneKey(elimKey);
+          }}
         />
       ) : null}
 
@@ -219,7 +341,8 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      {(isAwaitingBook && revealDone) || isCompleted ? (
+      {(isAwaitingBook && revealDone && !showEliminationBeat) ||
+      isCompleted ? (
         <ReadingDrawResultPanel
           readingDraw={readingDraw}
           shareCode={shareCode}
@@ -227,17 +350,22 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      {!showShelfReveal ? (
+      {!showSpectacle ? (
         <ul className="space-y-2">
           {readingDraw.participants.map((participant) => {
             const nomination = readingDraw.nominations.find(
               (item) => item.userId === participant.userId,
             );
-            const ready = Boolean(nomination?.confirmedAt);
+            const eliminated = Boolean(nomination?.eliminatedAt);
+            const ready = Boolean(nomination?.confirmedAt) && !eliminated;
             return (
               <li
                 key={participant.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-muted px-3 py-2 text-sm"
+                className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${
+                  eliminated
+                    ? "border-muted/60 bg-muted/20 opacity-70"
+                    : "border-muted"
+                }`}
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">
@@ -247,7 +375,11 @@ export default function ReadingDrawRoom() {
                       : ""}
                   </p>
                   {nomination?.title ? (
-                    <p className="truncate text-muted-foreground">
+                    <p
+                      className={`truncate text-muted-foreground ${
+                        eliminated ? "line-through" : ""
+                      }`}
+                    >
                       {nomination.title}
                       {nomination.author ? ` — ${nomination.author}` : ""}
                     </p>
@@ -255,12 +387,14 @@ export default function ReadingDrawRoom() {
                 </div>
                 <span
                   className={
-                    ready
-                      ? "shrink-0 text-primary"
-                      : "shrink-0 text-muted-foreground"
+                    eliminated
+                      ? "shrink-0 text-destructive"
+                      : ready
+                        ? "shrink-0 text-primary"
+                        : "shrink-0 text-muted-foreground"
                   }
                 >
-                  {ready ? "Pronto" : "Aguardando"}
+                  {eliminated ? "Eliminado" : ready ? "Pronto" : "Aguardando"}
                 </span>
               </li>
             );

@@ -54,7 +54,10 @@ export default function ReadingDrawShelfReveal({
   onFinished,
 }: ReadingDrawShelfRevealProps) {
   const books = useMemo(
-    () => nominations.filter((nomination) => nomination.confirmedAt),
+    () =>
+      nominations.filter(
+        (nomination) => nomination.confirmedAt && !nomination.eliminatedAt,
+      ),
     [nominations],
   );
 
