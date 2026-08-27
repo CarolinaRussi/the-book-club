@@ -31,6 +31,7 @@ export const createReadingDrawHandler = async (req: Request, res: Response) => {
       hostUserId,
       participantUserIds: participantUserIds.map(String),
       deadlineAt,
+      mode: req.body.mode,
     });
     return res.status(201).json({
       message: "Sorteio criado com sucesso!",

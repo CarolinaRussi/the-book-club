@@ -5,6 +5,7 @@ import {
   completeReadingDraw,
   confirmReadingDrawNomination,
   createReadingDraw,
+  eliminateReadingDraw,
   getActiveReadingDraw,
   getReadingDrawByShareCode,
   revealReadingDraw,
@@ -45,6 +46,11 @@ router.post(
   unconfirmReadingDrawNomination,
 );
 router.post("/reading-draws/:id/reveal", authMiddleware, revealReadingDraw);
+router.post(
+  "/reading-draws/:id/eliminate",
+  authMiddleware,
+  eliminateReadingDraw,
+);
 router.post("/reading-draws/:id/cancel", authMiddleware, cancelReadingDraw);
 router.post(
   "/reading-draws/:id/complete",

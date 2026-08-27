@@ -5,5 +5,6 @@ export { upsertReadingDrawNominationHandler as upsertReadingDrawNomination } fro
 export { confirmReadingDrawNominationHandler as confirmReadingDrawNomination } from "./confirmReadingDrawNomination";
 export { unconfirmReadingDrawNominationHandler as unconfirmReadingDrawNomination } from "./unconfirmReadingDrawNomination";
 export { revealReadingDrawHandler as revealReadingDraw } from "./revealReadingDraw";
+export { eliminateReadingDrawHandler as eliminateReadingDraw } from "./eliminateReadingDraw";
 export { cancelReadingDrawHandler as cancelReadingDraw } from "./cancelReadingDraw";
 export { completeReadingDrawHandler as completeReadingDraw } from "./completeReadingDraw";

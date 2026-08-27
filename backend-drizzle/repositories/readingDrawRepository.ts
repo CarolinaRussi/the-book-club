@@ -100,6 +100,8 @@ export async function findNominations(drawId: string) {
       title: readingDrawNomination.title,
       author: readingDrawNomination.author,
       confirmedAt: readingDrawNomination.confirmedAt,
+      eliminatedAt: readingDrawNomination.eliminatedAt,
+      eliminationRound: readingDrawNomination.eliminationRound,
     })
     .from(readingDrawNomination)
     .where(eq(readingDrawNomination.drawId, drawId));
@@ -218,6 +220,67 @@ export async function findConfirmedNominations(drawId: string) {
         sql`${readingDrawNomination.confirmedAt} is not null`,
       ),
     );
+}
+
+export async function findStandingNominations(drawId: string) {
+  return db
+    .select()
+    .from(readingDrawNomination)
+    .where(
+      and(
+        eq(readingDrawNomination.drawId, drawId),
+        sql`${readingDrawNomination.confirmedAt} is not null`,
+        sql`${readingDrawNomination.eliminatedAt} is null`,
+      ),
+    );
+}
+
+export async function hasEliminationStarted(drawId: string) {
+  const [row] = await db
+    .select({ id: readingDrawNomination.id })
+    .from(readingDrawNomination)
+    .where(
+      and(
+        eq(readingDrawNomination.drawId, drawId),
+        sql`${readingDrawNomination.eliminatedAt} is not null`,
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function findMaxEliminationRound(drawId: string) {
+  const [row] = await db
+    .select({
+      maxRound: sql<number | null>`max(${readingDrawNomination.eliminationRound})`,
+    })
+    .from(readingDrawNomination)
+    .where(eq(readingDrawNomination.drawId, drawId));
+  return row?.maxRound == null ? 0 : Number(row.maxRound);
+}
+
+export async function eliminateNomination(input: {
+  drawId: string;
+  nominationId: string;
+  eliminationRound: number;
+  eliminatedAt: Date;
+}) {
+  const [row] = await db
+    .update(readingDrawNomination)
+    .set({
+      eliminatedAt: input.eliminatedAt,
+      eliminationRound: input.eliminationRound,
+    })
+    .where(
+      and(
+        eq(readingDrawNomination.id, input.nominationId),
+        eq(readingDrawNomination.drawId, input.drawId),
+        sql`${readingDrawNomination.confirmedAt} is not null`,
+        sql`${readingDrawNomination.eliminatedAt} is null`,
+      ),
+    )
+    .returning();
+  return row ?? null;
 }
 
 export async function revealDrawWinner(input: {

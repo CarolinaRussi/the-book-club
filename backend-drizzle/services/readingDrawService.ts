@@ -1,7 +1,7 @@
 import { randomInt } from "crypto";
 import { db } from "../db/client";
 import { readingDraw, readingDrawParticipant } from "../db/schema";
-import { ReadingDrawMode } from "../enums/readingDrawMode";
+import { ReadingDrawMode, type ReadingDrawModeValue } from "../enums/readingDrawMode";
 import { ReadingDrawStatus } from "../enums/readingDrawStatus";
 import * as bookRepository from "../repositories/bookRepository";
 import * as clubRepository from "../repositories/clubRepository";
@@ -136,8 +136,28 @@ async function buildRoomPayload(draw: DrawRow, viewerUserId: string) {
       title: nomination.title,
       author: nomination.author,
       confirmedAt: nomination.confirmedAt,
+      eliminatedAt: nomination.eliminatedAt,
+      eliminationRound: nomination.eliminationRound,
     })),
   };
+}
+
+function parseCreateMode(mode: unknown): ReadingDrawModeValue {
+  if (mode === undefined || mode === null || mode === "") {
+    return ReadingDrawMode.DIRECT;
+  }
+  if (
+    mode === ReadingDrawMode.DIRECT ||
+    mode === ReadingDrawMode.LAST_STANDING
+  ) {
+    return mode;
+  }
+  if (mode === ReadingDrawMode.VOTE) {
+    throw new ReadingDrawValidationError(
+      "O modo votação ainda não está disponível.",
+    );
+  }
+  throw new ReadingDrawValidationError("Modo de sorteio inválido.");
 }
 
 export async function createReadingDraw(input: {
@@ -145,7 +165,9 @@ export async function createReadingDraw(input: {
   hostUserId: string;
   participantUserIds: string[];
   deadlineAt?: unknown;
+  mode?: unknown;
 }) {
+  const mode = parseCreateMode(input.mode);
   const activeClub = await clubRepository.findActiveClubById(input.clubId);
   if (!activeClub) {
     throw new ReadingDrawNotFoundError("Clube não encontrado.");
@@ -198,7 +220,7 @@ export async function createReadingDraw(input: {
           id: drawId,
           clubId: input.clubId,
           hostUserId: input.hostUserId,
-          mode: ReadingDrawMode.DIRECT,
+          mode,
           status: ReadingDrawStatus.NOMINATING,
           shareCode,
           deadlineAt,
@@ -304,6 +326,12 @@ async function loadNominatingDrawForParticipant(
   if (currentDraw.status !== ReadingDrawStatus.NOMINATING) {
     throw new ReadingDrawValidationError(
       "Não é possível alterar indicações neste momento.",
+    );
+  }
+
+  if (await readingDrawRepository.hasEliminationStarted(currentDraw.id)) {
+    throw new ReadingDrawValidationError(
+      "As indicações estão travadas: a eliminação já começou.",
     );
   }
 
@@ -464,6 +492,14 @@ async function loadDrawForHost(drawId: string, hostUserId: string) {
 export async function revealReadingDraw(drawId: string, hostUserId: string) {
   const draw = await loadDrawForHost(drawId, hostUserId);
 
+  if (draw.mode !== ReadingDrawMode.DIRECT) {
+    throw new ReadingDrawValidationError(
+      draw.mode === ReadingDrawMode.LAST_STANDING
+        ? "Neste modo, elimine um livro por vez."
+        : "Este modo não usa sorteio direto.",
+    );
+  }
+
   if (draw.status !== ReadingDrawStatus.NOMINATING) {
     throw new ReadingDrawValidationError(
       "Este sorteio não está na fase de indicações.",
@@ -494,6 +530,74 @@ export async function revealReadingDraw(drawId: string, hostUserId: string) {
   }
 
   return buildRoomPayload(revealed, hostUserId);
+}
+
+export async function eliminateReadingDrawNomination(
+  drawId: string,
+  hostUserId: string,
+) {
+  const draw = await loadDrawForHost(drawId, hostUserId);
+
+  if (draw.mode !== ReadingDrawMode.LAST_STANDING) {
+    throw new ReadingDrawValidationError(
+      "Eliminação só está disponível no modo sobra um.",
+    );
+  }
+
+  if (draw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "Este sorteio não está na fase de eliminações.",
+    );
+  }
+
+  const standing = await readingDrawRepository.findStandingNominations(
+    draw.id,
+  );
+  if (standing.length < 2) {
+    throw new ReadingDrawValidationError(
+      "É preciso pelo menos 2 indicações restantes para eliminar uma.",
+    );
+  }
+
+  const nextRound =
+    (await readingDrawRepository.findMaxEliminationRound(draw.id)) + 1;
+  const victim = standing[randomInt(standing.length)];
+  const eliminatedAt = new Date();
+
+  const eliminated = await readingDrawRepository.eliminateNomination({
+    drawId: draw.id,
+    nominationId: victim.id,
+    eliminationRound: nextRound,
+    eliminatedAt,
+  });
+  if (!eliminated) {
+    throw new ReadingDrawValidationError(
+      "Não foi possível eliminar esta indicação. Tente de novo.",
+    );
+  }
+
+  const remaining = await readingDrawRepository.findStandingNominations(
+    draw.id,
+  );
+  if (remaining.length === 1) {
+    const revealed = await readingDrawRepository.revealDrawWinner({
+      drawId: draw.id,
+      winnerNominationId: remaining[0].id,
+      revealStartedAt: eliminatedAt,
+    });
+    if (!revealed) {
+      throw new ReadingDrawValidationError(
+        "A eliminação ocorreu, mas o sorteio já não estava disponível.",
+      );
+    }
+    return buildRoomPayload(revealed, hostUserId);
+  }
+
+  const freshDraw = await readingDrawRepository.findById(draw.id);
+  if (!freshDraw) {
+    throw new ReadingDrawNotFoundError();
+  }
+  return buildRoomPayload(freshDraw, hostUserId);
 }
 
 export async function cancelReadingDraw(drawId: string, hostUserId: string) {
