@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { castReadingDrawVotes } from "@/api/mutations/readingDrawMutate";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import type { IApiError } from "@/types/IApi";
 import type { IReadingDraw } from "@/types/IReadingDraw";
 import { cn } from "@/lib/utils";
@@ -16,21 +17,32 @@ export default function ReadingDrawVotePanel({
   readingDraw,
   shareCode,
 }: ReadingDrawVotePanelProps) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const votesAllowed = readingDraw.voteVotesPerParticipant ?? 1;
+  const blockOwnNomination = votesAllowed === 1;
   const eligible = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt && !nomination.eliminatedAt,
   );
+  const ownNominationId =
+    eligible.find((nomination) => nomination.userId === user?.id)?.id ?? null;
 
   const [selectedIds, setSelectedIds] = useState<string[]>(
     readingDraw.myVoteNominationIds ?? [],
   );
 
   useEffect(() => {
-    setSelectedIds(readingDraw.myVoteNominationIds ?? []);
+    const saved = readingDraw.myVoteNominationIds ?? [];
+    setSelectedIds(
+      blockOwnNomination && ownNominationId
+        ? saved.filter((nominationId) => nominationId !== ownNominationId)
+        : saved,
+    );
   }, [
     readingDraw.voteRound,
     readingDraw.myVoteNominationIds,
+    blockOwnNomination,
+    ownNominationId,
   ]);
 
   const hasSavedVotes = (readingDraw.myVoteNominationIds ?? []).length > 0;
@@ -56,6 +68,10 @@ export default function ReadingDrawVotePanel({
   });
 
   const toggleNomination = (nominationId: string) => {
+    if (blockOwnNomination && nominationId === ownNominationId) {
+      toast.error("No voto único você não pode votar na sua própria indicação.");
+      return;
+    }
     setSelectedIds((current) => {
       if (current.includes(nominationId)) {
         return current.filter((id) => id !== nominationId);
@@ -82,11 +98,15 @@ export default function ReadingDrawVotePanel({
         </p>
         <p className="text-xs text-muted-foreground">
           {votesAllowed === 1
-            ? "Escolha 1 livro."
-            : `Escolha até ${votesAllowed} livros (no máximo 1 voto por livro).`}
-          {" "}
-          Pode votar no seu.
+            ? "Escolha 1 livro entre as indicações dos outros participantes."
+            : `Escolha até ${votesAllowed} livros (no máximo 1 voto por livro). Pode incluir o seu.`}
         </p>
+        {blockOwnNomination ? (
+          <p className="rounded-md border border-amber-600/30 bg-amber-500/10 px-2.5 py-2 text-xs text-foreground">
+            Neste sorteio o voto é único: você não pode votar na sua própria
+            indicação.
+          </p>
+        ) : null}
         <p className="text-xs text-warm-brown">
           Já votaram: {readingDraw.votersWhoVotedCount ?? 0} de{" "}
           {readingDraw.participants.length}
@@ -95,15 +115,22 @@ export default function ReadingDrawVotePanel({
 
       <ul className="space-y-2">
         {eligible.map((nomination) => {
+          const isOwn = nomination.id === ownNominationId;
+          const blocked = blockOwnNomination && isOwn;
           const checked = selectedIds.includes(nomination.id);
           return (
             <li key={nomination.id}>
               <label
                 className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 transition-colors",
-                  checked
+                  "flex items-start gap-3 rounded-md border px-3 py-2 transition-colors",
+                  blocked
+                    ? "cursor-not-allowed border-muted/60 bg-muted/20 opacity-70"
+                    : "cursor-pointer",
+                  !blocked && checked
                     ? "border-primary bg-primary/5"
-                    : "border-muted hover:bg-muted/40",
+                    : !blocked
+                      ? "border-muted hover:bg-muted/40"
+                      : null,
                 )}
               >
                 <input
@@ -111,15 +138,22 @@ export default function ReadingDrawVotePanel({
                   name="reading-draw-vote"
                   className="mt-1 size-4 accent-primary"
                   checked={checked}
+                  disabled={blocked}
                   onChange={() => toggleNomination(nomination.id)}
                 />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">
                     {nomination.title}
+                    {isOwn ? " (sua indicação)" : ""}
                   </span>
                   {nomination.author ? (
                     <span className="block text-xs text-muted-foreground">
                       {nomination.author}
+                    </span>
+                  ) : null}
+                  {blocked ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      Indisponível no voto único
                     </span>
                   ) : null}
                 </span>

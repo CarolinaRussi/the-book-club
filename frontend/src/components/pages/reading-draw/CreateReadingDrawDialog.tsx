@@ -238,6 +238,12 @@ export default function CreateReadingDrawDialog({
                     Múltiplo (até N livros)
                   </label>
                 </div>
+                {voteStyle === "single" ? (
+                  <p className="text-xs text-muted-foreground">
+                    No voto único, ninguém vota na própria indicação — só nas
+                    dos outros.
+                  </p>
+                ) : null}
                 {voteStyle === "multi" ? (
                   <div className="space-y-1.5">
                     <Label htmlFor="multi-votes-count">Votos por pessoa</Label>
