@@ -643,6 +643,27 @@ export async function completeReadingDraw(input: {
     throw new ReadingDrawValidationError("Livro inválido para este clube.");
   }
 
+  if (!draw.winnerNominationId) {
+    throw new ReadingDrawValidationError(
+      "Sorteio sem indicação vencedora; não é possível concluir.",
+    );
+  }
+
+  const nominations = await readingDrawRepository.findNominations(draw.id);
+  const winnerNomination = nominations.find(
+    (nomination) => nomination.id === draw.winnerNominationId,
+  );
+  if (!winnerNomination) {
+    throw new ReadingDrawValidationError(
+      "Indicação vencedora não encontrada.",
+    );
+  }
+
+  await bookRepository.updateClubBookSuggestedByUserId(
+    clubBookId,
+    winnerNomination.userId,
+  );
+
   const completed = await readingDrawRepository.completeDrawWithClubBook({
     drawId: draw.id,
     winningClubBookId: clubBookId,

@@ -328,6 +328,18 @@ export async function findActiveClubBookById(clubBookId: string) {
   return row ?? null;
 }
 
+export async function updateClubBookSuggestedByUserId(
+  clubBookId: string,
+  suggestedByUserId: string,
+) {
+  const [row] = await db
+    .update(clubBook)
+    .set({ suggestedByUserId })
+    .where(and(eq(clubBook.id, clubBookId), isNull(clubBook.deletedAt)))
+    .returning();
+  return row ?? null;
+}
+
 export async function updateBookTotalChaptersById(
   bookId: string,
   totalChapters: number
