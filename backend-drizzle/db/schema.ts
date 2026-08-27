@@ -10,6 +10,7 @@ import {
   pgEnum,
   uniqueIndex,
   index,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -61,6 +62,18 @@ export const membershipRequestStatusEnum = pgEnum(
   "MembershipRequestStatusEnum",
   ["pending", "approved", "rejected", "cancelled"],
 );
+export const readingDrawModeEnum = pgEnum("ReadingDrawModeEnum", [
+  "direct",
+  "vote",
+  "last_standing",
+]);
+export const readingDrawStatusEnum = pgEnum("ReadingDrawStatusEnum", [
+  "nominating",
+  "awaiting_book",
+  "completed",
+  "cancelled",
+  "expired",
+]);
 
 // State / City (IBGE — PK = código IBGE)
 export const state = pgTable(
@@ -406,6 +419,101 @@ export const feedback = pgTable("Feedback", {
     .notNull(),
 });
 
+// ReadingDraw (sorteio da próxima leitura)
+export const readingDraw = pgTable(
+  "ReadingDraw",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    clubId: varchar("club_id", { length: 255 })
+      .notNull()
+      .references(() => club.id, { onDelete: "cascade" }),
+    hostUserId: varchar("host_user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    mode: readingDrawModeEnum("mode").notNull(),
+    status: readingDrawStatusEnum("status").default("nominating").notNull(),
+    shareCode: varchar("share_code", { length: 255 }).notNull(),
+    deadlineAt: timestamp("deadline_at", {
+      withTimezone: true,
+      precision: 6,
+    }).notNull(),
+    winnerNominationId: varchar("winner_nomination_id", {
+      length: 255,
+    }).references((): AnyPgColumn => readingDrawNomination.id, {
+      onDelete: "set null",
+    }),
+    winningClubBookId: varchar("winning_club_book_id", { length: 255 }).references(
+      () => clubBook.id,
+      { onDelete: "set null" },
+    ),
+    voteVotesPerParticipant: integer("vote_votes_per_participant"),
+    revealStartedAt: timestamp("reveal_started_at", {
+      withTimezone: true,
+      precision: 6,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("ReadingDraw_share_code_key").on(table.shareCode),
+    uniqueIndex("ReadingDraw_club_id_active_key")
+      .on(table.clubId)
+      .where(
+        sql`${table.status} IN ('nominating', 'awaiting_book')`,
+      ),
+    index("ReadingDraw_club_id_status_idx").on(table.clubId, table.status),
+  ],
+);
+
+export const readingDrawParticipant = pgTable(
+  "ReadingDrawParticipant",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    drawId: varchar("draw_id", { length: 255 })
+      .notNull()
+      .references(() => readingDraw.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    uniqueIndex("ReadingDrawParticipant_draw_id_user_id_key").on(
+      table.drawId,
+      table.userId,
+    ),
+  ],
+);
+
+export const readingDrawNomination = pgTable(
+  "ReadingDrawNomination",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    drawId: varchar("draw_id", { length: 255 })
+      .notNull()
+      .references(() => readingDraw.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    author: varchar("author", { length: 255 }),
+    confirmedAt: timestamp("confirmed_at", {
+      withTimezone: true,
+      precision: 6,
+    }),
+  },
+  (table) => [
+    uniqueIndex("ReadingDrawNomination_draw_id_user_id_key").on(
+      table.drawId,
+      table.userId,
+    ),
+  ],
+);
+
 // Relations (for query API - optional, used with db.query)
 export const stateRelations = relations(state, ({ many }) => ({
   cities: many(city),
@@ -433,6 +541,9 @@ export const userRelations = relations(user, ({ many }) => ({
   meetingsCreated: many(meeting),
   meetingRecapsCreated: many(meetingRecap),
   feedbacks: many(feedback),
+  readingDrawsHosted: many(readingDraw),
+  readingDrawParticipations: many(readingDrawParticipant),
+  readingDrawNominations: many(readingDrawNomination),
 }));
 
 export const clubRelations = relations(club, ({ one, many }) => ({
@@ -452,6 +563,7 @@ export const clubRelations = relations(club, ({ one, many }) => ({
   members: many(member),
   clubBooks: many(clubBook),
   membershipRequests: many(membershipRequest),
+  readingDraws: many(readingDraw),
 }));
 
 export const membershipRequestRelations = relations(
@@ -573,3 +685,61 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const readingDrawRelations = relations(readingDraw, ({ one, many }) => ({
+  club: one(club, {
+    fields: [readingDraw.clubId],
+    references: [club.id],
+  }),
+  host: one(user, {
+    fields: [readingDraw.hostUserId],
+    references: [user.id],
+  }),
+  participants: many(readingDrawParticipant),
+  nominations: many(readingDrawNomination, {
+    relationName: "drawNominations",
+  }),
+  winnerNomination: one(readingDrawNomination, {
+    fields: [readingDraw.winnerNominationId],
+    references: [readingDrawNomination.id],
+    relationName: "drawWinner",
+  }),
+  winningClubBook: one(clubBook, {
+    fields: [readingDraw.winningClubBookId],
+    references: [clubBook.id],
+  }),
+}));
+
+export const readingDrawParticipantRelations = relations(
+  readingDrawParticipant,
+  ({ one }) => ({
+    draw: one(readingDraw, {
+      fields: [readingDrawParticipant.drawId],
+      references: [readingDraw.id],
+    }),
+    user: one(user, {
+      fields: [readingDrawParticipant.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const readingDrawNominationRelations = relations(
+  readingDrawNomination,
+  ({ one }) => ({
+    draw: one(readingDraw, {
+      fields: [readingDrawNomination.drawId],
+      references: [readingDraw.id],
+      relationName: "drawNominations",
+    }),
+    wonDraw: one(readingDraw, {
+      fields: [readingDrawNomination.id],
+      references: [readingDraw.winnerNominationId],
+      relationName: "drawWinner",
+    }),
+    user: one(user, {
+      fields: [readingDrawNomination.userId],
+      references: [user.id],
+    }),
+  }),
+);
