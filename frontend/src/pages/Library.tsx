@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { FaPlus } from "react-icons/fa6";
+import { Dices } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { deleteClubBook } from "@/api/mutations/bookMutate";
 import { updateUserPersonalList } from "@/api/mutations/userMutate";
 import { fetchPaginatedClubBooks } from "@/api/queries/fetchBooks";
 import CreateBookDialog from "@/components/pages/library/CreateBookDialog";
+import CreateReadingDrawDialog from "@/components/pages/reading-draw/CreateReadingDrawDialog";
 import { LibraryBookCard } from "@/components/pages/library/LibraryBookCard";
 import SkeletonLibrary from "@/components/pages/library/skeletons/SkeletonLibrary";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,7 @@ import { BOOK_STATUS_SUGGESTED } from "@/utils/constants/books";
 
 export default function Library() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
+  const [createDrawOpen, setCreateDrawOpen] = useState(false);
   const [booksPage, setBooksPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -133,9 +136,18 @@ export default function Library() {
             Todos os livros que já lemos juntos, com notas e avaliações
           </h2>
         </div>
-        <div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Button
-            className="w-full cursor-pointer rounded-xl bg-primary py-6 text-1xl font-semibold text-primary-foreground hover:bg-primary/80"
+            type="button"
+            variant="outline"
+            className="w-full cursor-pointer rounded-xl border-primary py-6 text-1xl font-semibold text-primary hover:bg-primary/10 sm:w-auto"
+            onClick={() => setCreateDrawOpen(true)}
+          >
+            <Dices className="size-5" />
+            Sortear próxima leitura
+          </Button>
+          <Button
+            className="w-full cursor-pointer rounded-xl bg-primary py-6 text-1xl font-semibold text-primary-foreground hover:bg-primary/80 sm:w-auto"
             onClick={() => setCreateBookOpen(true)}
           >
             <FaPlus size={24} />
@@ -184,6 +196,10 @@ export default function Library() {
       <CreateBookDialog
         open={createBookOpen}
         onOpenChange={setCreateBookOpen}
+      />
+      <CreateReadingDrawDialog
+        open={createDrawOpen}
+        onOpenChange={setCreateDrawOpen}
       />
     </div>
   );

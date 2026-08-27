@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import BrandLoadingScreen from "@/components/BrandLoadingScreen";
+import ReadingDrawSharePanel from "@/components/pages/reading-draw/ReadingDrawSharePanel";
 import { fetchReadingDrawByShareCode } from "@/api/queries/fetchReadingDraw";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
@@ -10,7 +11,6 @@ import {
   isReadingDrawLiveStatus,
   readingDrawStatusLabels,
 } from "@/utils/constants/readingDraw";
-import { buildReadingDrawShareUrl } from "@/utils/readingDrawUrl";
 
 const POLL_MS = 2000;
 
@@ -19,12 +19,7 @@ export default function ReadingDrawRoom() {
   const { user } = useAuth();
   const { selectedClubId, setSelectedClubId } = useClub();
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["readingDraw", shareCode],
     queryFn: () => fetchReadingDrawByShareCode(shareCode!),
     enabled: !!user && !!shareCode,
@@ -40,10 +35,7 @@ export default function ReadingDrawRoom() {
   const readingDraw = data?.readingDraw;
 
   useEffect(() => {
-    if (
-      readingDraw?.clubId &&
-      readingDraw.clubId !== selectedClubId
-    ) {
+    if (readingDraw?.clubId && readingDraw.clubId !== selectedClubId) {
       setSelectedClubId(readingDraw.clubId);
     }
   }, [readingDraw?.clubId, selectedClubId, setSelectedClubId]);
@@ -61,7 +53,9 @@ export default function ReadingDrawRoom() {
   }
 
   if (isError || !readingDraw) {
-    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    const status = axios.isAxiosError(error)
+      ? error.response?.status
+      : undefined;
     const message =
       axios.isAxiosError(error) && error.response?.data?.message
         ? String(error.response.data.message)
@@ -70,7 +64,9 @@ export default function ReadingDrawRoom() {
     return (
       <div className="mx-auto mt-16 max-w-lg space-y-4 px-4 text-center">
         <p className="text-lg font-semibold text-primary">
-          {status === 403 ? "Sem acesso a este sorteio" : "Sorteio não encontrado"}
+          {status === 403
+            ? "Sem acesso a este sorteio"
+            : "Sorteio não encontrado"}
         </p>
         <p className="text-warm-brown">{message}</p>
         <Link to="/home" className="text-sm text-primary underline">
@@ -83,11 +79,13 @@ export default function ReadingDrawRoom() {
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
   ).length;
-  const shareUrl = buildReadingDrawShareUrl(readingDraw.shareCode);
-  const deadlineLabel = new Date(readingDraw.deadlineAt).toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+  const deadlineLabel = new Date(readingDraw.deadlineAt).toLocaleString(
+    "pt-BR",
+    {
+      dateStyle: "short",
+      timeStyle: "short",
+    },
+  );
 
   return (
     <div className="mx-auto mt-8 w-full max-w-2xl space-y-6 px-4 pb-16">
@@ -110,9 +108,10 @@ export default function ReadingDrawRoom() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-secondary/40 bg-background p-4 space-y-2 text-sm">
+      <div className="space-y-2 rounded-lg border border-secondary/40 bg-background p-4 text-sm">
         <p>
-          <span className="font-medium text-primary">Prazo:</span> {deadlineLabel}
+          <span className="font-medium text-primary">Prazo:</span>{" "}
+          {deadlineLabel}
         </p>
         <p>
           <span className="font-medium text-primary">Participantes:</span>{" "}
@@ -121,10 +120,14 @@ export default function ReadingDrawRoom() {
           <span className="font-medium text-primary">Confirmados:</span>{" "}
           {confirmedCount}
         </p>
-        <p className="break-all">
-          <span className="font-medium text-primary">Link:</span> {shareUrl}
-        </p>
       </div>
+
+      {isReadingDrawLiveStatus(readingDraw.status) ? (
+        <ReadingDrawSharePanel
+          shareCode={readingDraw.shareCode}
+          clubName={readingDraw.club?.name}
+        />
+      ) : null}
 
       <ul className="space-y-2">
         {readingDraw.participants.map((participant) => {
@@ -139,9 +142,13 @@ export default function ReadingDrawRoom() {
             >
               <span>
                 {participant.user.nickname || participant.user.name}
-                {participant.userId === readingDraw.hostUserId ? " (anfitrião)" : ""}
+                {participant.userId === readingDraw.hostUserId
+                  ? " (anfitrião)"
+                  : ""}
               </span>
-              <span className={ready ? "text-primary" : "text-muted-foreground"}>
+              <span
+                className={ready ? "text-primary" : "text-muted-foreground"}
+              >
                 {ready ? "Pronto" : "Aguardando"}
               </span>
             </li>
@@ -150,7 +157,7 @@ export default function ReadingDrawRoom() {
       </ul>
 
       <p className="text-sm text-muted-foreground">
-        Indicação, controlos do anfitrião e animação entram nas próximas partes.
+        Indicação e controlos do anfitrião entram na próxima parte.
       </p>
     </div>
   );
