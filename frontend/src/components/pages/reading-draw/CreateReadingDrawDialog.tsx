@@ -126,15 +126,18 @@ export default function CreateReadingDrawDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-lg">
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <ResponsiveDialogHeader>
+      <ResponsiveDialogContent className="w-full sm:max-w-lg lg:flex lg:max-h-[min(90dvh,100svh)] lg:flex-col lg:overflow-hidden">
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
+        >
+          <ResponsiveDialogHeader className="shrink-0 pr-8">
             <ResponsiveDialogTitle>
               Sortear próxima leitura
             </ResponsiveDialogTitle>
           </ResponsiveDialogHeader>
 
-          <ResponsiveDialogBody className="space-y-5">
+          <ResponsiveDialogBody className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain">
             <div className="space-y-2">
               <Label htmlFor="reading-draw-deadline">Prazo máximo</Label>
               <Input
@@ -150,24 +153,31 @@ export default function CreateReadingDrawDialog({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label>Participantes</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  disabled={isLoadingMembers || members.length === 0}
-                >
-                  {allSelected ? "Limpar" : "Todos"}
-                </Button>
-              </div>
+              <Label>Participantes</Label>
               {isLoadingMembers ? (
                 <p className="text-sm text-muted-foreground">
                   Carregando membros…
                 </p>
               ) : (
-                <ul className="max-h-56 space-y-2 overflow-y-auto rounded-md border border-muted p-2">
+                <ul className="max-h-56 space-y-1 overflow-y-auto rounded-md border border-muted p-2">
+                  <li>
+                    <label
+                      className={`flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50 ${
+                        members.length === 0
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-primary"
+                        checked={allSelected}
+                        disabled={members.length === 0}
+                        onChange={handleSelectAll}
+                      />
+                      <span className="text-sm font-medium">Todos</span>
+                    </label>
+                  </li>
                   {members.map((member) => {
                     const checked = selectedUserIds.includes(member.user.id);
                     const isCurrentUser = member.user.id === user?.id;
@@ -190,13 +200,13 @@ export default function CreateReadingDrawDialog({
                   })}
                 </ul>
               )}
-              <p className="text-xs text-muted-foreground mb-2">
+              <p className="mb-2 text-xs text-muted-foreground">
                 Você inicia o sorteio. Pode tirar-se da lista e só conduzir.
               </p>
             </div>
           </ResponsiveDialogBody>
 
-          <ResponsiveDialogFooter>
+          <ResponsiveDialogFooter className="shrink-0 border-t border-border/60 pt-4">
             <Button
               type="button"
               variant="outline"
