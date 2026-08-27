@@ -1,9 +1,13 @@
 import type {
+  ReadingDrawCreateMode,
   ReadingDrawMode,
   ReadingDrawStatus,
 } from "@/types/IReadingDraw";
 
-export const READING_DRAW_MODE_DIRECT = "direct" as const satisfies ReadingDrawMode;
+export const READING_DRAW_MODE_DIRECT =
+  "direct" as const satisfies ReadingDrawMode;
+export const READING_DRAW_MODE_LAST_STANDING =
+  "last_standing" as const satisfies ReadingDrawMode;
 
 export const READING_DRAW_STATUS_NOMINATING =
   "nominating" as const satisfies ReadingDrawStatus;
@@ -22,6 +26,20 @@ export const readingDrawStatusLabels: Record<ReadingDrawStatus, string> = {
   completed: "Concluído",
   cancelled: "Cancelado",
   expired: "Expirado",
+};
+
+export const readingDrawModeLabels: Record<
+  ReadingDrawCreateMode,
+  { title: string; description: string }
+> = {
+  direct: {
+    title: "Sorteio direto",
+    description: "Um clique e sai o livro vencedor entre as indicações.",
+  },
+  last_standing: {
+    title: "Sobra um",
+    description: "Elimina um livro por vez até sobrar só um.",
+  },
 };
 
 export function isReadingDrawLiveStatus(status: ReadingDrawStatus): boolean {

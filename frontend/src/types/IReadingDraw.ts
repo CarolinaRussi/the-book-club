@@ -28,6 +28,8 @@ export interface IReadingDrawNomination {
   title: string;
   author: string | null;
   confirmedAt: string | null;
+  eliminatedAt: string | null;
+  eliminationRound: number | null;
 }
 
 export interface IReadingDraw {
@@ -51,7 +53,13 @@ export interface IReadingDraw {
   nominations: IReadingDrawNomination[];
 }
 
+export type ReadingDrawCreateMode = Extract<
+  ReadingDrawMode,
+  "direct" | "last_standing"
+>;
+
 export interface ICreateReadingDrawPayload {
   participantUserIds: string[];
   deadlineAt?: string;
+  mode?: ReadingDrawCreateMode;
 }

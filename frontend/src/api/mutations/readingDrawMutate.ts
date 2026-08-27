@@ -81,6 +81,17 @@ export async function revealReadingDraw(
   }
 }
 
+export async function eliminateReadingDrawNomination(
+  drawId: string,
+): Promise<ReadingDrawResponse> {
+  try {
+    const response = await api.post(`/reading-draws/${drawId}/eliminate`);
+    return response.data;
+  } catch (error: unknown) {
+    throwApiError(error, "Erro ao eliminar indicação.");
+  }
+}
+
 export async function cancelReadingDraw(
   drawId: string,
 ): Promise<ReadingDrawResponse> {

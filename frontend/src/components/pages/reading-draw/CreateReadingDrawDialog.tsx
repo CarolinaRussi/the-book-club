@@ -17,13 +17,27 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
+import { cn } from "@/lib/utils";
 import type { IApiError } from "@/types/IApi";
-import type { IReadingDraw } from "@/types/IReadingDraw";
+import type {
+  IReadingDraw,
+  ReadingDrawCreateMode,
+} from "@/types/IReadingDraw";
+import {
+  READING_DRAW_MODE_DIRECT,
+  READING_DRAW_MODE_LAST_STANDING,
+  readingDrawModeLabels,
+} from "@/utils/constants/readingDraw";
 
 type CreateReadingDrawDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
+const CREATE_MODES: ReadingDrawCreateMode[] = [
+  READING_DRAW_MODE_DIRECT,
+  READING_DRAW_MODE_LAST_STANDING,
+];
 
 function toDatetimeLocalValue(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
@@ -44,6 +58,9 @@ export default function CreateReadingDrawDialog({
   const { selectedClubId } = useClub();
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [deadlineLocal, setDeadlineLocal] = useState(defaultDeadlineValue);
+  const [mode, setMode] = useState<ReadingDrawCreateMode>(
+    READING_DRAW_MODE_DIRECT,
+  );
 
   const { data: membersData, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["readers", selectedClubId, "reading-draw-create"],
@@ -56,6 +73,7 @@ export default function CreateReadingDrawDialog({
   useEffect(() => {
     if (!open) return;
     setDeadlineLocal(defaultDeadlineValue());
+    setMode(READING_DRAW_MODE_DIRECT);
     if (members.length > 0) {
       setSelectedUserIds(members.map((member) => member.user.id));
     }
@@ -71,7 +89,11 @@ export default function CreateReadingDrawDialog({
   const { mutate: createMutate, isPending } = useMutation<
     { message: string; readingDraw: IReadingDraw },
     IApiError,
-    { participantUserIds: string[]; deadlineAt: string }
+    {
+      participantUserIds: string[];
+      deadlineAt: string;
+      mode: ReadingDrawCreateMode;
+    }
   >({
     mutationFn: (payload) => createReadingDraw(selectedClubId!, payload),
     onSuccess: async (result) => {
@@ -121,6 +143,7 @@ export default function CreateReadingDrawDialog({
     createMutate({
       participantUserIds: selectedUserIds,
       deadlineAt: deadlineAt.toISOString(),
+      mode,
     });
   };
 
@@ -138,6 +161,44 @@ export default function CreateReadingDrawDialog({
           </ResponsiveDialogHeader>
 
           <ResponsiveDialogBody className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain">
+            <div className="space-y-2">
+              <Label>Modo</Label>
+              <ul className="space-y-2">
+                {CREATE_MODES.map((createMode) => {
+                  const selected = mode === createMode;
+                  const labels = readingDrawModeLabels[createMode];
+                  return (
+                    <li key={createMode}>
+                      <label
+                        className={cn(
+                          "flex cursor-pointer gap-3 rounded-lg border px-3 py-2.5 transition-colors",
+                          selected
+                            ? "border-primary bg-primary/5"
+                            : "border-muted hover:bg-muted/40",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="reading-draw-mode"
+                          className="mt-1 size-4 accent-primary"
+                          checked={selected}
+                          onChange={() => setMode(createMode)}
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-foreground">
+                            {labels.title}
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {labels.description}
+                          </span>
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="reading-draw-deadline">Prazo máximo</Label>
               <Input
