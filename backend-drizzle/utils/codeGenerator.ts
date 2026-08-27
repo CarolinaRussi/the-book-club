@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { club } from "../db/schema";
+import { club, readingDraw } from "../db/schema";
 import type { db } from "../db/client";
 
 type Db = typeof db;
@@ -24,7 +24,7 @@ const generateRandomSuffix = (length: number = 4): string => {
 
 export const generateUniqueInvitationCode = async (
   clubName: string,
-  db: Db
+  dbClient: Db,
 ): Promise<string> => {
   const prefix = sanitizeClubName(clubName);
   let isUnique = false;
@@ -34,7 +34,7 @@ export const generateUniqueInvitationCode = async (
     const suffix = generateRandomSuffix(3);
     finalCode = `${prefix}-${suffix}`;
 
-    const existing = await db
+    const existing = await dbClient
       .select()
       .from(club)
       .where(eq(club.invitationCode, finalCode))
@@ -46,4 +46,20 @@ export const generateUniqueInvitationCode = async (
   }
 
   return finalCode;
+};
+
+export const generateUniqueReadingDrawShareCode = async (
+  dbClient: Db,
+): Promise<string> => {
+  for (;;) {
+    const shareCode = generateRandomSuffix(8);
+    const existing = await dbClient
+      .select({ id: readingDraw.id })
+      .from(readingDraw)
+      .where(eq(readingDraw.shareCode, shareCode))
+      .limit(1);
+    if (existing.length === 0) {
+      return shareCode;
+    }
+  }
 };

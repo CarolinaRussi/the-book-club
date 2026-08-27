@@ -87,6 +87,17 @@ export async function findClubNameById(
   return row?.name ?? null;
 }
 
+export async function findActiveMemberUserIdsByClubId(
+  clubId: string,
+): Promise<string[]> {
+  const rows = await db
+    .select({ userId: member.userId })
+    .from(member)
+    .innerJoin(user, eq(member.userId, user.id))
+    .where(activeMemberUserFilter(clubId));
+  return rows.map((row) => row.userId);
+}
+
 export async function findMemberById(
   memberId: string
 ): Promise<typeof member.$inferSelect | null> {

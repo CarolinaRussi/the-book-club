@@ -13,6 +13,7 @@ import meetingRoutes from "../routes/meetingRoutes";
 import googleAuthRoutes from "../routes/googleAuthRoutes";
 import feedRoutes from "../routes/feedRoutes";
 import feedbackRoutes from "../routes/feedbackRoutes";
+import readingDrawRoutes from "../routes/readingDrawRoutes";
 import { autoCompleteOverdueMeetings } from "../services/meetingService";
 import { sendReviewReminderDigests } from "../services/reviewReminderService";
 
@@ -34,6 +35,7 @@ app.use(locationRoutes);
 app.use(userRoutes);
 app.use(feedRoutes);
 app.use(feedbackRoutes);
+app.use(readingDrawRoutes);
 app.use(bookRoutes);
 app.use(meetingRoutes);
 app.use(memberRoutes);
