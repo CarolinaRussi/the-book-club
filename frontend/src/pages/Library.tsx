@@ -5,7 +5,6 @@ import { Dices } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { deleteClubBook } from "@/api/mutations/bookMutate";
-import { updateUserPersonalList } from "@/api/mutations/userMutate";
 import { fetchPaginatedClubBooks } from "@/api/queries/fetchBooks";
 import CreateBookDialog from "@/components/pages/library/CreateBookDialog";
 import CreateReadingDrawDialog from "@/components/pages/reading-draw/CreateReadingDrawDialog";
@@ -15,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import Pagination from "@/components/ui/pagination";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
-import type { IApiError, IPaginatedResponse } from "@/types/IApi";
+import type { IApiError } from "@/types/IApi";
 import type { IBook } from "@/types/IBooks";
 import { BOOK_STATUS_SUGGESTED } from "@/utils/constants/books";
 
@@ -30,60 +29,6 @@ export default function Library() {
   const { clubs, selectedClubId } = useClub();
   const { user } = useAuth();
   const selectedClub = clubs.find((club) => club.id === selectedClubId);
-
-  const { mutate: updateUserPersonalListMutate } = useMutation<
-    { action: string },
-    IApiError,
-    { bookId: string; userId: string },
-    { previousData: IPaginatedResponse<IBook> | undefined }
-  >({
-    mutationFn: updateUserPersonalList,
-    onMutate: async ({ bookId }) => {
-      await queryClient.cancelQueries({
-        queryKey: ["booksFromSelectedClub", selectedClubId, booksPage],
-      });
-      const previousData = queryClient.getQueryData<IPaginatedResponse<IBook>>([
-        "booksFromSelectedClub",
-        selectedClubId,
-        booksPage,
-      ]);
-      queryClient.setQueryData<IPaginatedResponse<IBook>>(
-        ["booksFromSelectedClub", selectedClubId, booksPage],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            data: old.data.map((book) =>
-              book.id === bookId
-                ? { ...book, isInLibrary: !book.isInLibrary }
-                : book,
-            ),
-          };
-        },
-      );
-      return { previousData };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(
-          ["booksFromSelectedClub", selectedClubId, booksPage],
-          context.previousData,
-        );
-      }
-      toast.error("Erro ao atualizar a biblioteca. Alteração desfeita.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
-    },
-    onSuccess: (result) => {
-      toast.success(
-        result.action === "added"
-          ? "Adicionado à fila Quero ler"
-          : "Removido da fila Quero ler",
-        { autoClose: 1000 },
-      );
-    },
-  });
 
   const { mutate: deleteClubBookMutate, isPending: isDeletingBook } =
     useMutation<unknown, IApiError, { clubId: string; bookId: string }>({
@@ -165,18 +110,9 @@ export default function Library() {
               <LibraryBookCard
                 key={book.id}
                 book={book}
-                userId={user?.id}
                 canDelete={canDeleteBook(book)}
                 isDeleting={isDeletingBook}
                 onOpenDetails={() => navigate(`/books/${book.id}`)}
-                onTogglePersonalList={() => {
-                  if (user?.id) {
-                    updateUserPersonalListMutate({
-                      bookId: book.id,
-                      userId: user.id,
-                    });
-                  }
-                }}
                 onDelete={() => handleDeleteBook(book)}
               />
             ))}

@@ -24,7 +24,7 @@ import {
   READING_STATUS_NOT_STARTED,
   READING_STATUS_STARTED,
   READING_STATUS_WANT_TO_READ,
-  readingStatusLabels,
+  readingStatusFormOptions,
   type ReadingStatus,
 } from "@/utils/constants/reading";
 
@@ -58,7 +58,11 @@ export function BookPageReviewForm({
     });
 
   useEffect(() => {
-    setValue("readingStatus", myUserBook?.readingStatus ?? undefined);
+    const status =
+      myUserBook?.readingStatus === READING_STATUS_WANT_TO_READ
+        ? undefined
+        : myUserBook?.readingStatus;
+    setValue("readingStatus", status);
     setValue("rating", myReview?.rating ?? 0);
     setValue("comment", myReview?.comment ?? "");
   }, [myUserBook, myReview, setValue]);
@@ -96,7 +100,6 @@ export function BookPageReviewForm({
 
     const hasRatingOrReview = data.rating > 0 || data.comment.trim() !== "";
     const blocksRating =
-      data.readingStatus === READING_STATUS_WANT_TO_READ ||
       data.readingStatus === READING_STATUS_NOT_STARTED ||
       data.readingStatus === READING_STATUS_STARTED;
 
@@ -162,17 +165,15 @@ export function BookPageReviewForm({
                 <SelectValue placeholder="Selecione um status" />
               </SelectTrigger>
               <SelectContent className="rounded-lg border-secondary bg-background">
-                {Object.entries(readingStatusLabels).map(
-                  ([statusKey, statusLabel]) => (
-                    <SelectItem
-                      key={statusKey}
-                      value={statusKey}
-                      className="text-md cursor-pointer p-3"
-                    >
-                      {statusLabel}
-                    </SelectItem>
-                  ),
-                )}
+                {readingStatusFormOptions.map(({ value, label }) => (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="text-md cursor-pointer p-3"
+                  >
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}

@@ -22,16 +22,24 @@ export const readingStatusLabels: Record<ReadingStatus, string> = {
   [READING_STATUS_FINISHED]: "Finalizado",
 };
 
-type BookWithMemberReviews = {
-  reviews?: { user: { id: string }; readingStatus: ReadingStatus }[];
-};
-
-export function canShowPersonalQueueBookmark(
-  book: BookWithMemberReviews,
-  userId: string | undefined,
-): boolean {
-  if (!userId) return false;
-  const myReview = book.reviews?.find((review) => review.user.id === userId);
-  if (!myReview) return true;
-  return myReview.readingStatus === READING_STATUS_WANT_TO_READ;
-}
+export const readingStatusFormOptions: {
+  value: Exclude<ReadingStatus, "want_to_read">;
+  label: string;
+}[] = [
+  {
+    value: READING_STATUS_NOT_STARTED,
+    label: readingStatusLabels[READING_STATUS_NOT_STARTED],
+  },
+  {
+    value: READING_STATUS_STARTED,
+    label: readingStatusLabels[READING_STATUS_STARTED],
+  },
+  {
+    value: READING_STATUS_DROPPED,
+    label: readingStatusLabels[READING_STATUS_DROPPED],
+  },
+  {
+    value: READING_STATUS_FINISHED,
+    label: readingStatusLabels[READING_STATUS_FINISHED],
+  },
+];

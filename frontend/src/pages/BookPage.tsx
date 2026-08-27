@@ -2,24 +2,17 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   keepPreviousData,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
-import { BsBookmarkCheckFill, BsBookmarkPlusFill } from "react-icons/bs";
-import { toast } from "react-toastify";
 import { fetchBookPage } from "@/api/queries/fetchBookPage";
-import { updateUserPersonalList } from "@/api/mutations/userMutate";
 import { BookPageClubLinks } from "@/components/pages/book/BookPageClubLinks";
 import { BookPageReviewForm } from "@/components/pages/book/BookPageReviewForm";
 import { BookPageReviewsSection } from "@/components/pages/book/BookPageReviewsSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
-import type { IApiError } from "@/types/IApi";
-import type { BookReviewsScope, IBookPageResponse } from "@/types/IBooks";
-import { READING_STATUS_WANT_TO_READ } from "@/utils/constants/reading";
+import type { BookReviewsScope } from "@/types/IBooks";
 
 const REVIEWS_LIMIT = 20;
 
@@ -27,7 +20,6 @@ export default function BookPage() {
   const { bookId } = useParams<{ bookId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [reviewsScope, setReviewsScope] = useState<BookReviewsScope>("all");
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -54,57 +46,6 @@ export default function BookPage() {
   const isInitialLoading = isLoading;
   const isReviewsLoading = isFetching && !isInitialLoading;
 
-  const { mutate: updateUserPersonalListMutate } = useMutation<
-    { action: string },
-    IApiError,
-    { bookId: string; userId: string },
-    { previousData: IBookPageResponse | undefined }
-  >({
-    mutationFn: updateUserPersonalList,
-    onMutate: async ({ bookId: targetBookId }) => {
-      await queryClient.cancelQueries({ queryKey: ["book", targetBookId] });
-      const previousData = queryClient.getQueryData<IBookPageResponse>([
-        "book",
-        targetBookId,
-        reviewsScope,
-        reviewsPage,
-      ]);
-      queryClient.setQueryData<IBookPageResponse>(
-        ["book", targetBookId, reviewsScope, reviewsPage],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            isInWantToReadQueue: !old.isInWantToReadQueue,
-          };
-        },
-      );
-      return { previousData };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previousData && bookId) {
-        queryClient.setQueryData(
-          ["book", bookId, reviewsScope, reviewsPage],
-          context.previousData,
-        );
-      }
-      toast.error("Erro ao atualizar a fila Quero ler. Alteração desfeita.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["book", bookId] });
-      queryClient.invalidateQueries({ queryKey: ["booksFromSelectedClub"] });
-      queryClient.invalidateQueries({ queryKey: ["userReadings"] });
-    },
-    onSuccess: (result) => {
-      toast.success(
-        result.action === "added"
-          ? "Adicionado à fila Quero ler"
-          : "Removido da fila Quero ler",
-        { autoClose: 1000 },
-      );
-    },
-  });
-
   if (!user || !bookId) {
     return null;
   }
@@ -114,17 +55,9 @@ export default function BookPage() {
     : undefined;
   const isNotFound = axios.isAxiosError(error) && error.response?.status === 404;
 
-  const showBookmark =
-    !bookPage?.myUserBook ||
-    bookPage.myUserBook.readingStatus === READING_STATUS_WANT_TO_READ;
-
   const handleScopeChange = (scope: BookReviewsScope) => {
     setReviewsScope(scope);
     setReviewsPage(1);
-  };
-
-  const handleToggleBookmark = () => {
-    updateUserPersonalListMutate({ bookId, userId: user.id });
   };
 
   return (
@@ -166,35 +99,6 @@ export default function BookPage() {
                 alt={bookPage.book.title}
                 className="aspect-2/3 w-full rounded-2xl object-cover"
               />
-              {showBookmark ? (
-                <div className="absolute -top-2 -right-2">
-                  {bookPage.isInWantToReadQueue ? (
-                    <button
-                      type="button"
-                      onClick={handleToggleBookmark}
-                      title="Remover da fila Quero ler"
-                      className="cursor-pointer transition-transform hover:scale-110"
-                    >
-                      <BsBookmarkCheckFill
-                        size={40}
-                        className="text-primary drop-shadow-md"
-                      />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleToggleBookmark}
-                      title="Salvar na fila Quero ler"
-                      className="cursor-pointer transition-transform hover:scale-110"
-                    >
-                      <BsBookmarkPlusFill
-                        size={40}
-                        className="text-primary drop-shadow-md"
-                      />
-                    </button>
-                  )}
-                </div>
-              ) : null}
             </div>
 
             <div className="min-w-0 flex-1 text-center sm:text-left">

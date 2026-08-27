@@ -48,7 +48,6 @@ export interface IBook {
   addedAt: string;
   createdAt: string;
   reviews?: IReview[];
-  isInLibrary?: boolean;
   suggestedBy?: { id: string; name: string; nickname: string } | null;
 }
 
@@ -115,7 +114,6 @@ export interface IBookPageResponse {
   book: IBookPageBook;
   myUserBook: IBookPageMyUserBook | null;
   myReview: IBookPageMyReview | null;
-  isInWantToReadQueue: boolean;
   myClubsWithBook: IBookPageClub[];
   reviews: IPaginatedResponse<IReview>;
 }
