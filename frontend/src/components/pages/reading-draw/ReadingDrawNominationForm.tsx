@@ -31,6 +31,8 @@ export default function ReadingDrawNominationForm({
   const eliminationsStarted = readingDraw.nominations.some(
     (nomination) => nomination.eliminatedAt,
   );
+  const votingStarted = readingDraw.voteRound != null;
+  const nominationsLocked = eliminationsStarted || votingStarted;
 
   const [title, setTitle] = useState(myNomination?.title ?? "");
   const [author, setAuthor] = useState(myNomination?.author ?? "");
@@ -96,7 +98,7 @@ export default function ReadingDrawNominationForm({
 
   const isPending = isSaving || isConfirming || isUnconfirming;
 
-  if (eliminationsStarted) {
+  if (nominationsLocked) {
     return (
       <div className="space-y-3 rounded-lg border border-muted bg-muted/30 p-4">
         <p className="text-sm font-medium text-primary">Sua indicação</p>
@@ -113,7 +115,9 @@ export default function ReadingDrawNominationForm({
           <p className="text-sm text-muted-foreground">Sem indicação nesta rodada.</p>
         )}
         <p className="text-xs text-muted-foreground">
-          A eliminação já começou — indicações travadas.
+          {votingStarted
+            ? "A votação já começou — indicações travadas."
+            : "A eliminação já começou — indicações travadas."}
         </p>
       </div>
     );

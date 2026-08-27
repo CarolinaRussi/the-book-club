@@ -13,12 +13,14 @@ import ReadingDrawSharePanel from "@/components/pages/reading-draw/ReadingDrawSh
 import ReadingDrawShelfReveal, {
   READING_DRAW_REVEAL_DURATION_MS,
 } from "@/components/pages/reading-draw/ReadingDrawShelfReveal";
+import ReadingDrawVotePanel from "@/components/pages/reading-draw/ReadingDrawVotePanel";
 import { fetchReadingDrawByShareCode } from "@/api/queries/fetchReadingDraw";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import {
   isReadingDrawLiveStatus,
   READING_DRAW_MODE_LAST_STANDING,
+  READING_DRAW_MODE_VOTE,
   READING_DRAW_STATUS_AWAITING_BOOK,
   READING_DRAW_STATUS_COMPLETED,
   READING_DRAW_STATUS_NOMINATING,
@@ -201,13 +203,14 @@ export default function ReadingDrawRoom() {
   const isCompleted = readingDraw.status === READING_DRAW_STATUS_COMPLETED;
   const isLastStanding =
     readingDraw.mode === READING_DRAW_MODE_LAST_STANDING;
+  const isVote = readingDraw.mode === READING_DRAW_MODE_VOTE;
+  const voteOpened = isVote && readingDraw.voteRound != null;
   const modeLabel =
-    readingDraw.mode === "vote"
-      ? "Votação"
-      : readingDrawModeLabels[readingDraw.mode as ReadingDrawCreateMode]
-          ?.title ?? readingDraw.mode;
+    readingDrawModeLabels[readingDraw.mode as ReadingDrawCreateMode]
+      ?.title ?? readingDraw.mode;
 
   const showEliminationBeat =
+    isLastStanding &&
     Boolean(elimKey) &&
     Boolean(latestEliminated?.eliminatedAt) &&
     elimBeatDoneKey !== elimKey;
@@ -220,6 +223,11 @@ export default function ReadingDrawRoom() {
     Boolean(readingDraw.winnerNominationId);
 
   const showSpectacle = showEliminationBeat || showShelfReveal;
+  const showVoteTieBanner =
+    isVote &&
+    isNominating &&
+    (readingDraw.voteRound ?? 0) > 1 &&
+    !showSpectacle;
 
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
@@ -276,11 +284,19 @@ export default function ReadingDrawRoom() {
             {" · "}
             <span className="font-medium text-primary">Confirmados:</span>{" "}
             {confirmedCount}
-            {isLastStanding ? (
+            {isLastStanding || isVote ? (
               <>
                 {" · "}
                 <span className="font-medium text-primary">Restantes:</span>{" "}
                 {standingCount}
+              </>
+            ) : null}
+            {voteOpened ? (
+              <>
+                {" · "}
+                <span className="font-medium text-primary">Votaram:</span>{" "}
+                {readingDraw.votersWhoVotedCount ?? 0}/
+                {readingDraw.participants.length}
               </>
             ) : null}
           </p>
@@ -294,11 +310,28 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
+      {showVoteTieBanner ? (
+        <div className="rounded-lg border border-amber-600/40 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+          Empate — nova rodada com {standingCount}{" "}
+          {standingCount === 1 ? "livro" : "livros"}. Votem de novo!
+        </div>
+      ) : null}
+
       {isNominating && isParticipant && user?.id && !showEliminationBeat ? (
         <ReadingDrawNominationForm
           readingDraw={readingDraw}
           shareCode={shareCode}
           userId={user.id}
+        />
+      ) : null}
+
+      {isNominating &&
+      isParticipant &&
+      voteOpened &&
+      !showEliminationBeat ? (
+        <ReadingDrawVotePanel
+          readingDraw={readingDraw}
+          shareCode={shareCode}
         />
       ) : null}
 
@@ -358,6 +391,11 @@ export default function ReadingDrawRoom() {
             );
             const eliminated = Boolean(nomination?.eliminatedAt);
             const ready = Boolean(nomination?.confirmedAt) && !eliminated;
+            const hasVoted =
+              voteOpened &&
+              (readingDraw.voterUserIdsWhoVoted ?? []).includes(
+                participant.userId,
+              );
             return (
               <li
                 key={participant.id}
@@ -389,12 +427,24 @@ export default function ReadingDrawRoom() {
                   className={
                     eliminated
                       ? "shrink-0 text-destructive"
-                      : ready
-                        ? "shrink-0 text-primary"
-                        : "shrink-0 text-muted-foreground"
+                      : voteOpened
+                        ? hasVoted
+                          ? "shrink-0 text-primary"
+                          : "shrink-0 text-muted-foreground"
+                        : ready
+                          ? "shrink-0 text-primary"
+                          : "shrink-0 text-muted-foreground"
                   }
                 >
-                  {eliminated ? "Eliminado" : ready ? "Pronto" : "Aguardando"}
+                  {eliminated
+                    ? "Fora"
+                    : voteOpened
+                      ? hasVoted
+                        ? "Votou"
+                        : "Sem voto"
+                      : ready
+                        ? "Pronto"
+                        : "Aguardando"}
                 </span>
               </li>
             );

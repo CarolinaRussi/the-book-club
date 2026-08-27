@@ -3,7 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
   cancelReadingDraw,
+  closeReadingDrawVote,
   eliminateReadingDrawNomination,
+  openReadingDrawVote,
   revealReadingDraw,
 } from "@/api/mutations/readingDrawMutate";
 import {
@@ -21,6 +23,7 @@ import type { IApiError } from "@/types/IApi";
 import type { IReadingDraw } from "@/types/IReadingDraw";
 import {
   READING_DRAW_MODE_LAST_STANDING,
+  READING_DRAW_MODE_VOTE,
 } from "@/utils/constants/readingDraw";
 
 type ReadingDrawHostControlsProps = {
@@ -40,6 +43,8 @@ export default function ReadingDrawHostControls({
 
   const isLastStanding =
     readingDraw.mode === READING_DRAW_MODE_LAST_STANDING;
+  const isVote = readingDraw.mode === READING_DRAW_MODE_VOTE;
+  const voteOpened = readingDraw.voteRound != null;
   const eliminationsStarted = readingDraw.nominations.some(
     (nomination) => nomination.eliminatedAt,
   );
@@ -60,6 +65,7 @@ export default function ReadingDrawHostControls({
   const allReady = pendingParticipants.length === 0;
   const canStart = confirmedCount >= 2;
   const canEliminate = standingCount >= 2;
+  const canCloseVote = (readingDraw.votersWhoVotedCount ?? 0) >= 1;
 
   const invalidateRoom = (next: IReadingDraw) => {
     queryClient.setQueryData(["readingDraw", shareCode], {
@@ -94,6 +100,29 @@ export default function ReadingDrawHostControls({
     },
   });
 
+  const { mutate: openVoteMutate, isPending: isOpeningVote } = useMutation({
+    mutationFn: () => openReadingDrawVote(readingDraw.id),
+    onSuccess: (result) => {
+      invalidateRoom(result.readingDraw);
+      setContinueOpen(false);
+      toast.success(result.message || "Votação aberta!");
+    },
+    onError: (error: IApiError) => {
+      toast.error(error.message || "Erro ao abrir votação.");
+    },
+  });
+
+  const { mutate: closeVoteMutate, isPending: isClosingVote } = useMutation({
+    mutationFn: () => closeReadingDrawVote(readingDraw.id),
+    onSuccess: (result) => {
+      invalidateRoom(result.readingDraw);
+      toast.success(result.message || "Votação encerrada.");
+    },
+    onError: (error: IApiError) => {
+      toast.error(error.message || "Erro ao fechar votação.");
+    },
+  });
+
   const { mutate: cancelMutate, isPending: isCancelling } = useMutation({
     mutationFn: () => cancelReadingDraw(readingDraw.id),
     onSuccess: (result) => {
@@ -106,9 +135,19 @@ export default function ReadingDrawHostControls({
     },
   });
 
-  const isBusy = isRevealing || isEliminating || isCancelling || actionLocked;
+  const isBusy =
+    isRevealing ||
+    isEliminating ||
+    isOpeningVote ||
+    isClosingVote ||
+    isCancelling ||
+    actionLocked;
 
   const runPrimaryAction = () => {
+    if (isVote) {
+      openVoteMutate();
+      return;
+    }
     if (isLastStanding) {
       eliminateMutate();
       return;
@@ -117,6 +156,27 @@ export default function ReadingDrawHostControls({
   };
 
   const handlePrimaryClick = () => {
+    if (isVote) {
+      if (voteOpened) {
+        if (!canCloseVote) {
+          toast.error("É preciso pelo menos um voto para fechar.");
+          return;
+        }
+        closeVoteMutate();
+        return;
+      }
+      if (!canStart) {
+        toast.error("É preciso pelo menos 2 indicações confirmadas.");
+        return;
+      }
+      if (!allReady) {
+        setContinueOpen(true);
+        return;
+      }
+      openVoteMutate();
+      return;
+    }
+
     if (isLastStanding) {
       if (!canEliminate) {
         toast.error("É preciso pelo menos 2 indicações restantes.");
@@ -148,24 +208,44 @@ export default function ReadingDrawHostControls({
     )
     .join(", ");
 
-  const primaryLabel = isLastStanding
-    ? isEliminating
+  let primaryLabel = "Iniciar sorteio";
+  if (isVote) {
+    if (voteOpened) {
+      primaryLabel = isClosingVote ? "Fechando…" : "Fechar votação";
+    } else {
+      primaryLabel = isOpeningVote ? "Abrindo…" : "Abrir votação";
+    }
+  } else if (isLastStanding) {
+    primaryLabel = isEliminating
       ? "Eliminando…"
       : eliminationsStarted
         ? "Eliminar próximo"
-        : "Eliminar um livro"
-    : isRevealing
-      ? "Sorteando…"
-      : "Iniciar sorteio";
+        : "Eliminar um livro";
+  } else if (isRevealing) {
+    primaryLabel = "Sorteando…";
+  }
 
-  const primaryDisabled = isLastStanding
-    ? isBusy || !canEliminate
-    : isBusy || !canStart;
+  let primaryDisabled = isBusy;
+  if (isVote) {
+    primaryDisabled = voteOpened
+      ? isBusy || !canCloseVote
+      : isBusy || !canStart;
+  } else if (isLastStanding) {
+    primaryDisabled = isBusy || !canEliminate;
+  } else {
+    primaryDisabled = isBusy || !canStart;
+  }
 
   return (
     <div className="space-y-3 rounded-lg border border-primary/40 bg-background p-4">
       <p className="text-sm font-medium text-primary">Painel do anfitrião</p>
-      {isLastStanding && eliminationsStarted ? (
+      {isVote && voteOpened ? (
+        <p className="text-sm text-warm-brown">
+          Rodada {readingDraw.voteRound}: {readingDraw.votersWhoVotedCount ?? 0}{" "}
+          de {readingDraw.participants.length} já votaram. Contagens ficam
+          ocultas até fechar.
+        </p>
+      ) : isLastStanding && eliminationsStarted ? (
         <p className="text-sm text-warm-brown">
           Restam {standingCount}{" "}
           {standingCount === 1 ? "livro" : "livros"} na prateleira.
@@ -173,7 +253,11 @@ export default function ReadingDrawHostControls({
       ) : allReady ? (
         <p className="text-sm text-warm-brown">
           Todos prontos —{" "}
-          {isLastStanding ? "pode começar a eliminar." : "pode sortear."}
+          {isVote
+            ? "pode abrir a votação."
+            : isLastStanding
+              ? "pode começar a eliminar."
+              : "pode sortear."}
         </p>
       ) : (
         <p className="text-sm text-warm-brown">
@@ -197,12 +281,22 @@ export default function ReadingDrawHostControls({
           Cancelar sorteio
         </Button>
       </div>
+      {isVote && !voteOpened && !canStart ? (
+        <p className="text-xs text-muted-foreground">
+          Mínimo de 2 indicações confirmadas para abrir a votação.
+        </p>
+      ) : null}
+      {isVote && voteOpened && !canCloseVote ? (
+        <p className="text-xs text-muted-foreground">
+          Aguarde pelo menos um voto antes de fechar.
+        </p>
+      ) : null}
       {isLastStanding && !canEliminate ? (
         <p className="text-xs text-muted-foreground">
           Mínimo de 2 indicações restantes para eliminar.
         </p>
       ) : null}
-      {!isLastStanding && !canStart ? (
+      {!isLastStanding && !isVote && !canStart ? (
         <p className="text-xs text-muted-foreground">
           Mínimo de 2 indicações confirmadas para iniciar.
         </p>
@@ -214,9 +308,11 @@ export default function ReadingDrawHostControls({
             <AlertDialogTitle>Continuar sem todo mundo?</AlertDialogTitle>
             <AlertDialogDescription>
               Ainda não confirmaram: {pendingNames}.{" "}
-              {isLastStanding
-                ? `A eliminação usa só as indicações já confirmadas (${confirmedCount}).`
-                : `O sorteio usa só as indicações já confirmadas (${confirmedCount}).`}
+              {isVote
+                ? `A votação usa só as indicações já confirmadas (${confirmedCount}).`
+                : isLastStanding
+                  ? `A eliminação usa só as indicações já confirmadas (${confirmedCount}).`
+                  : `O sorteio usa só as indicações já confirmadas (${confirmedCount}).`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
