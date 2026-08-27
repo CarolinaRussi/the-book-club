@@ -134,6 +134,13 @@
       "when": 1787862602828,
       "tag": "0018_remove_want_to_read_default",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1787863551509,
+      "tag": "0019_reading_draw_vote_tables",
+      "breakpoints": true
     }
   ]
 }

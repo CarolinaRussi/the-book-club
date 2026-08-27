@@ -447,6 +447,7 @@ export const readingDraw = pgTable(
       { onDelete: "set null" },
     ),
     voteVotesPerParticipant: integer("vote_votes_per_participant"),
+    voteRound: integer("vote_round"),
     revealStartedAt: timestamp("reveal_started_at", {
       withTimezone: true,
       precision: 6,
@@ -519,6 +520,35 @@ export const readingDrawNomination = pgTable(
   ],
 );
 
+export const readingDrawVote = pgTable(
+  "ReadingDrawVote",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    drawId: varchar("draw_id", { length: 255 })
+      .notNull()
+      .references(() => readingDraw.id, { onDelete: "cascade" }),
+    round: integer("round").notNull(),
+    voterUserId: varchar("voter_user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    nominationId: varchar("nomination_id", { length: 255 })
+      .notNull()
+      .references(() => readingDrawNomination.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("ReadingDrawVote_draw_round_voter_nomination_key").on(
+      table.drawId,
+      table.round,
+      table.voterUserId,
+      table.nominationId,
+    ),
+    index("ReadingDrawVote_draw_id_round_idx").on(table.drawId, table.round),
+  ],
+);
+
 // Relations (for query API - optional, used with db.query)
 export const stateRelations = relations(state, ({ many }) => ({
   cities: many(city),
@@ -549,6 +579,7 @@ export const userRelations = relations(user, ({ many }) => ({
   readingDrawsHosted: many(readingDraw),
   readingDrawParticipations: many(readingDrawParticipant),
   readingDrawNominations: many(readingDrawNomination),
+  readingDrawVotes: many(readingDrawVote),
 }));
 
 export const clubRelations = relations(club, ({ one, many }) => ({
@@ -704,6 +735,7 @@ export const readingDrawRelations = relations(readingDraw, ({ one, many }) => ({
   nominations: many(readingDrawNomination, {
     relationName: "drawNominations",
   }),
+  votes: many(readingDrawVote),
   winnerNomination: one(readingDrawNomination, {
     fields: [readingDraw.winnerNominationId],
     references: [readingDrawNomination.id],
@@ -731,7 +763,7 @@ export const readingDrawParticipantRelations = relations(
 
 export const readingDrawNominationRelations = relations(
   readingDrawNomination,
-  ({ one }) => ({
+  ({ one, many }) => ({
     draw: one(readingDraw, {
       fields: [readingDrawNomination.drawId],
       references: [readingDraw.id],
@@ -745,6 +777,25 @@ export const readingDrawNominationRelations = relations(
     user: one(user, {
       fields: [readingDrawNomination.userId],
       references: [user.id],
+    }),
+    votes: many(readingDrawVote),
+  }),
+);
+
+export const readingDrawVoteRelations = relations(
+  readingDrawVote,
+  ({ one }) => ({
+    draw: one(readingDraw, {
+      fields: [readingDrawVote.drawId],
+      references: [readingDraw.id],
+    }),
+    voter: one(user, {
+      fields: [readingDrawVote.voterUserId],
+      references: [user.id],
+    }),
+    nomination: one(readingDrawNomination, {
+      fields: [readingDrawVote.nominationId],
+      references: [readingDrawNomination.id],
     }),
   }),
 );
