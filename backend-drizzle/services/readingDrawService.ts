@@ -280,3 +280,157 @@ export async function getActiveReadingDrawForClub(
 
   return buildRoomPayload(currentDraw, viewerUserId);
 }
+
+async function loadNominatingDrawForParticipant(
+  drawId: string,
+  userId: string,
+) {
+  const draw = await readingDrawRepository.findById(drawId);
+  if (!draw) {
+    throw new ReadingDrawNotFoundError();
+  }
+
+  const membership = await memberRepository.findMemberByUserAndClub(
+    userId,
+    draw.clubId,
+  );
+  if (!membership) {
+    throw new ReadingDrawForbiddenError();
+  }
+
+  const currentDraw = await expireDrawIfPastDeadline(draw);
+  if (currentDraw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "Não é possível alterar indicações neste momento.",
+    );
+  }
+
+  const participant = await readingDrawRepository.findParticipant(
+    currentDraw.id,
+    userId,
+  );
+  if (!participant) {
+    throw new ReadingDrawForbiddenError(
+      "Apenas participantes podem indicar um livro.",
+    );
+  }
+
+  return currentDraw;
+}
+
+export async function upsertReadingDrawNomination(input: {
+  drawId: string;
+  userId: string;
+  title: unknown;
+  author?: unknown;
+}) {
+  const draw = await loadNominatingDrawForParticipant(
+    input.drawId,
+    input.userId,
+  );
+
+  const title = typeof input.title === "string" ? input.title.trim() : "";
+  if (!title) {
+    throw new ReadingDrawValidationError("Informe o título do livro.");
+  }
+  if (title.length > 255) {
+    throw new ReadingDrawValidationError(
+      "O título pode ter no máximo 255 caracteres.",
+    );
+  }
+
+  let author: string | null = null;
+  if (input.author !== undefined && input.author !== null) {
+    const authorText = String(input.author).trim();
+    if (authorText.length > 255) {
+      throw new ReadingDrawValidationError(
+        "O autor pode ter no máximo 255 caracteres.",
+      );
+    }
+    author = authorText || null;
+  }
+
+  const existing = await readingDrawRepository.findNominationByDrawAndUser(
+    draw.id,
+    input.userId,
+  );
+  if (existing?.confirmedAt) {
+    throw new ReadingDrawValidationError(
+      "Desfaça a confirmação (Alterar) antes de editar a indicação.",
+    );
+  }
+
+  await readingDrawRepository.upsertNomination({
+    id: existing?.id ?? createId(),
+    drawId: draw.id,
+    userId: input.userId,
+    title,
+    author: input.author === undefined && existing ? existing.author : author,
+  });
+
+  const freshDraw = await readingDrawRepository.findById(draw.id);
+  if (!freshDraw) {
+    throw new ReadingDrawNotFoundError();
+  }
+  return buildRoomPayload(freshDraw, input.userId);
+}
+
+export async function confirmReadingDrawNomination(
+  drawId: string,
+  userId: string,
+) {
+  const draw = await loadNominatingDrawForParticipant(drawId, userId);
+
+  const nomination = await readingDrawRepository.findNominationByDrawAndUser(
+    draw.id,
+    userId,
+  );
+  if (!nomination || !nomination.title.trim()) {
+    throw new ReadingDrawValidationError(
+      "Indique um livro antes de confirmar.",
+    );
+  }
+  if (nomination.confirmedAt) {
+    const freshDraw = await readingDrawRepository.findById(draw.id);
+    if (!freshDraw) {
+      throw new ReadingDrawNotFoundError();
+    }
+    return buildRoomPayload(freshDraw, userId);
+  }
+
+  await readingDrawRepository.setNominationConfirmedAt(
+    nomination.id,
+    new Date(),
+  );
+
+  const freshDraw = await readingDrawRepository.findById(draw.id);
+  if (!freshDraw) {
+    throw new ReadingDrawNotFoundError();
+  }
+  return buildRoomPayload(freshDraw, userId);
+}
+
+export async function unconfirmReadingDrawNomination(
+  drawId: string,
+  userId: string,
+) {
+  const draw = await loadNominatingDrawForParticipant(drawId, userId);
+
+  const nomination = await readingDrawRepository.findNominationByDrawAndUser(
+    draw.id,
+    userId,
+  );
+  if (!nomination) {
+    throw new ReadingDrawValidationError("Nenhuma indicação para alterar.");
+  }
+
+  if (nomination.confirmedAt) {
+    await readingDrawRepository.setNominationConfirmedAt(nomination.id, null);
+  }
+
+  const freshDraw = await readingDrawRepository.findById(draw.id);
+  if (!freshDraw) {
+    throw new ReadingDrawNotFoundError();
+  }
+  return buildRoomPayload(freshDraw, userId);
+}

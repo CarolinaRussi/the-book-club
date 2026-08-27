@@ -127,3 +127,83 @@ export async function findHostPublicProfile(hostUserId: string) {
     .limit(1);
   return row ?? null;
 }
+
+export async function findParticipant(drawId: string, userId: string) {
+  const [row] = await db
+    .select()
+    .from(readingDrawParticipant)
+    .where(
+      and(
+        eq(readingDrawParticipant.drawId, drawId),
+        eq(readingDrawParticipant.userId, userId),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findNominationByDrawAndUser(
+  drawId: string,
+  userId: string,
+) {
+  const [row] = await db
+    .select()
+    .from(readingDrawNomination)
+    .where(
+      and(
+        eq(readingDrawNomination.drawId, drawId),
+        eq(readingDrawNomination.userId, userId),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function upsertNomination(values: {
+  id: string;
+  drawId: string;
+  userId: string;
+  title: string;
+  author: string | null;
+}) {
+  const existing = await findNominationByDrawAndUser(
+    values.drawId,
+    values.userId,
+  );
+  if (existing) {
+    const [row] = await db
+      .update(readingDrawNomination)
+      .set({
+        title: values.title,
+        author: values.author,
+      })
+      .where(eq(readingDrawNomination.id, existing.id))
+      .returning();
+    return row ?? null;
+  }
+
+  const [row] = await db
+    .insert(readingDrawNomination)
+    .values({
+      id: values.id,
+      drawId: values.drawId,
+      userId: values.userId,
+      title: values.title,
+      author: values.author,
+      confirmedAt: null,
+    })
+    .returning();
+  return row ?? null;
+}
+
+export async function setNominationConfirmedAt(
+  nominationId: string,
+  confirmedAt: Date | null,
+) {
+  const [row] = await db
+    .update(readingDrawNomination)
+    .set({ confirmedAt })
+    .where(eq(readingDrawNomination.id, nominationId))
+    .returning();
+  return row ?? null;
+}
