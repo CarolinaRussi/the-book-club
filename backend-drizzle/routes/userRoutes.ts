@@ -2,7 +2,6 @@ import { Router } from "express";
 import multer from "multer";
 import {
   getUserAuthenticated,
-  updatePersonalLibrary,
   updateUser,
   getUserProfile,
   getUserReadings,
@@ -20,7 +19,6 @@ router.put(
   upload.single("profile_picture"),
   updateUser
 );
-router.post("/update-personal-library", authMiddleware, updatePersonalLibrary);
 router.get("/users/:userId/profile", authMiddleware, getUserProfile);
 router.get("/users/:userId/readings", authMiddleware, getUserReadings);
 

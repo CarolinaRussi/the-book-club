@@ -19,7 +19,6 @@ export const getBooksByClubId = async (req: Request, res: Response) => {
   try {
     const result = await bookService.getBooksByClubId(
       clubId,
-      userId,
       page,
       limit
     );

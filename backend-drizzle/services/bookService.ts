@@ -62,7 +62,6 @@ export async function createBookForClub(input: {
 
 export async function getBooksByClubId(
   clubId: string,
-  userId: string | undefined,
   page: number | undefined,
   limit: number | undefined
 ) {
@@ -140,14 +139,6 @@ export async function getBooksByClubId(
           },
         };
       });
-      const myUserBook = userId
-        ? userBooksForBooks.find(
-            (userBook) =>
-              userBook.userId === userId && userBook.bookId === book.id,
-          )
-        : undefined;
-      const isInLibrary =
-        myUserBook?.readingStatus === ReadingStatus.WANT_TO_READ;
       const suggestedBy = clubBook.suggestedByUserId
         ? suggesterById.get(clubBook.suggestedByUserId) ?? null
         : null;
@@ -156,7 +147,6 @@ export async function getBooksByClubId(
         status: clubBook.status,
         addedAt: clubBook.addedAt,
         reviews: formattedReviews,
-        isInLibrary,
         suggestedBy,
       };
     })
@@ -268,8 +258,6 @@ export async function getBookPage(input: {
     ]);
 
   const myReview = myReviewRows[0] ?? null;
-  const isInWantToReadQueue =
-    myUserBook?.readingStatus === ReadingStatus.WANT_TO_READ;
 
   let reviewRows: Awaited<
     ReturnType<typeof bookRepository.findReviewsWithUsersForBookAll>
@@ -317,7 +305,6 @@ export async function getBookPage(input: {
     myReview: myReview
       ? { rating: myReview.rating, comment: myReview.comment }
       : null,
-    isInWantToReadQueue,
     myClubsWithBook: myClubsWithBook.map((clubRow) => ({
       id: clubRow.clubId,
       name: clubRow.clubName,
@@ -346,6 +333,13 @@ export class BookNotFoundError extends Error {
   constructor() {
     super("Livro não encontrado.");
     this.name = "BookNotFoundError";
+  }
+}
+
+export class UnsupportedReadingStatusError extends Error {
+  constructor() {
+    super("Status de leitura inválido.");
+    this.name = "UnsupportedReadingStatusError";
   }
 }
 
@@ -402,6 +396,10 @@ export async function saveReview(input: {
   rating: number | null | undefined;
   comment: string | null | undefined;
 }) {
+  if (input.readingStatus === ReadingStatus.WANT_TO_READ) {
+    throw new UnsupportedReadingStatusError();
+  }
+
   if (input.clubId) {
     const memberRow = await bookRepository.findMemberByUserAndClub(
       input.userId,

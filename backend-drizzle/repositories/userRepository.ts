@@ -1,4 +1,4 @@
-import { eq, ne, count, and, inArray, sql } from "drizzle-orm";
+import { eq, count, and, inArray, sql, notInArray } from "drizzle-orm";
 import { db } from "../db/client";
 import { user, userBook, review, clubBook, club, member } from "../db/schema";
 import { ReadingStatus } from "../enums/readingStatus";
@@ -121,15 +121,6 @@ export async function findUserBookByUserAndBook(
   });
 }
 
-export async function deleteUserBookById(id: string) {
-  await db.delete(userBook).where(eq(userBook.id, id));
-}
-
-export async function insertUserBook(values: typeof userBook.$inferInsert) {
-  const [row] = await db.insert(userBook).values(values).returning();
-  return row ?? null;
-}
-
 export async function countUserBooksByUserId(
   userId: string,
   readingStatus?: ReadingStatus,
@@ -137,7 +128,10 @@ export async function countUserBooksByUserId(
   const statusFilter =
     readingStatus !== undefined
       ? eq(userBook.readingStatus, readingStatus)
-      : ne(userBook.readingStatus, ReadingStatus.DROPPED);
+      : notInArray(userBook.readingStatus, [
+          ReadingStatus.DROPPED,
+          ReadingStatus.WANT_TO_READ,
+        ]);
 
   const [{ value: totalItems }] = await db
     .select({ value: count() })
@@ -155,7 +149,10 @@ export async function findUserBooksPaginatedForUser(
   const statusFilter =
     readingStatus !== undefined
       ? eq(userBook.readingStatus, readingStatus)
-      : ne(userBook.readingStatus, ReadingStatus.DROPPED);
+      : notInArray(userBook.readingStatus, [
+          ReadingStatus.DROPPED,
+          ReadingStatus.WANT_TO_READ,
+        ]);
 
   return db.query.userBook.findMany({
     where: (userBookRow, { eq, and }) =>

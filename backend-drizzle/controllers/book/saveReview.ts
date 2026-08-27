@@ -3,6 +3,7 @@ import {
   saveReview as saveReviewService,
   NotClubMemberForReviewError,
   BookNotFoundError,
+  UnsupportedReadingStatusError,
 } from "../../services/bookService";
 
 export const saveReview = async (req: Request, res: Response) => {
@@ -37,6 +38,9 @@ export const saveReview = async (req: Request, res: Response) => {
     }
     if (error instanceof BookNotFoundError) {
       return res.status(404).json({ message: error.message });
+    }
+    if (error instanceof UnsupportedReadingStatusError) {
+      return res.status(400).json({ message: error.message });
     }
     console.error("Erro ao salvar avaliação:", error);
     return res

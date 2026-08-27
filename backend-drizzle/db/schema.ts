@@ -337,7 +337,7 @@ export const userBook = pgTable(
       .notNull()
       .references(() => book.id, { onDelete: "cascade" }),
     readingStatus: readingStatusEnum("reading_status")
-      .default("want_to_read")
+      .default("not_started")
       .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, precision: 3 })
       .defaultNow()
