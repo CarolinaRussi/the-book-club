@@ -3,12 +3,17 @@ import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import BrandLoadingScreen from "@/components/BrandLoadingScreen";
+import ReadingDrawHostControls from "@/components/pages/reading-draw/ReadingDrawHostControls";
+import ReadingDrawNominationForm from "@/components/pages/reading-draw/ReadingDrawNominationForm";
+import ReadingDrawResultPanel from "@/components/pages/reading-draw/ReadingDrawResultPanel";
 import ReadingDrawSharePanel from "@/components/pages/reading-draw/ReadingDrawSharePanel";
 import { fetchReadingDrawByShareCode } from "@/api/queries/fetchReadingDraw";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import {
   isReadingDrawLiveStatus,
+  READING_DRAW_STATUS_AWAITING_BOOK,
+  READING_DRAW_STATUS_NOMINATING,
   readingDrawStatusLabels,
 } from "@/utils/constants/readingDraw";
 
@@ -76,6 +81,14 @@ export default function ReadingDrawRoom() {
     );
   }
 
+  const isHost = readingDraw.hostUserId === user?.id;
+  const isParticipant = readingDraw.participants.some(
+    (participant) => participant.userId === user?.id,
+  );
+  const isNominating = readingDraw.status === READING_DRAW_STATUS_NOMINATING;
+  const isAwaitingBook =
+    readingDraw.status === READING_DRAW_STATUS_AWAITING_BOOK;
+
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
   ).length;
@@ -100,9 +113,9 @@ export default function ReadingDrawRoom() {
           {readingDrawStatusLabels[readingDraw.status]}
           {" · "}
           Você:{" "}
-          {readingDraw.viewerRole === "host"
+          {isHost
             ? "anfitrião"
-            : readingDraw.viewerRole === "participant"
+            : isParticipant
               ? "participante"
               : "espectador"}
         </p>
@@ -129,6 +142,29 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
+      {isNominating && isParticipant && user?.id ? (
+        <ReadingDrawNominationForm
+          readingDraw={readingDraw}
+          shareCode={shareCode}
+          userId={user.id}
+        />
+      ) : null}
+
+      {isNominating && isHost ? (
+        <ReadingDrawHostControls
+          readingDraw={readingDraw}
+          shareCode={shareCode}
+        />
+      ) : null}
+
+      {isAwaitingBook ? (
+        <ReadingDrawResultPanel
+          readingDraw={readingDraw}
+          shareCode={shareCode}
+          isHost={isHost}
+        />
+      ) : null}
+
       <ul className="space-y-2">
         {readingDraw.participants.map((participant) => {
           const nomination = readingDraw.nominations.find(
@@ -138,16 +174,28 @@ export default function ReadingDrawRoom() {
           return (
             <li
               key={participant.id}
-              className="flex items-center justify-between rounded-md border border-muted px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-3 rounded-md border border-muted px-3 py-2 text-sm"
             >
-              <span>
-                {participant.user.nickname || participant.user.name}
-                {participant.userId === readingDraw.hostUserId
-                  ? " (anfitrião)"
-                  : ""}
-              </span>
+              <div className="min-w-0">
+                <p className="truncate font-medium">
+                  {participant.user.nickname || participant.user.name}
+                  {participant.userId === readingDraw.hostUserId
+                    ? " (anfitrião)"
+                    : ""}
+                </p>
+                {nomination?.title ? (
+                  <p className="truncate text-muted-foreground">
+                    {nomination.title}
+                    {nomination.author ? ` — ${nomination.author}` : ""}
+                  </p>
+                ) : null}
+              </div>
               <span
-                className={ready ? "text-primary" : "text-muted-foreground"}
+                className={
+                  ready
+                    ? "shrink-0 text-primary"
+                    : "shrink-0 text-muted-foreground"
+                }
               >
                 {ready ? "Pronto" : "Aguardando"}
               </span>
@@ -155,10 +203,6 @@ export default function ReadingDrawRoom() {
           );
         })}
       </ul>
-
-      <p className="text-sm text-muted-foreground">
-        Indicação e controlos do anfitrião entram na próxima parte.
-      </p>
     </div>
   );
 }
