@@ -43,6 +43,7 @@ export interface IReadingDraw {
   winnerNominationId: string | null;
   winningClubBookId: string | null;
   voteVotesPerParticipant: number | null;
+  voteRound: number | null;
   revealStartedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -51,15 +52,19 @@ export interface IReadingDraw {
   host: IReadingDrawUserSummary | null;
   participants: IReadingDrawParticipant[];
   nominations: IReadingDrawNomination[];
+  myVoteNominationIds: string[];
+  votersWhoVotedCount: number;
+  voterUserIdsWhoVoted: string[];
 }
 
 export type ReadingDrawCreateMode = Extract<
   ReadingDrawMode,
-  "direct" | "last_standing"
+  "direct" | "last_standing" | "vote"
 >;
 
 export interface ICreateReadingDrawPayload {
   participantUserIds: string[];
   deadlineAt?: string;
   mode?: ReadingDrawCreateMode;
+  voteVotesPerParticipant?: number;
 }

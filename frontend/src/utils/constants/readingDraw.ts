@@ -8,6 +8,7 @@ export const READING_DRAW_MODE_DIRECT =
   "direct" as const satisfies ReadingDrawMode;
 export const READING_DRAW_MODE_LAST_STANDING =
   "last_standing" as const satisfies ReadingDrawMode;
+export const READING_DRAW_MODE_VOTE = "vote" as const satisfies ReadingDrawMode;
 
 export const READING_DRAW_STATUS_NOMINATING =
   "nominating" as const satisfies ReadingDrawStatus;
@@ -40,7 +41,13 @@ export const readingDrawModeLabels: Record<
     title: "Sobra um",
     description: "Elimina um livro por vez até sobrar só um.",
   },
+  vote: {
+    title: "Votação",
+    description: "Participantes votam; empate abre nova rodada só com os empatados.",
+  },
 };
+
+export const READING_DRAW_MULTI_VOTE_OPTIONS = [2, 3, 4, 5] as const;
 
 export function isReadingDrawLiveStatus(status: ReadingDrawStatus): boolean {
   return (

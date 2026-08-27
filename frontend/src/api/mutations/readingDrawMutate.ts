@@ -92,6 +92,42 @@ export async function eliminateReadingDrawNomination(
   }
 }
 
+export async function openReadingDrawVote(
+  drawId: string,
+): Promise<ReadingDrawResponse> {
+  try {
+    const response = await api.post(`/reading-draws/${drawId}/open-vote`);
+    return response.data;
+  } catch (error: unknown) {
+    throwApiError(error, "Erro ao abrir a votação.");
+  }
+}
+
+export async function castReadingDrawVotes(
+  drawId: string,
+  nominationIds: string[],
+): Promise<ReadingDrawResponse> {
+  try {
+    const response = await api.put(`/reading-draws/${drawId}/votes`, {
+      nominationIds,
+    });
+    return response.data;
+  } catch (error: unknown) {
+    throwApiError(error, "Erro ao registrar votos.");
+  }
+}
+
+export async function closeReadingDrawVote(
+  drawId: string,
+): Promise<ReadingDrawResponse> {
+  try {
+    const response = await api.post(`/reading-draws/${drawId}/close-vote`);
+    return response.data;
+  } catch (error: unknown) {
+    throwApiError(error, "Erro ao fechar a votação.");
+  }
+}
+
 export async function cancelReadingDraw(
   drawId: string,
 ): Promise<ReadingDrawResponse> {

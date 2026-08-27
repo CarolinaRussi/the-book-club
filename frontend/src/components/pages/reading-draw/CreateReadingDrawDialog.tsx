@@ -26,6 +26,8 @@ import type {
 import {
   READING_DRAW_MODE_DIRECT,
   READING_DRAW_MODE_LAST_STANDING,
+  READING_DRAW_MODE_VOTE,
+  READING_DRAW_MULTI_VOTE_OPTIONS,
   readingDrawModeLabels,
 } from "@/utils/constants/readingDraw";
 
@@ -37,6 +39,7 @@ type CreateReadingDrawDialogProps = {
 const CREATE_MODES: ReadingDrawCreateMode[] = [
   READING_DRAW_MODE_DIRECT,
   READING_DRAW_MODE_LAST_STANDING,
+  READING_DRAW_MODE_VOTE,
 ];
 
 function toDatetimeLocalValue(date: Date): string {
@@ -61,6 +64,8 @@ export default function CreateReadingDrawDialog({
   const [mode, setMode] = useState<ReadingDrawCreateMode>(
     READING_DRAW_MODE_DIRECT,
   );
+  const [voteStyle, setVoteStyle] = useState<"single" | "multi">("multi");
+  const [multiVotes, setMultiVotes] = useState<number>(3);
 
   const { data: membersData, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["readers", selectedClubId, "reading-draw-create"],
@@ -74,6 +79,8 @@ export default function CreateReadingDrawDialog({
     if (!open) return;
     setDeadlineLocal(defaultDeadlineValue());
     setMode(READING_DRAW_MODE_DIRECT);
+    setVoteStyle("multi");
+    setMultiVotes(3);
     if (members.length > 0) {
       setSelectedUserIds(members.map((member) => member.user.id));
     }
@@ -93,6 +100,7 @@ export default function CreateReadingDrawDialog({
       participantUserIds: string[];
       deadlineAt: string;
       mode: ReadingDrawCreateMode;
+      voteVotesPerParticipant?: number;
     }
   >({
     mutationFn: (payload) => createReadingDraw(selectedClubId!, payload),
@@ -144,6 +152,12 @@ export default function CreateReadingDrawDialog({
       participantUserIds: selectedUserIds,
       deadlineAt: deadlineAt.toISOString(),
       mode,
+      ...(mode === READING_DRAW_MODE_VOTE
+        ? {
+            voteVotesPerParticipant:
+              voteStyle === "single" ? 1 : multiVotes,
+          }
+        : {}),
     });
   };
 
@@ -198,6 +212,53 @@ export default function CreateReadingDrawDialog({
                 })}
               </ul>
             </div>
+
+            {mode === READING_DRAW_MODE_VOTE ? (
+              <div className="space-y-3 rounded-lg border border-muted p-3">
+                <Label>Tipo de voto</Label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="vote-style"
+                      className="size-4 accent-primary"
+                      checked={voteStyle === "single"}
+                      onChange={() => setVoteStyle("single")}
+                    />
+                    Voto único
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="vote-style"
+                      className="size-4 accent-primary"
+                      checked={voteStyle === "multi"}
+                      onChange={() => setVoteStyle("multi")}
+                    />
+                    Múltiplo (até N livros)
+                  </label>
+                </div>
+                {voteStyle === "multi" ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="multi-votes-count">Votos por pessoa</Label>
+                    <select
+                      id="multi-votes-count"
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                      value={multiVotes}
+                      onChange={(event) =>
+                        setMultiVotes(Number(event.target.value))
+                      }
+                    >
+                      {READING_DRAW_MULTI_VOTE_OPTIONS.map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="space-y-2">
               <Label htmlFor="reading-draw-deadline">Prazo máximo</Label>
