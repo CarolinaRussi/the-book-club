@@ -4,3 +4,6 @@ export { getActiveReadingDrawHandler as getActiveReadingDraw } from "./getActive
 export { upsertReadingDrawNominationHandler as upsertReadingDrawNomination } from "./upsertReadingDrawNomination";
 export { confirmReadingDrawNominationHandler as confirmReadingDrawNomination } from "./confirmReadingDrawNomination";
 export { unconfirmReadingDrawNominationHandler as unconfirmReadingDrawNomination } from "./unconfirmReadingDrawNomination";
+export { revealReadingDrawHandler as revealReadingDraw } from "./revealReadingDraw";
+export { cancelReadingDrawHandler as cancelReadingDraw } from "./cancelReadingDraw";
+export { completeReadingDrawHandler as completeReadingDraw } from "./completeReadingDraw";

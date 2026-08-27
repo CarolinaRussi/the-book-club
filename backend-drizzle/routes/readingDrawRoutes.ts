@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
+  cancelReadingDraw,
+  completeReadingDraw,
   confirmReadingDrawNomination,
   createReadingDraw,
   getActiveReadingDraw,
   getReadingDrawByShareCode,
+  revealReadingDraw,
   unconfirmReadingDrawNomination,
   upsertReadingDrawNomination,
 } from "../controllers/readingDraw";
@@ -40,6 +43,13 @@ router.post(
   "/reading-draws/:id/nomination/unconfirm",
   authMiddleware,
   unconfirmReadingDrawNomination,
+);
+router.post("/reading-draws/:id/reveal", authMiddleware, revealReadingDraw);
+router.post("/reading-draws/:id/cancel", authMiddleware, cancelReadingDraw);
+router.post(
+  "/reading-draws/:id/complete",
+  authMiddleware,
+  completeReadingDraw,
 );
 
 export default router;

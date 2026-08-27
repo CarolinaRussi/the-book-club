@@ -15,6 +15,7 @@ import feedRoutes from "../routes/feedRoutes";
 import feedbackRoutes from "../routes/feedbackRoutes";
 import readingDrawRoutes from "../routes/readingDrawRoutes";
 import { autoCompleteOverdueMeetings } from "../services/meetingService";
+import { expireOverdueReadingDraws } from "../services/readingDrawService";
 import { sendReviewReminderDigests } from "../services/reviewReminderService";
 
 const app = express();
@@ -79,6 +80,27 @@ if (process.env.ENABLE_REVIEW_REMINDER === "true") {
   );
   console.log(
     "Lembrete de notas agendado (10:00 dias 1 e 15 America/Sao_Paulo)",
+  );
+}
+
+if (process.env.ENABLE_READING_DRAW_EXPIRE === "true") {
+  cron.schedule(
+    "15 * * * *",
+    () => {
+      void expireOverdueReadingDraws()
+        .then((result) => {
+          console.log(
+            `[reading-draws:expire] expired=${result.expired}`,
+          );
+        })
+        .catch((error) => {
+          console.error("[reading-draws:expire]", error);
+        });
+    },
+    { timezone: "America/Sao_Paulo" },
+  );
+  console.log(
+    "Expiração de sorteios agendada (minuto 15 de cada hora, America/Sao_Paulo)",
   );
 }
 

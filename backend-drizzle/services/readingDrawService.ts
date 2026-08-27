@@ -1,7 +1,9 @@
+import { randomInt } from "crypto";
 import { db } from "../db/client";
 import { readingDraw, readingDrawParticipant } from "../db/schema";
 import { ReadingDrawMode } from "../enums/readingDrawMode";
 import { ReadingDrawStatus } from "../enums/readingDrawStatus";
+import * as bookRepository from "../repositories/bookRepository";
 import * as clubRepository from "../repositories/clubRepository";
 import * as memberRepository from "../repositories/memberRepository";
 import * as readingDrawRepository from "../repositories/readingDrawRepository";
@@ -433,4 +435,125 @@ export async function unconfirmReadingDrawNomination(
     throw new ReadingDrawNotFoundError();
   }
   return buildRoomPayload(freshDraw, userId);
+}
+
+async function loadDrawForHost(drawId: string, hostUserId: string) {
+  const draw = await readingDrawRepository.findById(drawId);
+  if (!draw) {
+    throw new ReadingDrawNotFoundError();
+  }
+
+  const membership = await memberRepository.findMemberByUserAndClub(
+    hostUserId,
+    draw.clubId,
+  );
+  if (!membership) {
+    throw new ReadingDrawForbiddenError();
+  }
+
+  const currentDraw = await expireDrawIfPastDeadline(draw);
+  if (currentDraw.hostUserId !== hostUserId) {
+    throw new ReadingDrawForbiddenError(
+      "Apenas quem iniciou o sorteio pode realizar esta ação.",
+    );
+  }
+
+  return currentDraw;
+}
+
+export async function revealReadingDraw(drawId: string, hostUserId: string) {
+  const draw = await loadDrawForHost(drawId, hostUserId);
+
+  if (draw.status !== ReadingDrawStatus.NOMINATING) {
+    throw new ReadingDrawValidationError(
+      "Este sorteio não está na fase de indicações.",
+    );
+  }
+
+  const confirmed = await readingDrawRepository.findConfirmedNominations(
+    draw.id,
+  );
+  if (confirmed.length < 2) {
+    throw new ReadingDrawValidationError(
+      "É preciso pelo menos 2 indicações confirmadas para sortear.",
+    );
+  }
+
+  const winner = confirmed[randomInt(confirmed.length)];
+  const revealStartedAt = new Date();
+
+  const revealed = await readingDrawRepository.revealDrawWinner({
+    drawId: draw.id,
+    winnerNominationId: winner.id,
+    revealStartedAt,
+  });
+  if (!revealed) {
+    throw new ReadingDrawValidationError(
+      "O sorteio já foi iniciado ou não está mais disponível.",
+    );
+  }
+
+  return buildRoomPayload(revealed, hostUserId);
+}
+
+export async function cancelReadingDraw(drawId: string, hostUserId: string) {
+  const draw = await loadDrawForHost(drawId, hostUserId);
+
+  if (!isActiveStatus(draw.status)) {
+    throw new ReadingDrawValidationError("Este sorteio já foi encerrado.");
+  }
+
+  const cancelled = await readingDrawRepository.cancelActiveDraw(draw.id);
+  if (!cancelled) {
+    throw new ReadingDrawValidationError(
+      "Não foi possível cancelar este sorteio.",
+    );
+  }
+
+  return buildRoomPayload(cancelled, hostUserId);
+}
+
+export async function completeReadingDraw(input: {
+  drawId: string;
+  hostUserId: string;
+  clubBookId: unknown;
+}) {
+  const draw = await loadDrawForHost(input.drawId, input.hostUserId);
+
+  if (draw.status !== ReadingDrawStatus.AWAITING_BOOK) {
+    throw new ReadingDrawValidationError(
+      "Só é possível concluir o sorteio após o resultado.",
+    );
+  }
+
+  const clubBookId =
+    typeof input.clubBookId === "string" ? input.clubBookId.trim() : "";
+  if (!clubBookId) {
+    throw new ReadingDrawValidationError(
+      "Informe o livro adicionado (clubBookId).",
+    );
+  }
+
+  const clubBookRow = await bookRepository.findActiveClubBookById(clubBookId);
+  if (!clubBookRow || clubBookRow.clubId !== draw.clubId) {
+    throw new ReadingDrawValidationError("Livro inválido para este clube.");
+  }
+
+  const completed = await readingDrawRepository.completeDrawWithClubBook({
+    drawId: draw.id,
+    winningClubBookId: clubBookId,
+  });
+  if (!completed) {
+    throw new ReadingDrawValidationError(
+      "Não foi possível concluir este sorteio.",
+    );
+  }
+
+  return buildRoomPayload(completed, input.hostUserId);
+}
+
+export async function expireOverdueReadingDraws() {
+  const expired =
+    await readingDrawRepository.expireAllActiveDrawsPastDeadline();
+  return { expired };
 }

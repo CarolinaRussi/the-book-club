@@ -1,4 +1,4 @@
-import { and, eq, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import {
   club,
@@ -206,4 +206,87 @@ export async function setNominationConfirmedAt(
     .where(eq(readingDrawNomination.id, nominationId))
     .returning();
   return row ?? null;
+}
+
+export async function findConfirmedNominations(drawId: string) {
+  return db
+    .select()
+    .from(readingDrawNomination)
+    .where(
+      and(
+        eq(readingDrawNomination.drawId, drawId),
+        sql`${readingDrawNomination.confirmedAt} is not null`,
+      ),
+    );
+}
+
+export async function revealDrawWinner(input: {
+  drawId: string;
+  winnerNominationId: string;
+  revealStartedAt: Date;
+}) {
+  const [row] = await db
+    .update(readingDraw)
+    .set({
+      status: ReadingDrawStatus.AWAITING_BOOK,
+      winnerNominationId: input.winnerNominationId,
+      revealStartedAt: input.revealStartedAt,
+    })
+    .where(
+      and(
+        eq(readingDraw.id, input.drawId),
+        eq(readingDraw.status, ReadingDrawStatus.NOMINATING),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function cancelActiveDraw(drawId: string) {
+  const [row] = await db
+    .update(readingDraw)
+    .set({ status: ReadingDrawStatus.CANCELLED })
+    .where(
+      and(
+        eq(readingDraw.id, drawId),
+        inArray(readingDraw.status, [...ACTIVE_STATUSES]),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function completeDrawWithClubBook(input: {
+  drawId: string;
+  winningClubBookId: string;
+}) {
+  const [row] = await db
+    .update(readingDraw)
+    .set({
+      status: ReadingDrawStatus.COMPLETED,
+      winningClubBookId: input.winningClubBookId,
+    })
+    .where(
+      and(
+        eq(readingDraw.id, input.drawId),
+        eq(readingDraw.status, ReadingDrawStatus.AWAITING_BOOK),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function expireAllActiveDrawsPastDeadline() {
+  const now = new Date();
+  const rows = await db
+    .update(readingDraw)
+    .set({ status: ReadingDrawStatus.EXPIRED })
+    .where(
+      and(
+        inArray(readingDraw.status, [...ACTIVE_STATUSES]),
+        lt(readingDraw.deadlineAt, now),
+      ),
+    )
+    .returning({ id: readingDraw.id });
+  return rows.length;
 }
