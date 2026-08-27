@@ -190,7 +190,7 @@ export default function CreateReadingDrawDialog({
                   })}
                 </ul>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mb-2">
                 Você inicia o sorteio. Pode tirar-se da lista e só conduzir.
               </p>
             </div>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -7,6 +7,9 @@ import ReadingDrawHostControls from "@/components/pages/reading-draw/ReadingDraw
 import ReadingDrawNominationForm from "@/components/pages/reading-draw/ReadingDrawNominationForm";
 import ReadingDrawResultPanel from "@/components/pages/reading-draw/ReadingDrawResultPanel";
 import ReadingDrawSharePanel from "@/components/pages/reading-draw/ReadingDrawSharePanel";
+import ReadingDrawShelfReveal, {
+  READING_DRAW_REVEAL_DURATION_MS,
+} from "@/components/pages/reading-draw/ReadingDrawShelfReveal";
 import { fetchReadingDrawByShareCode } from "@/api/queries/fetchReadingDraw";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
@@ -20,10 +23,15 @@ import {
 
 const POLL_MS = 2000;
 
+function revealStorageKey(drawId: string, revealStartedAt: string) {
+  return `reading-draw-reveal:${drawId}:${revealStartedAt}`;
+}
+
 export default function ReadingDrawRoom() {
   const { shareCode } = useParams<{ shareCode: string }>();
   const { user } = useAuth();
   const { selectedClubId, setSelectedClubId } = useClub();
+  const [revealDone, setRevealDone] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["readingDraw", shareCode],
@@ -45,6 +53,35 @@ export default function ReadingDrawRoom() {
       setSelectedClubId(readingDraw.clubId);
     }
   }, [readingDraw?.clubId, selectedClubId, setSelectedClubId]);
+
+  useEffect(() => {
+    if (!readingDraw) return;
+
+    if (readingDraw.status === READING_DRAW_STATUS_COMPLETED) {
+      setRevealDone(true);
+      return;
+    }
+
+    if (
+      readingDraw.status !== READING_DRAW_STATUS_AWAITING_BOOK ||
+      !readingDraw.revealStartedAt
+    ) {
+      setRevealDone(false);
+      return;
+    }
+
+    const key = revealStorageKey(readingDraw.id, readingDraw.revealStartedAt);
+    const elapsed =
+      Date.now() - new Date(readingDraw.revealStartedAt).getTime();
+    if (
+      sessionStorage.getItem(key) ||
+      elapsed >= READING_DRAW_REVEAL_DURATION_MS
+    ) {
+      setRevealDone(true);
+    } else {
+      setRevealDone(false);
+    }
+  }, [readingDraw?.id, readingDraw?.status, readingDraw?.revealStartedAt]);
 
   if (!shareCode) {
     return (
@@ -90,6 +127,11 @@ export default function ReadingDrawRoom() {
   const isAwaitingBook =
     readingDraw.status === READING_DRAW_STATUS_AWAITING_BOOK;
   const isCompleted = readingDraw.status === READING_DRAW_STATUS_COMPLETED;
+  const showShelfReveal =
+    isAwaitingBook &&
+    !revealDone &&
+    Boolean(readingDraw.revealStartedAt) &&
+    Boolean(readingDraw.winnerNominationId);
 
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
@@ -123,21 +165,23 @@ export default function ReadingDrawRoom() {
         </p>
       </div>
 
-      <div className="space-y-2 rounded-lg border border-secondary/40 bg-background p-4 text-sm">
-        <p>
-          <span className="font-medium text-primary">Prazo:</span>{" "}
-          {deadlineLabel}
-        </p>
-        <p>
-          <span className="font-medium text-primary">Participantes:</span>{" "}
-          {readingDraw.participants.length}
-          {" · "}
-          <span className="font-medium text-primary">Confirmados:</span>{" "}
-          {confirmedCount}
-        </p>
-      </div>
+      {!showShelfReveal ? (
+        <div className="space-y-2 rounded-lg border border-secondary/40 bg-background p-4 text-sm">
+          <p>
+            <span className="font-medium text-primary">Prazo:</span>{" "}
+            {deadlineLabel}
+          </p>
+          <p>
+            <span className="font-medium text-primary">Participantes:</span>{" "}
+            {readingDraw.participants.length}
+            {" · "}
+            <span className="font-medium text-primary">Confirmados:</span>{" "}
+            {confirmedCount}
+          </p>
+        </div>
+      ) : null}
 
-      {isReadingDrawLiveStatus(readingDraw.status) ? (
+      {isReadingDrawLiveStatus(readingDraw.status) && !showShelfReveal ? (
         <ReadingDrawSharePanel
           shareCode={readingDraw.shareCode}
           clubName={readingDraw.club?.name}
@@ -159,7 +203,23 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      {isAwaitingBook || isCompleted ? (
+      {showShelfReveal ? (
+        <ReadingDrawShelfReveal
+          nominations={readingDraw.nominations}
+          winnerNominationId={readingDraw.winnerNominationId!}
+          revealStartedAt={readingDraw.revealStartedAt!}
+          drawId={readingDraw.id}
+          onFinished={() => {
+            sessionStorage.setItem(
+              revealStorageKey(readingDraw.id, readingDraw.revealStartedAt!),
+              "1",
+            );
+            setRevealDone(true);
+          }}
+        />
+      ) : null}
+
+      {(isAwaitingBook && revealDone) || isCompleted ? (
         <ReadingDrawResultPanel
           readingDraw={readingDraw}
           shareCode={shareCode}
@@ -167,44 +227,46 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      <ul className="space-y-2">
-        {readingDraw.participants.map((participant) => {
-          const nomination = readingDraw.nominations.find(
-            (item) => item.userId === participant.userId,
-          );
-          const ready = Boolean(nomination?.confirmedAt);
-          return (
-            <li
-              key={participant.id}
-              className="flex items-center justify-between gap-3 rounded-md border border-muted px-3 py-2 text-sm"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-medium">
-                  {participant.user.nickname || participant.user.name}
-                  {participant.userId === readingDraw.hostUserId
-                    ? " (anfitrião)"
-                    : ""}
-                </p>
-                {nomination?.title ? (
-                  <p className="truncate text-muted-foreground">
-                    {nomination.title}
-                    {nomination.author ? ` — ${nomination.author}` : ""}
-                  </p>
-                ) : null}
-              </div>
-              <span
-                className={
-                  ready
-                    ? "shrink-0 text-primary"
-                    : "shrink-0 text-muted-foreground"
-                }
+      {!showShelfReveal ? (
+        <ul className="space-y-2">
+          {readingDraw.participants.map((participant) => {
+            const nomination = readingDraw.nominations.find(
+              (item) => item.userId === participant.userId,
+            );
+            const ready = Boolean(nomination?.confirmedAt);
+            return (
+              <li
+                key={participant.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-muted px-3 py-2 text-sm"
               >
-                {ready ? "Pronto" : "Aguardando"}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {participant.user.nickname || participant.user.name}
+                    {participant.userId === readingDraw.hostUserId
+                      ? " (anfitrião)"
+                      : ""}
+                  </p>
+                  {nomination?.title ? (
+                    <p className="truncate text-muted-foreground">
+                      {nomination.title}
+                      {nomination.author ? ` — ${nomination.author}` : ""}
+                    </p>
+                  ) : null}
+                </div>
+                <span
+                  className={
+                    ready
+                      ? "shrink-0 text-primary"
+                      : "shrink-0 text-muted-foreground"
+                  }
+                >
+                  {ready ? "Pronto" : "Aguardando"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </div>
   );
 }
