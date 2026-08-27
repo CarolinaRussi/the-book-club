@@ -24,6 +24,7 @@ import InviteJoin from "./pages/InviteJoin.tsx";
 import Explore from "./pages/Explore.tsx";
 import ExploreClub from "./pages/ExploreClub.tsx";
 import BookPage from "./pages/BookPage.tsx";
+import ReadingDrawRoom from "./pages/ReadingDrawRoom.tsx";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
           {
             path: "/books/:bookId",
             element: <BookPage />,
+          },
+          {
+            path: "/sorteio/:shareCode",
+            element: <ReadingDrawRoom />,
           },
           {
             element: <ClubGuard />,
