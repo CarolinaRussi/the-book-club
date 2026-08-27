@@ -13,6 +13,7 @@ import { useClub } from "@/contexts/ClubContext";
 import {
   isReadingDrawLiveStatus,
   READING_DRAW_STATUS_AWAITING_BOOK,
+  READING_DRAW_STATUS_COMPLETED,
   READING_DRAW_STATUS_NOMINATING,
   readingDrawStatusLabels,
 } from "@/utils/constants/readingDraw";
@@ -88,6 +89,7 @@ export default function ReadingDrawRoom() {
   const isNominating = readingDraw.status === READING_DRAW_STATUS_NOMINATING;
   const isAwaitingBook =
     readingDraw.status === READING_DRAW_STATUS_AWAITING_BOOK;
+  const isCompleted = readingDraw.status === READING_DRAW_STATUS_COMPLETED;
 
   const confirmedCount = readingDraw.nominations.filter(
     (nomination) => nomination.confirmedAt,
@@ -157,7 +159,7 @@ export default function ReadingDrawRoom() {
         />
       ) : null}
 
-      {isAwaitingBook ? (
+      {isAwaitingBook || isCompleted ? (
         <ReadingDrawResultPanel
           readingDraw={readingDraw}
           shareCode={shareCode}

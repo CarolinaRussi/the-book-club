@@ -91,3 +91,17 @@ export async function cancelReadingDraw(
     throwApiError(error, "Erro ao cancelar o sorteio.");
   }
 }
+
+export async function completeReadingDraw(
+  drawId: string,
+  clubBookId: string,
+): Promise<ReadingDrawResponse> {
+  try {
+    const response = await api.post(`/reading-draws/${drawId}/complete`, {
+      clubBookId,
+    });
+    return response.data;
+  } catch (error: unknown) {
+    throwApiError(error, "Erro ao concluir o sorteio.");
+  }
+}

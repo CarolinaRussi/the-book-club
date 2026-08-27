@@ -6,7 +6,9 @@ import type {
   IBookTotalChaptersPayload,
 } from "../../types/IBooks";
 
-export async function createBook(data: IBookPayload): Promise<unknown> {
+export async function createBook(
+  data: IBookPayload,
+): Promise<{ message: string; book: { id: string } }> {
   try {
     const formData = new FormData();
 

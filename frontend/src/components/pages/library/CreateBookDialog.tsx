@@ -26,6 +26,10 @@ import type { IBookPayload } from "@/types/IBooks";
 type CreateBookDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTitle?: string;
+  initialAuthor?: string;
+  dialogTitle?: string;
+  onBookCreated?: (clubBookId: string) => void | Promise<void>;
 };
 
 type CreateBookForm = {
@@ -38,6 +42,10 @@ type CreateBookForm = {
 export default function CreateBookDialog({
   open,
   onOpenChange,
+  initialTitle = "",
+  initialAuthor = "",
+  dialogTitle = "Adicionar nova Leitura",
+  onBookCreated,
 }: CreateBookDialogProps) {
   const [selectedBook, setSelectedBook] = useState<SearchResultBook | null>(
     null,
@@ -64,17 +72,21 @@ export default function CreateBookDialog({
   });
 
   const { mutate: createBookMutate, isPending } = useMutation<
-    unknown,
+    { message: string; book: { id: string } },
     IApiError,
     IBookPayload
   >({
     mutationFn: createBook,
-    onSuccess: async () => {
-      onOpenChange(false);
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({
         queryKey: ["booksFromSelectedClub", selectedClubId],
       });
-      toast.success("Livro adicionado à biblioteca com sucesso!");
+      if (onBookCreated) {
+        await onBookCreated(result.book.id);
+      } else {
+        toast.success("Livro adicionado à biblioteca com sucesso!");
+      }
+      onOpenChange(false);
     },
     onError: (error) => {
       toast.error(error.message || "Dados do livro incorretos");
@@ -84,17 +96,17 @@ export default function CreateBookDialog({
   useLayoutEffect(() => {
     if (!open) return;
     reset({
-      title: "",
-      author: "",
+      title: initialTitle,
+      author: initialAuthor,
       totalChapters: undefined,
       coverImg: undefined,
     });
     setSelectedBook(null);
-    setInputValue("");
+    setInputValue(initialTitle);
     setPreviewUrl(undefined);
     setOpenCombobox(false);
     setFileInputKey((key) => key + 1);
-  }, [open, reset]);
+  }, [open, reset, initialTitle, initialAuthor]);
 
   const isLocalSelection = selectedBook?.source === "local";
   const isOpenLibrarySelection = selectedBook?.source === "openLibrary";
@@ -164,7 +176,7 @@ export default function CreateBookDialog({
         >
           <ResponsiveDialogHeader className="shrink-0 gap-0 pr-8">
             <ResponsiveDialogTitle className="line-clamp-2 text-balance text-left text-2xl text-primary sm:text-3xl">
-              Adicionar nova Leitura
+              {dialogTitle}
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription className="text-1xl text-warm-brown">
               Pesquise na Open Library ou adicione manualmente.
