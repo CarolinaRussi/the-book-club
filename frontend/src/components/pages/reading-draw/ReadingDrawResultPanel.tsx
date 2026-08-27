@@ -59,15 +59,18 @@ export default function ReadingDrawResultPanel({
     });
   };
 
-  const { mutate: cancelMutate, isPending: isCancelling } = useMutation({
+  const { mutate: redoMutate, isPending: isRedoing } = useMutation({
     mutationFn: () => cancelReadingDraw(readingDraw.id),
     onSuccess: (result) => {
       invalidateRoom(result.readingDraw);
       setCancelOpen(false);
-      toast.success(result.message || "Sorteio cancelado.");
+      toast.success(
+        result.message ||
+          "Resultado descartado. Pode sortear de novo com as mesmas indicações.",
+      );
     },
     onError: (error: IApiError) => {
-      toast.error(error.message || "Erro ao cancelar.");
+      toast.error(error.message || "Erro ao refazer o sorteio.");
     },
   });
 
@@ -137,10 +140,10 @@ export default function ReadingDrawResultPanel({
           <Button
             type="button"
             variant="outline"
-            disabled={isCancelling}
+            disabled={isRedoing}
             onClick={() => setCancelOpen(true)}
           >
-            Cancelar sorteio
+            Refazer sorteio
           </Button>
         </div>
       ) : (
@@ -161,20 +164,21 @@ export default function ReadingDrawResultPanel({
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar este sorteio?</AlertDialogTitle>
+            <AlertDialogTitle>Refazer o sorteio?</AlertDialogTitle>
             <AlertDialogDescription>
-              O resultado será descartado e o clube poderá criar outro sorteio.
+              O resultado atual será descartado. As indicações confirmadas
+              continuam e você poderá sortear de novo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Manter</AlertDialogCancel>
+            <AlertDialogCancel>Manter resultado</AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();
-                cancelMutate();
+                redoMutate();
               }}
             >
-              Cancelar sorteio
+              Refazer sorteio
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
