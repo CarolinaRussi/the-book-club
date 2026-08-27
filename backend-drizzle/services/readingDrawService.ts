@@ -794,6 +794,20 @@ export async function castReadingDrawVotes(input: {
     );
   }
 
+  if (votesAllowed === 1) {
+    const ownNomination = standing.find(
+      (nomination) => nomination.userId === input.userId,
+    );
+    if (
+      ownNomination &&
+      uniqueNominationIds.includes(ownNomination.id)
+    ) {
+      throw new ReadingDrawValidationError(
+        "No voto único você não pode votar na sua própria indicação.",
+      );
+    }
+  }
+
   await readingDrawRepository.replaceVotesForVoterInRound({
     drawId: currentDraw.id,
     round: currentDraw.voteRound,
