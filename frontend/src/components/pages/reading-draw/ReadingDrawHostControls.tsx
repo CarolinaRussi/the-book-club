@@ -201,12 +201,27 @@ export default function ReadingDrawHostControls({
     revealMutate();
   };
 
-  const pendingNames = pendingParticipants
-    .map(
-      (participant) =>
-        participant.user.nickname || participant.user.name || "alguém",
-    )
-    .join(", ");
+  const pendingDisplayNames = pendingParticipants.map(
+    (participant) =>
+      participant.user.nickname || participant.user.name || "alguém",
+  );
+  const pendingCount = pendingDisplayNames.length;
+  const pendingIsSingular = pendingCount === 1;
+  const pendingSingleName = pendingDisplayNames[0] ?? "essa pessoa";
+  const pendingNamesLabel = pendingDisplayNames.join(", ");
+
+  const continueTitle = pendingIsSingular
+    ? `Continuar sem ${pendingSingleName}?`
+    : "Continuar sem quem ainda falta?";
+  const continueActionLabel = pendingIsSingular
+    ? `Continuar sem ${pendingSingleName}`
+    : "Continuar sem eles";
+
+  const poolActionLabel = isVote
+    ? "A votação"
+    : isLastStanding
+      ? "A eliminação"
+      : "O sorteio";
 
   let primaryLabel = "Iniciar sorteio";
   if (isVote) {
@@ -261,7 +276,7 @@ export default function ReadingDrawHostControls({
         </p>
       ) : (
         <p className="text-sm text-warm-brown">
-          Aguardando: {pendingNames || "confirmações"}
+          Aguardando: {pendingNamesLabel || "confirmações"}
         </p>
       )}
       <div className="flex flex-wrap gap-2">
@@ -303,16 +318,45 @@ export default function ReadingDrawHostControls({
       ) : null}
 
       <AlertDialog open={continueOpen} onOpenChange={setContinueOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Continuar sem todo mundo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ainda não confirmaram: {pendingNames}.{" "}
-              {isVote
-                ? `A votação usa só as indicações já confirmadas (${confirmedCount}).`
-                : isLastStanding
-                  ? `A eliminação usa só as indicações já confirmadas (${confirmedCount}).`
-                  : `O sorteio usa só as indicações já confirmadas (${confirmedCount}).`}
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader className="gap-3">
+            <AlertDialogTitle>{continueTitle}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-left text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <p>
+                    {pendingIsSingular
+                      ? "Ainda não confirmou:"
+                      : "Ainda não confirmaram:"}
+                  </p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {pendingParticipants.map((participant) => {
+                      const name =
+                        participant.user.nickname ||
+                        participant.user.name ||
+                        "alguém";
+                      return (
+                        <li
+                          key={participant.id}
+                          className="rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-sm font-medium text-foreground"
+                        >
+                          {name}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <p className="rounded-lg border border-border/80 bg-muted/30 px-3 py-2 text-foreground/90">
+                  {poolActionLabel} usa só as{" "}
+                  <span className="font-semibold text-foreground">
+                    {confirmedCount}{" "}
+                    {confirmedCount === 1
+                      ? "indicação já confirmada"
+                      : "indicações já confirmadas"}
+                  </span>
+                  .
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -323,7 +367,7 @@ export default function ReadingDrawHostControls({
                 runPrimaryAction();
               }}
             >
-              Continuar sem eles
+              {continueActionLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
