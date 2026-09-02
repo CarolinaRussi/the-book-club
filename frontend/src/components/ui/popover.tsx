@@ -4,6 +4,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { cn } from "../../lib/utils";
 
 function Popover({
+  // ponytail: modal default true — Popover portals outside Dialog/Drawer; without modal, clicks/focus hit the form behind (city select). Use modal={false} only if outside interaction while open is intentional. Mobile drawer still needs inline CitySelect (Vaul inert).
   modal = true,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {

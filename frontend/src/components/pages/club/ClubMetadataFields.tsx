@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useOptionalResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   CLUB_JOIN_POLICY_APPROVAL,
   CLUB_JOIN_POLICY_VALUES,
@@ -47,6 +48,11 @@ export function ClubMetadataFields({
     watch,
     formState: { errors },
   } = useFormContext<ClubMetadataFormValues>();
+
+  const responsiveDialog = useOptionalResponsiveDialog();
+  // ponytail: Radix Select portals outside Vaul drawer — touch scroll becomes drawer drag. Native <select> only inside mobile drawer.
+  const useNativeStateSelect =
+    responsiveDialog != null && !responsiveDialog.isDesktop;
 
   const visibility = watch("visibility");
   const stateId = watch("stateId");
@@ -153,31 +159,53 @@ export function ClubMetadataFields({
           control={control}
           name="stateId"
           rules={{ required: locationRequired ? "Obrigatório" : false }}
-          render={({ field }) => (
-            <Select
-              value={field.value != null ? String(field.value) : undefined}
-              onValueChange={(value) => {
-                field.onChange(Number(value));
-                setValue("cityId", null);
-              }}
-              disabled={isLoadingStates}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={
-                    isLoadingStates ? "Carregando…" : "Selecione o estado"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
+          render={({ field }) =>
+            useNativeStateSelect ? (
+              <select
+                value={field.value != null ? String(field.value) : ""}
+                disabled={isLoadingStates}
+                className="border-input bg-transparent h-10 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  field.onChange(nextValue ? Number(nextValue) : null);
+                  setValue("cityId", null);
+                }}
+              >
+                <option value="">
+                  {isLoadingStates ? "Carregando…" : "Selecione o estado"}
+                </option>
                 {states.map((stateRow) => (
-                  <SelectItem key={stateRow.id} value={String(stateRow.id)}>
+                  <option key={stateRow.id} value={String(stateRow.id)}>
                     {stateRow.code} — {stateRow.name}
-                  </SelectItem>
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
-          )}
+              </select>
+            ) : (
+              <Select
+                value={field.value != null ? String(field.value) : undefined}
+                onValueChange={(value) => {
+                  field.onChange(Number(value));
+                  setValue("cityId", null);
+                }}
+                disabled={isLoadingStates}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={
+                      isLoadingStates ? "Carregando…" : "Selecione o estado"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {states.map((stateRow) => (
+                    <SelectItem key={stateRow.id} value={String(stateRow.id)}>
+                      {stateRow.code} — {stateRow.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )
+          }
         />
         {errors.stateId ? (
           <span className="text-xs text-red-500">Obrigatório</span>

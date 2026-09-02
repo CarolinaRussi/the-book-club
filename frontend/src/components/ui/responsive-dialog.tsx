@@ -45,6 +45,10 @@ function useResponsiveDialogContext() {
   return context;
 }
 
+function useOptionalResponsiveDialog() {
+  return React.useContext(ResponsiveDialogContext);
+}
+
 function useLockedOverlayVariant(open: boolean | undefined) {
   const matchesDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const [lockedVariant, setLockedVariant] =
@@ -110,6 +114,7 @@ function ResponsiveDialog({
         onOpenChange={handleOpenChange}
         dismissible={dismissible}
         shouldScaleBackground={false}
+        repositionInputs={false}
         {...props}
       >
         {children}
@@ -280,4 +285,5 @@ export {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
+  useOptionalResponsiveDialog,
 };
