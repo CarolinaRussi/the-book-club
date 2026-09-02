@@ -1,6 +1,8 @@
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, eq, ilike, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { city, state } from "../db/schema";
+
+const PT_BR_NAME_ORDER = sql`COLLATE "pt-BR-x-icu"`;
 
 export async function findAllStates() {
   return db
@@ -10,7 +12,7 @@ export async function findAllStates() {
       name: state.name,
     })
     .from(state)
-    .orderBy(asc(state.name));
+    .orderBy(sql`${state.name} ${PT_BR_NAME_ORDER}`);
 }
 
 export async function findStateById(stateId: number) {
@@ -62,6 +64,6 @@ export async function findCitiesByStateId(
     })
     .from(city)
     .where(and(...filters))
-    .orderBy(asc(city.name))
+    .orderBy(sql`${city.name} ${PT_BR_NAME_ORDER}`)
     .limit(limit);
 }
