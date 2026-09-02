@@ -6,12 +6,14 @@ import LandingProblem from "@/components/pages/landing/LandingProblem";
 
 export default function Index() {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col pb-6">
+    <div className="flex w-full flex-col pb-6">
       <LandingHero />
-      <LandingProblem />
-      <LandingHowItWorks />
-      <LandingFeatures />
-      <LandingFinalCta />
+      <div className="mx-auto w-full max-w-6xl">
+        <LandingProblem />
+        <LandingHowItWorks />
+        <LandingFeatures />
+        <LandingFinalCta />
+      </div>
     </div>
   );
 }
