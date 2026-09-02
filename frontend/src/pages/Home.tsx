@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useClub } from "@/contexts/ClubContext";
 import HomeOnboardingCards from "@/components/pages/home/HomeOnboardingCards";
+import HomeInviteCard from "@/components/pages/home/HomeInviteCard";
 import HomeUpcomingMeetings from "@/components/pages/home/HomeUpcomingMeetings";
 import HomeSidebar from "@/components/pages/home/HomeSidebar";
 import StickySidebarColumn from "@/components/pages/home/StickySidebarColumn";
@@ -45,7 +46,10 @@ export default function Home() {
         </>
       ) : (
         <>
-          <HomeOnboardingCards variant="compact" className="mt-5 md:hidden" />
+          <div className="mt-5 flex flex-col gap-4 md:hidden">
+            <HomeInviteCard />
+            <HomeOnboardingCards variant="compact" />
+          </div>
           <div
             className="my-5 h-px w-full bg-foreground/15 md:hidden"
             aria-hidden
