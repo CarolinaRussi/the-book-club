@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { fetchCitiesByStateId } from "@/api/queries/fetchLocations";
@@ -30,36 +30,34 @@ type CitySelectProps = {
 
 type CityOption = { id: number; name: string };
 
-function filterCitiesByQuery(cities: CityOption[], query: string) {
-  const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
-  if (normalizedQuery.length < MIN_CITY_QUERY_LENGTH) {
-    return [];
-  }
-  return cities.filter((cityRow) =>
-    cityRow.name.toLocaleLowerCase("pt-BR").includes(normalizedQuery),
-  );
+function useCitySearch(stateId: number | null, query: string) {
+  const trimmedQuery = query.trim();
+  const canSearch = trimmedQuery.length >= MIN_CITY_QUERY_LENGTH;
+
+  const { data: cities = [], isFetching } = useQuery({
+    queryKey: ["locations", "cities", stateId, trimmedQuery],
+    queryFn: () => fetchCitiesByStateId(stateId as number, trimmedQuery),
+    enabled: stateId != null && canSearch,
+  });
+
+  return { cities, isFetching, canSearch, trimmedQuery };
 }
 
 function CityCommandList({
-  cities,
+  stateId,
   value,
   onChange,
   allowClear,
   onPicked,
 }: {
-  cities: CityOption[];
+  stateId: number;
   value: number | null;
-  onChange: (cityId: number | null) => void;
+  onChange: (cityId: number | null, cityName?: string) => void;
   allowClear: boolean;
   onPicked: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const trimmedQuery = query.trim();
-  const canSearch = trimmedQuery.length >= MIN_CITY_QUERY_LENGTH;
-  const filteredCities = useMemo(
-    () => filterCitiesByQuery(cities, query),
-    [cities, query],
-  );
+  const { cities, isFetching, canSearch } = useCitySearch(stateId, query);
 
   return (
     <Command shouldFilter={false}>
@@ -92,16 +90,20 @@ function CityCommandList({
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">
             Digite pelo menos {MIN_CITY_QUERY_LENGTH} letras para buscar
           </p>
+        ) : isFetching ? (
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Buscando…
+          </p>
         ) : (
           <>
             <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
             <CommandGroup>
-              {filteredCities.map((cityRow) => (
+              {cities.map((cityRow: CityOption) => (
                 <CommandItem
                   key={cityRow.id}
                   value={cityRow.name}
                   onSelect={() => {
-                    onChange(cityRow.id);
+                    onChange(cityRow.id, cityRow.name);
                     onPicked();
                   }}
                 >
@@ -123,57 +125,46 @@ function CityCommandList({
 }
 
 function MobileCityPicker({
-  cities,
+  stateId,
   value,
   onChange,
   allowClear,
-  onPicked,
 }: {
-  cities: CityOption[];
+  stateId: number;
   value: number | null;
-  onChange: (cityId: number | null) => void;
+  onChange: (cityId: number | null, cityName?: string) => void;
   allowClear: boolean;
-  onPicked: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const trimmedQuery = query.trim();
-  const canSearch = trimmedQuery.length >= MIN_CITY_QUERY_LENGTH;
-  const filteredCities = useMemo(
-    () => filterCitiesByQuery(cities, query),
-    [cities, query],
-  );
+  const { cities, isFetching, canSearch } = useCitySearch(stateId, query);
+
+  useEffect(() => {
+    setQuery("");
+  }, [stateId]);
 
   return (
     <div
       data-vaul-no-drag
-      className="overflow-hidden rounded-md border bg-background text-foreground"
+      className="overflow-hidden rounded-md border border-input bg-background text-foreground"
     >
       <input
         type="search"
         value={query}
+        enterKeyHint="search"
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
         placeholder="Digite ao menos 3 letras…"
         className="h-11 w-full border-b border-input bg-transparent px-3 text-base outline-none placeholder:text-muted-foreground"
         onChange={(event) => setQuery(event.target.value)}
-        onTouchStart={(event) => event.stopPropagation()}
       />
-      <ul
-        data-vaul-no-drag
-        className="max-h-52 touch-pan-y overflow-y-auto overscroll-contain"
-        onTouchStart={(event) => event.stopPropagation()}
-        onTouchMove={(event) => event.stopPropagation()}
-      >
+      <ul className="max-h-52 touch-pan-y overflow-y-auto overscroll-contain">
         {allowClear ? (
           <li>
             <button
               type="button"
               className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-base"
-              onClick={() => {
-                onChange(null);
-                onPicked();
-              }}
+              onClick={() => onChange(null)}
             >
               <Check
                 className={cn(
@@ -186,22 +177,26 @@ function MobileCityPicker({
           </li>
         ) : null}
         {!canSearch ? (
-          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+          <li className="px-3 py-4 text-center text-sm text-muted-foreground">
             Digite pelo menos {MIN_CITY_QUERY_LENGTH} letras para buscar
           </li>
-        ) : filteredCities.length === 0 ? (
-          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+        ) : isFetching ? (
+          <li className="px-3 py-4 text-center text-sm text-muted-foreground">
+            Buscando…
+          </li>
+        ) : cities.length === 0 ? (
+          <li className="px-3 py-4 text-center text-sm text-muted-foreground">
             Nenhuma cidade encontrada.
           </li>
         ) : (
-          filteredCities.map((cityRow) => (
+          cities.map((cityRow) => (
             <li key={cityRow.id}>
               <button
                 type="button"
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-base"
                 onClick={() => {
-                  onChange(cityRow.id);
-                  onPicked();
+                  onChange(cityRow.id, cityRow.name);
+                  setQuery("");
                 }}
               >
                 <Check
@@ -227,54 +222,83 @@ export function CitySelect({
   allowClear = false,
 }: CitySelectProps) {
   const [open, setOpen] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const responsiveDialog = useOptionalResponsiveDialog();
-  // ponytail: Popover/cmdk inside Vaul drawer = zoom + broken touch scroll. Plain 16px input + list only in mobile drawer.
+  // ponytail: inside Vaul drawer, avoid Popover + toggle button (touch stolen by drawer drag). Always-on search field + handleOnly on drawer.
   const useInlineList =
     responsiveDialog != null && !responsiveDialog.isDesktop;
 
-  const { data: cities = [], isLoading } = useQuery({
-    queryKey: ["locations", "cities", stateId],
+  useEffect(() => {
+    setOpen(false);
+    setSelectedLabel(null);
+  }, [stateId]);
+
+  useEffect(() => {
+    if (value == null) {
+      setSelectedLabel(null);
+    }
+  }, [value]);
+
+  const { data: citiesForLabel = [] } = useQuery({
+    queryKey: ["locations", "cities", stateId, "label", value],
     queryFn: () => fetchCitiesByStateId(stateId as number),
-    enabled: stateId != null,
+    enabled: stateId != null && value != null && selectedLabel == null,
   });
 
-  const selectedName =
-    value != null
-      ? cities.find((cityRow) => Number(cityRow.id) === Number(value))?.name
-      : null;
+  useEffect(() => {
+    if (selectedLabel != null || value == null) {
+      return;
+    }
+    const matchedCity = citiesForLabel.find(
+      (cityRow) => Number(cityRow.id) === Number(value),
+    );
+    if (matchedCity) {
+      setSelectedLabel(matchedCity.name);
+    }
+  }, [citiesForLabel, selectedLabel, value]);
+
+  const handleChange = (cityId: number | null, cityName?: string) => {
+    onChange(cityId);
+    setSelectedLabel(cityId == null ? null : (cityName ?? null));
+  };
 
   const triggerLabel =
-    selectedName ??
-    (isLoading
-      ? "Carregando cidades…"
-      : stateId
-        ? allowClear
-          ? "Todas as cidades"
-          : "Buscar cidade"
-        : "Selecione o estado primeiro");
+    selectedLabel ??
+    (stateId
+      ? allowClear
+        ? "Todas as cidades"
+        : "Buscar cidade"
+      : "Selecione o estado primeiro");
 
   if (useInlineList) {
+    if (stateId == null) {
+      return (
+        <div className="flex h-10 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">
+          Selecione o estado primeiro
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-2">
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          disabled={stateId == null || isLoading}
-          aria-expanded={open}
-          className="w-full justify-between font-normal"
-          onClick={() => setOpen((currentOpen) => !currentOpen)}
-        >
-          {triggerLabel}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-        {open && stateId != null && !isLoading ? (
+        {selectedLabel ? (
+          <div className="flex items-center justify-between gap-2 rounded-md border border-input px-3 py-2 text-base">
+            <span className="truncate">{selectedLabel}</span>
+            <button
+              type="button"
+              className="shrink-0 text-sm text-primary underline-offset-2 hover:underline"
+              onClick={() => handleChange(null)}
+            >
+              Trocar
+            </button>
+          </div>
+        ) : null}
+        {!selectedLabel || allowClear ? (
           <MobileCityPicker
-            cities={cities}
+            stateId={stateId}
             value={value}
-            onChange={onChange}
+            onChange={handleChange}
             allowClear={allowClear}
-            onPicked={() => setOpen(false)}
           />
         ) : null}
       </div>
@@ -288,7 +312,7 @@ export function CitySelect({
           type="button"
           variant="outline"
           role="combobox"
-          disabled={stateId == null || isLoading}
+          disabled={stateId == null}
           className="w-full justify-between font-normal"
         >
           {triggerLabel}
@@ -299,13 +323,15 @@ export function CitySelect({
         className="w-(--radix-popover-trigger-width) p-0"
         align="start"
       >
-        <CityCommandList
-          cities={cities}
-          value={value}
-          onChange={onChange}
-          allowClear={allowClear}
-          onPicked={() => setOpen(false)}
-        />
+        {stateId != null ? (
+          <CityCommandList
+            stateId={stateId}
+            value={value}
+            onChange={handleChange}
+            allowClear={allowClear}
+            onPicked={() => setOpen(false)}
+          />
+        ) : null}
       </PopoverContent>
     </Popover>
   );

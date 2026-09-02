@@ -59,7 +59,7 @@ function DrawerContent({
         )}
         {...props}
       >
-        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
+        <DrawerPrimitive.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>

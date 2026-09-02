@@ -115,6 +115,7 @@ function ResponsiveDialog({
         dismissible={dismissible}
         shouldScaleBackground={false}
         repositionInputs={false}
+        handleOnly
         {...props}
       >
         {children}
