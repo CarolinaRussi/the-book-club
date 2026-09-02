@@ -17,25 +17,24 @@ export default function LandingHero() {
   };
 
   return (
-    <section className="relative w-full overflow-hidden">
-      <div
-        aria-hidden
-        className="landing-hero-glow pointer-events-none absolute inset-0"
-      />
-      <div aria-hidden className="landing-hero-noise pointer-events-none absolute inset-0" />
-
-      <div className="relative mx-auto flex min-h-[min(72vh,34rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-10 text-center sm:px-6 sm:py-14 md:px-10 lg:px-16">
+    <section className="w-full">
+      <div className="mx-auto flex min-h-[min(72vh,34rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-10 text-center sm:px-6 sm:py-14 md:px-10 lg:px-16">
         <LogoEntrelivros
           size={320}
-          className="-mb-1 h-52 w-52 shrink-0 drop-shadow-sm sm:-mb-2 sm:h-56 sm:w-56 lg:h-72 lg:w-72"
+          className="h-52 w-52 shrink-0 sm:h-56 sm:w-56 lg:h-72 lg:w-72"
           aria-hidden
         />
 
-        <p className="mt-1 text-sm font-semibold tracking-[0.18em] text-primary uppercase sm:mt-2">
+        <p className="mt-1 text-lg font-bold tracking-[0.2em] text-primary uppercase sm:mt-2 sm:text-xl lg:text-2xl">
           Entrelivros
         </p>
 
-        <h1 className="mt-3 whitespace-nowrap text-2xl font-bold leading-tight text-foreground sm:text-4xl lg:text-5xl">
+        <div
+          aria-hidden
+          className="mt-4 h-px w-16 bg-gradient-to-r from-transparent via-primary/45 to-transparent sm:w-20"
+        />
+
+        <h1 className="mt-4 whitespace-nowrap text-2xl font-bold leading-tight text-foreground sm:text-4xl lg:text-5xl">
           O lugar do seu clube de leitura
         </h1>
 
@@ -52,7 +51,7 @@ export default function LandingHero() {
             asChild
             variant="outline"
             size="lg"
-            className="w-full rounded-xl border-secondary bg-background/70 backdrop-blur-sm sm:w-auto sm:min-w-36"
+            className="w-full rounded-xl border-secondary bg-background/80 backdrop-blur-sm sm:w-auto sm:min-w-36"
           >
             <Link to="/login">Entrar</Link>
           </Button>

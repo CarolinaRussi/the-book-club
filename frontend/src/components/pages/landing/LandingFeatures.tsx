@@ -5,25 +5,49 @@ const features = [
     title: "Biblioteca",
     description:
       "O acervo do clube num só lugar: o que já leram, o que está em andamento e o que vem pela frente, com quem sugeriu e o status de cada leitura.",
-    imageAlt: "Captura de tela da biblioteca do clube no Entrelivros",
+    images: [
+      {
+        src: "/landing/biblioteca.png",
+        alt: "Captura de tela da biblioteca do clube no Entrelivros, com capas e status das leituras",
+      },
+    ],
   },
   {
     title: "Encontros",
     description:
       "Marque datas, escolha o formato e registre o que rolou. O histórico do clube deixa de viver só na memória de quem organizou.",
-    imageAlt: "Captura de tela dos encontros do clube no Entrelivros",
+    images: [
+      {
+        src: "/landing/encontros.png",
+        alt: "Captura de tela dos encontros do clube no Entrelivros, com próximo encontro e livro da vez",
+      },
+    ],
   },
   {
     title: "Sorteador",
     description:
       "Na hora de escolher o próximo livro, o sorteio fica justo e transparente, com a turma participando no mesmo espaço.",
-    imageAlt: "Captura de tela do sorteador de leitura no Entrelivros",
+    images: [
+      {
+        src: "/landing/sorteio.png",
+        alt: "Captura de tela do sorteador no Entrelivros enquanto a prateleira escolhe entre vários livros",
+      },
+      {
+        src: "/landing/sorteio2.png",
+        alt: "Captura de tela do sorteador no Entrelivros com a próxima leitura definida",
+      },
+    ],
   },
   {
     title: "Explorar",
     description:
       "Descubra clubes públicos perto de você no mapa e veja se encaixa na turma, sem precisar de indicação no escuro.",
-    imageAlt: "Captura de tela do mapa Explorar no Entrelivros",
+    images: [
+      {
+        src: "/landing/explorar.png",
+        alt: "Captura de tela do mapa Explorar no Entrelivros, com lista de clubes e pins",
+      },
+    ],
   },
 ] as const;
 
@@ -45,7 +69,7 @@ export default function LandingFeatures() {
               key={feature.title}
               title={feature.title}
               description={feature.description}
-              imageAlt={feature.imageAlt}
+              images={[...feature.images]}
               reverse={index % 2 === 1}
             />
           ))}

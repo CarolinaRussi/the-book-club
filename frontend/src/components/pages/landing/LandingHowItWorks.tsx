@@ -21,7 +21,7 @@ const steps = [
 
 export default function LandingHowItWorks() {
   return (
-    <section className="w-full bg-background/60 px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-16">
+    <section className="w-full px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-balance text-2xl font-bold text-foreground sm:text-3xl">
           Como funciona

@@ -1,20 +1,25 @@
 import { cn } from "@/lib/utils";
 
+type LandingFeatureImage = {
+  src: string;
+  alt: string;
+};
+
 type LandingFeatureRowProps = {
   title: string;
   description: string;
-  imageAlt: string;
-  imageSrc?: string;
+  images?: LandingFeatureImage[];
   reverse?: boolean;
 };
 
 export default function LandingFeatureRow({
   title,
   description,
-  imageAlt,
-  imageSrc,
+  images,
   reverse = false,
 }: LandingFeatureRowProps) {
+  const hasImages = !!images && images.length > 0;
+
   return (
     <div
       className={cn(
@@ -30,16 +35,22 @@ export default function LandingFeatureRow({
       </div>
 
       <div className="w-full flex-1">
-        {imageSrc ? (
-          <img
-            src={imageSrc}
-            alt={imageAlt}
-            className="w-full rounded-lg border border-border object-cover shadow-md"
-          />
+        {hasImages ? (
+          <div className="flex flex-col gap-3">
+            {images.map((image) => (
+              <img
+                key={image.src}
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                className="w-full rounded-lg border border-border object-cover shadow-md"
+              />
+            ))}
+          </div>
         ) : (
           <div
             role="img"
-            aria-label={imageAlt}
+            aria-label={`${title}: print em breve`}
             className="flex aspect-[4/3] w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/60 px-4 text-center"
           >
             <span className="text-sm text-muted-foreground">
