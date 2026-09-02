@@ -44,7 +44,7 @@ export function ExploreFilters({
   onCityIdChange,
 }: ExploreFiltersProps) {
   return (
-    <div className="grid gap-3 rounded-xl border border-border p-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 rounded-xl border border-border bg-card p-4 shadow-sm md:grid-cols-2 lg:grid-cols-4">
       <div className="lg:col-span-2">
         <label className="mb-1 block text-sm font-medium">Busca</label>
         <div className="flex gap-2">

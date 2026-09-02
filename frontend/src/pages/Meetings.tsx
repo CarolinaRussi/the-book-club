@@ -94,7 +94,7 @@ export default function Meetings() {
   };
 
   return (
-    <div className="min-h-screen bg-cream w-full">
+    <div className="w-full">
       <section className="relative h-[300px] ">
         <div
           className="absolute inset-0 bg-cover bg-center"

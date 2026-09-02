@@ -72,7 +72,7 @@ export default function HomeUpcomingMeetings({
                   <button
                     type="button"
                     onClick={() => handleMeetingClick(meeting.club.id)}
-                    className="w-full rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/60 cursor-pointer"
+                    className="w-full cursor-pointer rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-muted"
                   >
                     <p className="font-medium text-sm text-primary truncate">
                       {meeting.club.name}

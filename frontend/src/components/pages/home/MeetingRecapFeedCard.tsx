@@ -118,7 +118,7 @@ export function MeetingRecapFeedCard({
   return (
     <>
       <Card
-        className="w-full overflow-hidden cursor-pointer transition-colors hover:bg-muted/20"
+        className="w-full cursor-pointer overflow-hidden transition-[box-shadow,border-color] hover:border-primary/40 hover:shadow-md"
         onClick={handleOpenDetail}
         role="button"
         tabIndex={0}
