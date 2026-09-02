@@ -20,6 +20,7 @@ import Account from "./pages/Account.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import RouteError from "./pages/RouteError.tsx";
 import InviteJoin from "./pages/InviteJoin.tsx";
 import Explore from "./pages/Explore.tsx";
 import ExploreClub from "./pages/ExploreClub.tsx";
@@ -30,83 +31,88 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/privacidade", element: <PrivacyPolicy /> },
-      { path: "/privacy", element: <PrivacyPolicy /> },
-      { path: "/reset-password", element: <ResetPassword /> },
-      { path: "/convite/:code", element: <InviteJoin /> },
       {
-        element: <PublicRoute />,
+        errorElement: <RouteError />,
         children: [
-          { path: "/", element: <Index /> },
-          { path: "/login", element: <Login /> },
-          { path: "/register", element: <Register /> },
-          { path: "/forgot-password", element: <ForgotPassword /> },
-        ],
-      },
-      {
-        element: <PrivateRoute />,
-        children: [
+          { path: "/privacidade", element: <PrivacyPolicy /> },
+          { path: "/privacy", element: <PrivacyPolicy /> },
+          { path: "/reset-password", element: <ResetPassword /> },
+          { path: "/convite/:code", element: <InviteJoin /> },
           {
-            path: "/home",
-            element: <Home />,
+            element: <PublicRoute />,
+            children: [
+              { path: "/", element: <Index /> },
+              { path: "/login", element: <Login /> },
+              { path: "/register", element: <Register /> },
+              { path: "/forgot-password", element: <ForgotPassword /> },
+            ],
           },
           {
-            path: "/explorar",
-            element: <Explore />,
-          },
-          {
-            path: "/explorar/:clubId",
-            element: <ExploreClub />,
-          },
-          {
-            path: "/me",
-            element: <Me />,
-          },
-          {
-            path: "/me/account",
-            element: <Account />,
-          },
-          {
-            path: "/users/:userId",
-            element: <UserProfile />,
-          },
-          {
-            path: "/books/:bookId",
-            element: <BookPage />,
-          },
-          {
-            path: "/sorteio/:shareCode",
-            element: <ReadingDrawRoom />,
-          },
-          {
-            element: <ClubGuard />,
+            element: <PrivateRoute />,
             children: [
               {
-                path: "/meetings",
-                element: <Meetings />,
+                path: "/home",
+                element: <Home />,
               },
               {
-                path: "/library",
-                element: <Library />,
+                path: "/explorar",
+                element: <Explore />,
               },
               {
-                path: "/readers",
-                element: <Readers />,
+                path: "/explorar/:clubId",
+                element: <ExploreClub />,
               },
               {
-                element: <ClubAdminGuard />,
+                path: "/me",
+                element: <Me />,
+              },
+              {
+                path: "/me/account",
+                element: <Account />,
+              },
+              {
+                path: "/users/:userId",
+                element: <UserProfile />,
+              },
+              {
+                path: "/books/:bookId",
+                element: <BookPage />,
+              },
+              {
+                path: "/sorteio/:shareCode",
+                element: <ReadingDrawRoom />,
+              },
+              {
+                element: <ClubGuard />,
                 children: [
                   {
-                    path: "/club/manage",
-                    element: <ManageClub />,
+                    path: "/meetings",
+                    element: <Meetings />,
+                  },
+                  {
+                    path: "/library",
+                    element: <Library />,
+                  },
+                  {
+                    path: "/readers",
+                    element: <Readers />,
+                  },
+                  {
+                    element: <ClubAdminGuard />,
+                    children: [
+                      {
+                        path: "/club/manage",
+                        element: <ManageClub />,
+                      },
+                    ],
                   },
                 ],
               },
             ],
           },
+          { path: "*", element: <NotFound /> },
         ],
       },
-      { path: "*", element: <NotFound /> },
     ],
   },
 ]);
