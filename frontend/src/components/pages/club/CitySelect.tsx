@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { fetchCitiesByStateId } from "@/api/queries/fetchLocations";
@@ -19,12 +19,26 @@ import {
 import { useOptionalResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 
+const MIN_CITY_QUERY_LENGTH = 3;
+
 type CitySelectProps = {
   stateId: number | null;
   value: number | null;
   onChange: (cityId: number | null) => void;
   allowClear?: boolean;
 };
+
+type CityOption = { id: number; name: string };
+
+function filterCitiesByQuery(cities: CityOption[], query: string) {
+  const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+  if (normalizedQuery.length < MIN_CITY_QUERY_LENGTH) {
+    return [];
+  }
+  return cities.filter((cityRow) =>
+    cityRow.name.toLocaleLowerCase("pt-BR").includes(normalizedQuery),
+  );
+}
 
 function CityCommandList({
   cities,
@@ -33,19 +47,30 @@ function CityCommandList({
   allowClear,
   onPicked,
 }: {
-  cities: { id: number; name: string }[];
+  cities: CityOption[];
   value: number | null;
   onChange: (cityId: number | null) => void;
   allowClear: boolean;
   onPicked: () => void;
 }) {
+  const [query, setQuery] = useState("");
+  const trimmedQuery = query.trim();
+  const canSearch = trimmedQuery.length >= MIN_CITY_QUERY_LENGTH;
+  const filteredCities = useMemo(
+    () => filterCitiesByQuery(cities, query),
+    [cities, query],
+  );
+
   return (
-    <Command>
-      <CommandInput placeholder="Digite o nome da cidade…" />
+    <Command shouldFilter={false}>
+      <CommandInput
+        value={query}
+        placeholder="Digite ao menos 3 letras…"
+        onValueChange={setQuery}
+      />
       <CommandList onWheel={(event) => event.stopPropagation()}>
-        <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
-        <CommandGroup>
-          {allowClear ? (
+        {allowClear ? (
+          <CommandGroup>
             <CommandItem
               value="todas as cidades"
               onSelect={() => {
@@ -61,28 +86,137 @@ function CityCommandList({
               />
               Todas as cidades
             </CommandItem>
-          ) : null}
-          {cities.map((cityRow) => (
-            <CommandItem
-              key={cityRow.id}
-              value={cityRow.name}
-              onSelect={() => {
-                onChange(cityRow.id);
+          </CommandGroup>
+        ) : null}
+        {!canSearch ? (
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Digite pelo menos {MIN_CITY_QUERY_LENGTH} letras para buscar
+          </p>
+        ) : (
+          <>
+            <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+            <CommandGroup>
+              {filteredCities.map((cityRow) => (
+                <CommandItem
+                  key={cityRow.id}
+                  value={cityRow.name}
+                  onSelect={() => {
+                    onChange(cityRow.id);
+                    onPicked();
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 size-4",
+                      value === cityRow.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  {cityRow.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+      </CommandList>
+    </Command>
+  );
+}
+
+function MobileCityPicker({
+  cities,
+  value,
+  onChange,
+  allowClear,
+  onPicked,
+}: {
+  cities: CityOption[];
+  value: number | null;
+  onChange: (cityId: number | null) => void;
+  allowClear: boolean;
+  onPicked: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const trimmedQuery = query.trim();
+  const canSearch = trimmedQuery.length >= MIN_CITY_QUERY_LENGTH;
+  const filteredCities = useMemo(
+    () => filterCitiesByQuery(cities, query),
+    [cities, query],
+  );
+
+  return (
+    <div
+      data-vaul-no-drag
+      className="overflow-hidden rounded-md border bg-background text-foreground"
+    >
+      <input
+        type="search"
+        value={query}
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        placeholder="Digite ao menos 3 letras…"
+        className="h-11 w-full border-b border-input bg-transparent px-3 text-base outline-none placeholder:text-muted-foreground"
+        onChange={(event) => setQuery(event.target.value)}
+        onTouchStart={(event) => event.stopPropagation()}
+      />
+      <ul
+        data-vaul-no-drag
+        className="max-h-52 touch-pan-y overflow-y-auto overscroll-contain"
+        onTouchStart={(event) => event.stopPropagation()}
+        onTouchMove={(event) => event.stopPropagation()}
+      >
+        {allowClear ? (
+          <li>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-base"
+              onClick={() => {
+                onChange(null);
                 onPicked();
               }}
             >
               <Check
                 className={cn(
-                  "mr-2 size-4",
-                  value === cityRow.id ? "opacity-100" : "opacity-0",
+                  "size-4 shrink-0",
+                  value == null ? "opacity-100" : "opacity-0",
                 )}
               />
-              {cityRow.name}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-      </CommandList>
-    </Command>
+              Todas as cidades
+            </button>
+          </li>
+        ) : null}
+        {!canSearch ? (
+          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Digite pelo menos {MIN_CITY_QUERY_LENGTH} letras para buscar
+          </li>
+        ) : filteredCities.length === 0 ? (
+          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Nenhuma cidade encontrada.
+          </li>
+        ) : (
+          filteredCities.map((cityRow) => (
+            <li key={cityRow.id}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-base"
+                onClick={() => {
+                  onChange(cityRow.id);
+                  onPicked();
+                }}
+              >
+                <Check
+                  className={cn(
+                    "size-4 shrink-0",
+                    value === cityRow.id ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                {cityRow.name}
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
   );
 }
 
@@ -94,7 +228,7 @@ export function CitySelect({
 }: CitySelectProps) {
   const [open, setOpen] = useState(false);
   const responsiveDialog = useOptionalResponsiveDialog();
-  // ponytail: Popover portals outside Vaul drawer → inert/focus trap blocks input+scroll. Inline only inside mobile drawer; Popover elsewhere.
+  // ponytail: Popover/cmdk inside Vaul drawer = zoom + broken touch scroll. Plain 16px input + list only in mobile drawer.
   const useInlineList =
     responsiveDialog != null && !responsiveDialog.isDesktop;
 
@@ -135,18 +269,13 @@ export function CitySelect({
           <ChevronsUpDown className="opacity-50" />
         </Button>
         {open && stateId != null && !isLoading ? (
-          <div
-            data-vaul-no-drag
-            className="rounded-md border bg-popover text-popover-foreground shadow-md"
-          >
-            <CityCommandList
-              cities={cities}
-              value={value}
-              onChange={onChange}
-              allowClear={allowClear}
-              onPicked={() => setOpen(false)}
-            />
-          </div>
+          <MobileCityPicker
+            cities={cities}
+            value={value}
+            onChange={onChange}
+            allowClear={allowClear}
+            onPicked={() => setOpen(false)}
+          />
         ) : null}
       </div>
     );
