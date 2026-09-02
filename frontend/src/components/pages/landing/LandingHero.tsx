@@ -39,8 +39,7 @@ export default function LandingHero() {
         </h1>
 
         <p className="mt-3 max-w-2xl text-pretty text-base text-warm-brown sm:text-lg md:text-xl">
-          Leituras, encontros e memórias num só lugar: sem planilha, sem sumiço no
-          WhatsApp.
+          Leituras, encontros e memórias num só lugar: sem planilha, sem bloco de notas e sem sumiço no falatório do grupo de WhatsApp.
         </p>
 
         <div className="mt-7 flex w-full max-w-md flex-col gap-2.5 sm:flex-row sm:justify-center sm:gap-4 md:max-w-lg">
