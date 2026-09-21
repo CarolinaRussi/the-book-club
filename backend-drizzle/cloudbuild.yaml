@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - backend-drizzle/Dockerfile
+      - -t
+      - southamerica-east1-docker.pkg.dev/the-book-club-integracoes/entrelivros/api
+      - .
+images:
+  - southamerica-east1-docker.pkg.dev/the-book-club-integracoes/entrelivros/api
+options:
+  logging: CLOUD_LOGGING_ONLY

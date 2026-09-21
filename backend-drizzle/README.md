@@ -40,6 +40,16 @@ API em **Node**, **Express** e **Drizzle ORM** com PostgreSQL.
 
    Servidor em `http://localhost:4001` (ou a porta em `PORT`).
 
+4. **Produção (Google Cloud Run)**
+
+   Postgres já no Neon. Imagem Docker a partir da **raiz** do monorepo:
+
+   ```bash
+   docker build -f backend-drizzle/Dockerfile -t entrelivros-api .
+   ```
+
+   Detalhes de `gcloud`, env/secrets, OAuth redirects e crons: secção **Deploy (Google Cloud Run)** em `BACKEND-GUIDE.md`.
+
 ## Scripts
 
 | Script             | Descrição                          |

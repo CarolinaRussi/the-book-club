@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+.git
+.cursor
+**/.env
+**/.env.*
+!**/.env.example
+frontend
+agent-transcripts
+**/*.md
+!backend-drizzle/README.md
+backend-drizzle/drizzle
+backend-drizzle/scripts
+**/.DS_Store
+**/package-lock.json

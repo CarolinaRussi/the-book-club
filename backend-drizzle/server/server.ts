@@ -104,7 +104,7 @@ if (process.env.ENABLE_READING_DRAW_EXPIRE === "true") {
   );
 }
 
-app.listen(port, () => {
+app.listen(Number(port), "0.0.0.0", () => {
   console.log(
     `Servidor Drizzle rodando em http://localhost:${port}`
   );
